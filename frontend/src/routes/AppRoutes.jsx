@@ -6,6 +6,8 @@ import Layout from '../components/layout/Layout';
 import Login from '../pages/auth/Login';
 import OTP from '../pages/auth/OTP';
 import Home from '../pages/user/home/Home';
+import Groups from '../pages/user/groups/Groups';
+import Deals from '../pages/user/deals/Deals';
 import GroupDetail from '../pages/user/group/GroupDetail';
 import CreateGroup from '../pages/user/group/CreateGroup';
 import GroupChat from '../pages/user/group/GroupChat';
@@ -25,14 +27,18 @@ const AppRoutes = () => {
 
       {/* Main App Routes */}
       <Route element={<ProtectedRoute />}>
+        {/* Chat screen — no navbar/bottom nav, fullscreen */}
+        <Route path="/groups/:groupId/chat" element={<GroupChat />} />
+
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/groups" element={<Groups />} />
+          <Route path="/deals" element={<Deals />} />
           <Route path="/profile" element={<Profile />} />
-          
+
           {/* Group Routes */}
-          <Route path="/groups/:groupId" element={<GroupDetail />} />
           <Route path="/groups/create" element={<CreateGroup />} />
-          <Route path="/groups/:groupId/chat" element={<GroupChat />} />
+          <Route path="/groups/:groupId" element={<GroupDetail />} />
 
           {/* Vendor Specific (Still within Main Layout) */}
           <Route element={<ProtectedRoute allowedRoles={['vendor', 'admin']} />}>
