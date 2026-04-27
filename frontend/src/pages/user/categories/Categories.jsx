@@ -67,7 +67,7 @@ const Categories = () => {
             onClick={() => setActiveChip(chip)}
             className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-all ${
               activeChip === chip 
-                ? 'bg-gray-900 text-white shadow-lg' 
+                ? 'bg-blue-50 text-blue-600 border-blue-100 shadow-sm' 
                 : 'bg-gray-100 text-gray-500'
             }`}
           >
@@ -80,12 +80,7 @@ const Categories = () => {
       <div className="flex-1 px-6">
         <div className="grid grid-cols-4 gap-y-6 gap-x-3">
           {CATEGORIES.map((cat, index) => (
-            <motion.div
-              key={cat.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.02 }}
-            >
+            <div key={cat.id}>
               <Link 
                 to={cat.id === 'more' ? '/categories' : `/groups?category=${cat.name.toLowerCase()}`}
                 className="flex flex-col items-center gap-2"
@@ -101,7 +96,7 @@ const Categories = () => {
                   {cat.name}
                 </span>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
