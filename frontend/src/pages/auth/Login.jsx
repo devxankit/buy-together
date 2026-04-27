@@ -1,126 +1,213 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, ArrowRight, Store, User, ShieldCheck } from 'lucide-react';
+import { Phone, User, Mail, ArrowRight, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from '../../hooks/useDispatch';
-import { login } from '../../redux/asyncActions/authActions';
+import { login, register } from '../../redux/asyncActions/authActions';
 
 const Login = () => {
   const [role, setRole] = useState('user'); // 'user' or 'vendor'
-  const [mobile, setMobile] = useState('');
-  const [step, setStep] = useState(1); // 1: Mobile Input, 2: OTP (if you want to keep it on one page)
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    mobile: ''
+  });
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSendOTP = (e) => {
+  const primaryColor = role === 'vendor' ? '#0052cc' : '#ff7a00';
+  const hoverColor = role === 'vendor' ? '#0041a3' : '#e66e00';
+  const shadowColor = role === 'vendor' ? 'rgba(0, 82, 204, 0.2)' : 'rgba(255, 122, 0, 0.2)';
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAuth = (e) => {
     e.preventDefault();
-    if (mobile.length >= 10) {
-      // In a real app, this would trigger the OTP SMS
-      console.log(`Sending OTP to ${mobile} for role ${role}`);
-      navigate('/otp', { state: { role, mobile } }); 
+    if (isLogin) {
+      navigate('/otp', { state: { role, mobile: formData.mobile, flow: 'login' } });
+    } else {
+      navigate('/otp', { state: { ...formData, role, flow: 'signup' } });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafafa] p-4">
+    <div className="min-h-screen bg-white md:bg-[#f8f9fa] md:flex md:items-center md:justify-center">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-7 rounded-[1.5rem] shadow-xl shadow-orange-500/5 border border-gray-100 w-full max-w-[400px] relative overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="bg-white min-h-screen w-full md:min-h-0 md:h-auto md:max-w-[440px] md:rounded-[3rem] md:shadow-2xl md:shadow-black/5 overflow-hidden flex flex-col relative"
       >
-        {/* Top Branding Section */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="flex items-center gap-1.5 mb-4 scale-90">
-            <span className="text-secondary font-black text-xl tracking-tighter">Buy</span>
-            <span className="text-primary font-black text-xl tracking-tighter">together</span>
-          </div>
-          
-          <h1 className="text-xl font-black text-gray-900 mb-1">Welcome Back</h1>
-          <p className="text-gray-400 text-xs font-semibold text-center">Securely access your account</p>
-        </div>
-
-        {/* Role Switcher */}
-        <div className="flex p-1 bg-gray-100 rounded-xl mb-6 relative">
-          {/* Animated Background Pill */}
-          <motion.div
-            initial={false}
-            animate={{ 
-              x: role === 'user' ? 0 : '100%',
-            }}
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm"
-          />
-
-          <button 
-            type="button"
-            onClick={() => setRole('user')}
-            className={`relative flex-1 py-2 rounded-lg text-sm font-black transition-colors duration-200 z-10 flex items-center justify-center gap-2 ${
-              role === 'user' ? 'text-primary' : 'text-gray-400'
-            }`}
-          >
-            <User size={16} />
-            Individual
-          </button>
-          <button 
-            type="button"
-            onClick={() => setRole('vendor')}
-            className={`relative flex-1 py-2 rounded-lg text-sm font-black transition-colors duration-200 z-10 flex items-center justify-center gap-2 ${
-              role === 'vendor' ? 'text-secondary' : 'text-gray-400'
-            }`}
-          >
-            <Store size={16} />
-            Business
-          </button>
-        </div>
-
-        {/* Auth Form */}
-        <form onSubmit={handleSendOTP} className="space-y-5">
-          <div className="relative group">
-            <label className="block text-[10px] font-black text-gray-400 mb-1.5 px-1 uppercase tracking-widest">
-              Mobile Number
-            </label>
-            <div className="flex items-center border-2 border-gray-100 rounded-xl focus-within:border-primary focus-within:bg-white bg-gray-50/30 transition-all pr-4 pl-4 py-0.5">
-              <span className="pr-2 text-gray-400 font-bold border-r border-gray-100 my-2.5 text-sm">+91</span>
-              <input 
-                type="tel" 
-                maxLength="10"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-3 py-2.5 bg-transparent outline-none font-bold text-gray-900 tracking-widest text-sm placeholder:text-gray-200 placeholder:font-medium placeholder:tracking-normal"
-                placeholder="Ex: 98765 43210"
-                required
-              />
-              <Phone className="text-gray-200 group-focus-within:text-primary transition-colors" size={16} />
-            </div>
+        {/* Header with Deeper Curve */}
+        <div 
+          className="relative h-80 shrink-0 overflow-hidden transition-colors duration-500"
+          style={{ backgroundColor: primaryColor }}
+        >
+          <div className="absolute bottom-24 left-10 z-10">
+            <h1 className="text-[40px] font-bold text-white mb-2 leading-tight tracking-tight">
+              {role === 'vendor' ? 'Business' : (isLogin ? <>Welcome <br /> Back</> : <>Create <br /> Account</>)}
+              {role === 'vendor' && <div className="text-xl opacity-80 -mt-1">Partner Portal</div>}
+            </h1>
+            <p className="text-white/90 font-medium text-[15px]">
+              {isLogin ? "Sign in to your account" : "Sign up to get started"}
+            </p>
           </div>
 
-          <button 
-            type="submit"
-            className={`w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-lg ${
-              role === 'user' 
-                ? 'bg-primary text-white shadow-orange-500/20 hover:bg-orange-600' 
-                : 'bg-secondary text-white shadow-blue-500/20 hover:bg-blue-700'
-            }`}
-          >
-            Continue 
-            <ArrowRight size={18} />
-          </button>
-        </form>
+          {/* Curve SVG - Deepened */}
+          <div className="absolute bottom-0 left-0 w-full leading-[0] z-0">
+            <svg viewBox="0 0 500 150" preserveAspectRatio="none" className="w-full h-44">
+              <path d="M0,80 C150,160 350,0 500,80 L500,150 L0,150 Z" className="fill-white"></path>
+            </svg>
+          </div>
+        </div>
 
-        {/* Footer Navigation */}
-        <div className="mt-8 pt-6 border-t border-gray-50 flex flex-col items-center gap-4">
-          {role === 'vendor' ? (
-            <div className="text-center">
-              <p className="text-gray-400 text-[10px] font-black uppercase tracking-wider mb-1">New to our marketplace?</p>
-              <Link to="/vendor/signup" className="text-secondary font-black text-sm hover:underline flex items-center gap-1 justify-center">
-                Register as Business Partner <ArrowRight size={12} />
-              </Link>
+        {/* Form Section */}
+        <div className="px-10 pb-12 pt-10 -mt-12 relative z-10 bg-white flex-1 md:flex-none">
+          <form onSubmit={handleAuth} className="space-y-5">
+            <AnimatePresence mode="wait">
+              {!isLogin && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-5"
+                >
+                  {/* Full Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-bold text-gray-500 ml-1">Full Name</label>
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-gray-900 transition-all focus:bg-white focus:ring-4 placeholder:text-gray-300"
+                        style={{ '--tw-ring-color': `${primaryColor}0D`, borderColor: 'var(--tw-border-opacity) transparent' }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#f3f4f6';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                        placeholder="e.g. Alex Johnson"
+                        required={!isLogin}
+                      />
+                      <User className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                    </div>
+                  </div>
+
+                  {/* Email Address */}
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-bold text-gray-500 ml-1">Email Address</label>
+                    <div className="relative">
+                      <input 
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-gray-900 transition-all focus:bg-white focus:ring-4 placeholder:text-gray-300"
+                        onFocus={(e) => {
+                          e.target.style.borderColor = primaryColor;
+                          e.target.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#f3f4f6';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                        placeholder="alex@example.com"
+                      />
+                      <Mail className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Mobile Number */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-gray-500 ml-1">Mobile Number</label>
+              <div 
+                className="flex items-center bg-gray-50 border border-gray-100 rounded-2xl transition-all px-5"
+                id="mobile-container"
+              >
+                <span className="text-gray-400 font-bold text-sm mr-2">+91</span>
+                <input 
+                  type="tel"
+                  name="mobile"
+                  maxLength="10"
+                  value={formData.mobile}
+                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })}
+                  onFocus={() => {
+                    const el = document.getElementById('mobile-container');
+                    el.style.borderColor = primaryColor;
+                    el.style.backgroundColor = 'white';
+                    el.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
+                  }}
+                  onBlur={() => {
+                    const el = document.getElementById('mobile-container');
+                    el.style.borderColor = '#f3f4f6';
+                    el.style.backgroundColor = '#f9fafb';
+                    el.style.boxShadow = 'none';
+                  }}
+                  className="flex-1 py-4 bg-transparent outline-none font-bold text-gray-900 placeholder:text-gray-300 tracking-wider"
+                  placeholder="98765 43210"
+                  required
+                />
+                <Phone className="text-gray-300" size={18} />
+              </div>
             </div>
-          ) : (
-            <div className="text-center">
-              <p className="text-gray-400 text-[10px] font-medium">By logging in, you agree to our <Link to="/terms" className="text-primary font-bold">Terms of Service</Link></p>
+
+            <div className="pt-6">
+              <button 
+                type="submit"
+                className="w-full text-white py-4.5 rounded-2xl font-bold text-lg transition-all transform active:scale-95 flex items-center justify-center gap-3 shadow-xl"
+                style={{ backgroundColor: primaryColor, shadowColor: shadowColor }}
+              >
+                <span className="tracking-tight">{isLogin ? "Sign In" : "Create Account"}</span>
+                <ArrowRight size={20} />
+              </button>
             </div>
-          )}
+          </form>
+
+          <div className="mt-12 text-center space-y-4">
+            {role === 'user' && (
+              <button 
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-gray-400 text-[15px] font-medium transition-colors"
+                style={{ color: isLogin ? '' : primaryColor }}
+              >
+                {isLogin ? (
+                  <>New to Buytogether? <span className="font-bold" style={{ color: primaryColor }}>Sign up here</span></>
+                ) : (
+                  <>Already have an account? <span className="font-bold" style={{ color: primaryColor }}>Sign in here</span></>
+                )}
+              </button>
+            )}
+
+            <div className="pt-4 border-t border-gray-50 flex flex-col items-center gap-3">
+              <button 
+                onClick={() => {
+                  setRole(role === 'user' ? 'vendor' : 'user');
+                  setIsLogin(true);
+                }}
+                className="text-sm font-bold flex items-center gap-2 hover:opacity-80 transition-opacity"
+                style={{ color: role === 'user' ? '#0052cc' : '#ff7a00' }}
+              >
+                {role === 'user' ? 'Login as Vendor' : 'Login as Individual User'}
+                <ArrowRight size={14} />
+              </button>
+
+              {role === 'vendor' && (
+                <Link to="/vendor/signup" className="text-xs text-gray-400 font-bold uppercase tracking-widest hover:text-secondary transition-colors">
+                  Register as Business Partner
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>

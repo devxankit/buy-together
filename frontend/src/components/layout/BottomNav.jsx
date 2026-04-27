@@ -16,33 +16,54 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-2 pb-6 pt-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-lg lg:bg-white/90">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-2 pb-5 pt-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-lg lg:bg-white/90">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = path === tab.path;
+          const Icon = tab.icon;
           
           return (
             <Link 
               key={tab.name}
               to={tab.path}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                isActive ? 'text-primary scale-105' : 'text-gray-400'
-              }`}
+              className="flex-1 relative flex flex-col items-center justify-center gap-0.5 group py-0.5"
             >
-              <div className={`relative p-1 rounded-xl transition-all ${
-                tab.isAction ? 'bg-secondary/5 text-secondary' : ''
-              } ${isActive && !tab.isAction ? 'bg-primary/5' : ''}`}>
-                <tab.icon 
-                  size={tab.isAction ? 24 : 22} 
-                  strokeWidth={isActive ? 2.5 : 2}
-                  className="transition-transform duration-300"
+              {/* Active Background Indicator (Sliding) */}
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-x-2 inset-y-1 bg-[#ff7a00]/5 rounded-xl -z-10"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
-              </div>
-              <span className={`text-[10px] font-bold tracking-tight ${
-                isActive ? 'text-gray-900' : 'text-gray-400'
-              }`}>
+              )}
+
+              {/* Icon Container */}
+              <motion.div
+                animate={{ 
+                  scale: isActive ? 1.12 : 1,
+                  y: isActive ? -1 : 0
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className={`relative p-1.5 rounded-xl transition-colors ${
+                  isActive ? 'text-[#ff7a00]' : 'text-gray-400'
+                }`}
+              >
+                <Icon 
+                  size={isActive ? 24 : 22} 
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+              </motion.div>
+
+              <motion.span 
+                animate={{ 
+                  opacity: isActive ? 1 : 0.6,
+                }}
+                className={`text-[9px] font-black tracking-widest uppercase ${
+                  isActive ? 'text-gray-900' : 'text-gray-400'
+                }`}
+              >
                 {tab.name}
-              </span>
+              </motion.span>
             </Link>
           );
         })}

@@ -101,18 +101,15 @@ const STATUS_META = {
 };
 
 /* ─── Group Row ──────────────────────────────────────────────────── */
-const GroupRow = ({ group, index }) => {
+/* ─── Group Row ──────────────────────────────────────────────────── */
+const GroupRow = ({ group }) => {
   const pct = Math.round((group.joined / group.total) * 100);
   const spotsLeft = group.total - group.joined;
   const meta = STATUS_META[group.status] || STATUS_META.active;
   const initials = group.name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.25 }}
-    >
+    <div>
       <Link to={`/groups/${group.id}`}>
         <div className="flex items-center gap-3.5 px-5 py-3.5 active:bg-gray-50 transition-colors cursor-pointer">
           {/* Avatar */}
@@ -166,10 +163,8 @@ const GroupRow = ({ group, index }) => {
             {/* Progress bar */}
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.7, delay: index * 0.05 }}
+                <div
+                  style={{ width: `${pct}%` }}
                   className={`h-full rounded-full ${
                     pct >= 90 ? 'bg-primary' : pct >= 60 ? 'bg-secondary' : 'bg-gray-300'
                   }`}
@@ -191,7 +186,7 @@ const GroupRow = ({ group, index }) => {
         {/* Divider — indented like WhatsApp */}
         <div className="ml-[82px] h-px bg-gray-100" />
       </Link>
-    </motion.div>
+    </div>
   );
 };
 
@@ -243,29 +238,22 @@ const Groups = () => {
           </div>
         </div>
 
-        {/* Search bar — slides in */}
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden px-5 pb-3"
-            >
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-                <input
-                  autoFocus
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search groups, products..."
-                  className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-2xl text-[14px] font-medium text-gray-800 outline-none"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Search bar */}
+        {searchOpen && (
+          <div className="px-5 pb-3">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+              <input
+                autoFocus
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search groups, products..."
+                className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-2xl text-[14px] font-medium text-gray-800 outline-none"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Tab pills */}
         <div className="flex gap-2 px-5 pb-3 overflow-x-auto no-scrollbar">
@@ -286,7 +274,7 @@ const Groups = () => {
 
         {/* Live ticker */}
         <div className="mx-5 mb-3 flex items-center gap-2 bg-secondary/5 border border-secondary/10 rounded-xl px-3.5 py-2.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+          <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
           <TrendingUp size={13} className="text-secondary" />
           <span className="text-[12px] font-bold text-secondary flex-1 truncate">
             42 people joined groups in the last hour
@@ -299,33 +287,27 @@ const Groups = () => {
 
       {/* ── Group List ── */}
       <div className="flex-1">
-        <AnimatePresence>
-          {filtered.length > 0 ? (
-            filtered.map((group, i) => (
-              <GroupRow key={group.id} group={group} index={i} />
-            ))
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-20 px-8 text-center"
+        {filtered.length > 0 ? (
+          filtered.map((group) => (
+            <GroupRow key={group.id} group={group} />
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Users size={26} className="text-gray-300" />
+            </div>
+            <h3 className="font-bold text-gray-900 mb-1.5">No groups found</h3>
+            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+              Try a different search term or be the first to create a group.
+            </p>
+            <Link
+              to="/groups/create"
+              className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm shadow-lg shadow-orange-500/20"
             >
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <Users size={26} className="text-gray-300" />
-              </div>
-              <h3 className="font-bold text-gray-900 mb-1.5">No groups found</h3>
-              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Try a different search term or be the first to create a group.
-              </p>
-              <Link
-                to="/groups/create"
-                className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm shadow-lg shadow-orange-500/20"
-              >
-                Create Group
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              Create Group
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

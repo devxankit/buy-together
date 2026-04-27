@@ -14,6 +14,8 @@ import GroupChat from '../pages/user/group/GroupChat';
 import VendorDashboard from '../pages/vendor/dashboard/VendorDashboard';
 import CreateOffer from '../pages/vendor/offers/CreateOffer';
 import Profile from '../pages/user/profile/Profile';
+import Notifications from '../pages/user/notifications/Notifications';
+import Categories from '../pages/user/categories/Categories';
 import AdminDashboard from '../pages/admin/dashboard/AdminDashboard';
 import VendorSignup from '../pages/vendor/VendorSignup';
 
@@ -35,6 +37,8 @@ const AppRoutes = () => {
           <Route path="/groups" element={<Groups />} />
           <Route path="/deals" element={<Deals />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/categories" element={<Categories />} />
 
           {/* Group Routes */}
           <Route path="/groups/create" element={<CreateGroup />} />
