@@ -17,7 +17,7 @@ const Login = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: c.surfaceAlt, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, padding: 'max(44px, calc(env(safe-area-inset-top, 0px) + 20px)) 24px 32px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 24px 32px', display: 'flex', flexDirection: 'column' }}>
         {/* Back */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button

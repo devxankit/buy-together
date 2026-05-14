@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from '../../../hooks/useSelector';
+import { useDispatch } from '../../../hooks/useDispatch';
+import { logout } from '../../../redux/slices/authSlice';
 import { c } from '../../../design/tokens';
 import Icon from '../../../components/ui/Icon';
 import { Avatar } from '../../../components/ui/Avatar';
@@ -15,7 +17,13 @@ const MENU = [
 
 const Profile = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector(s => s.auth);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
 
   return (
     <div style={{ background: c.surfaceAlt, minHeight: '100vh' }}>
@@ -125,12 +133,15 @@ const Profile = () => {
         </div>
 
         {/* Logout */}
-        <button style={{
-          width: '100%', background: 'transparent', color: c.danger,
-          padding: '14px 16px', borderRadius: 16, border: `1px solid ${c.line}`,
-          display: 'flex', alignItems: 'center', gap: 10,
-          fontWeight: 500, fontSize: 13, cursor: 'pointer', marginBottom: 8,
-        }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '100%', background: 'transparent', color: c.danger,
+            padding: '14px 16px', borderRadius: 16, border: `1px solid ${c.line}`,
+            display: 'flex', alignItems: 'center', gap: 10,
+            fontWeight: 500, fontSize: 13, cursor: 'pointer', marginBottom: 8,
+          }}
+        >
           <Icon name="log" size={16} color={c.danger} stroke={1.8} />
           Log out
         </button>

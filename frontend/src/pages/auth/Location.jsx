@@ -14,7 +14,7 @@ const Location = () => {
     }}>
       {/* Map visual area */}
       <div style={{
-        margin: '56px 20px 0', borderRadius: 24, overflow: 'hidden',
+        margin: 'calc(env(safe-area-inset-top, 0px) + 16px) 20px 0', borderRadius: 24, overflow: 'hidden',
         background: '#fff', position: 'relative', height: 300,
         border: `1px solid ${c.line}`,
       }}>

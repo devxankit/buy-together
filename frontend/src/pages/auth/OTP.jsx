@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from '../../hooks/useDispatch';
 import { setAuth } from '../../redux/slices/authSlice';
@@ -6,163 +6,283 @@ import { c } from '../../design/tokens';
 import Icon from '../../components/ui/Icon';
 import Button from '../../components/ui/Button';
 
+const N = 6;
+
 const OTP = () => {
-  const [digits, setDigits] = useState(['', '', '', '', '', '']);
+  const [digits, setDigits] = useState(Array(N).fill(''));
+  const [focusIdx, setFocusIdx] = useState(0);
+  const [timer, setTimer] = useState(29);
+  const refs = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { role = 'user', mobile = '', name, email, flow = 'login' } = location.state || {};
+  const { role = 'user', mobile = '', name, email } = location.state || {};
 
-  const handleChange = (i, val) => {
-    if (isNaN(val)) return;
+  /* countdown timer */
+  useEffect(() => {
+    if (timer <= 0) return;
+    const id = setTimeout(() => setTimer(t => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [timer]);
+
+  /* focus first box on mount */
+  useEffect(() => { refs.current[0]?.focus(); }, []);
+
+  const focus = (i) => {
+    const el = refs.current[i];
+    if (!el) return;
+    el.focus();
+    /* place cursor at end so typing replaces cleanly */
+    setTimeout(() => el.setSelectionRange(1, 1), 0);
+  };
+
+  const handleChange = (i, e) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (!val) return;
+    const d = val.slice(-1);
     const next = [...digits];
-    next[i] = val.slice(-1);
+    next[i] = d;
     setDigits(next);
-    if (val && i < 5) document.getElementById(`otp-${i + 1}`)?.focus();
+    if (i < N - 1) focus(i + 1);
   };
 
   const handleKeyDown = (i, e) => {
-    if (e.key === 'Backspace' && !digits[i] && i > 0) {
-      document.getElementById(`otp-${i - 1}`)?.focus();
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const next = [...digits];
+      if (digits[i]) {
+        next[i] = '';
+        setDigits(next);
+      } else if (i > 0) {
+        next[i - 1] = '';
+        setDigits(next);
+        focus(i - 1);
+      }
+    } else if (e.key === 'ArrowLeft' && i > 0) {
+      focus(i - 1);
+    } else if (e.key === 'ArrowRight' && i < N - 1) {
+      focus(i + 1);
     }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const raw = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, N);
+    if (!raw) return;
+    const next = Array(N).fill('');
+    [...raw].forEach((ch, idx) => { next[idx] = ch; });
+    setDigits(next);
+    focus(Math.min(raw.length, N - 1));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (digits.join('').length === 6) {
-      dispatch(setAuth({
-        user: {
-          name: name || (role === 'vendor' ? 'Premium Vendor' : 'Verified User'),
-          email: email || '',
-          mobile,
-          role,
-        },
-        token: 'mock-jwt-' + Date.now(),
-      }));
-      navigate(role === 'vendor' ? '/vendor/dashboard' : '/location');
-    }
+    if (digits.join('').length < N) return;
+    dispatch(setAuth({
+      user: {
+        name: name || (role === 'vendor' ? 'Apple India' : 'Verified User'),
+        email: email || '',
+        mobile,
+        role,
+        businessName: role === 'vendor' ? 'Apple India' : undefined,
+      },
+      token: 'mock-jwt-' + Date.now(),
+    }));
+    navigate(role === 'vendor' ? '/vendor/dashboard' : '/location');
   };
 
+  const filled = digits.filter(Boolean).length;
+
   return (
-    <div style={{ minHeight: '100vh', background: c.surfaceAlt, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, padding: 'max(44px, calc(env(safe-area-inset-top, 0px) + 20px)) 24px 32px', display: 'flex', flexDirection: 'column' }}>
-        {/* Back + progress */}
+    <div style={{ minHeight: '100dvh', background: c.surfaceAlt }}>
+      <div style={{
+        maxWidth: 430,
+        margin: '0 auto',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 24px 48px',
+      }}>
+
+        {/* Back + step indicator */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button
+            type="button"
             onClick={() => navigate(-1)}
             style={{
               width: 40, height: 40, borderRadius: 12, background: '#fff',
               border: `1px solid ${c.line}`,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', flexShrink: 0,
             }}
           >
             <Icon name="arrowL" size={18} color={c.ink} stroke={1.8} />
           </button>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {[1,2,3].map(s => (
-              <div key={s} style={{ width: 22, height: 3, background: s <= 2 ? c.primary : c.line, borderRadius: 2 }} />
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+            {[0, 1, 2].map(s => (
+              <div key={s} style={{
+                height: 6, borderRadius: 3,
+                width: s === 1 ? 22 : 6,
+                background: s <= 1 ? c.primary : c.line,
+              }} />
             ))}
           </div>
         </div>
 
-        {/* Icon + heading */}
-        <div style={{ marginTop: 36 }}>
+        {/* Icon */}
+        <div style={{ marginTop: 40 }}>
           <div style={{
-            width: 56, height: 56, borderRadius: 16,
-            background: c.primarySoft, border: `1px solid rgba(15,107,83,0.20)`,
+            width: 56, height: 56, borderRadius: 17,
+            background: c.primarySoft,
+            border: `1px solid rgba(15,107,83,0.18)`,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Icon name="shield" size={24} color={c.primary} stroke={1.8} />
           </div>
-          <div style={{ fontSize: 36, fontWeight: 400, letterSpacing: -1.2, lineHeight: 1.05, marginTop: 20, color: c.ink }}>
-            Verify it's<br />
-            <span style={{ color: c.primary }}>really you.</span>
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 400, color: c.muted, marginTop: 12, lineHeight: 1.5 }}>
-            We've sent a 6-digit code to{' '}
-            <span style={{ color: c.ink, fontWeight: 500 }}>+91 {mobile}</span>.{' '}
-            <span onClick={() => navigate(-1)} style={{ color: c.primary, fontWeight: 500, cursor: 'pointer' }}>Change number</span>
-          </div>
         </div>
 
-        {/* OTP inputs */}
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', gap: 8, marginTop: 32 }}>
+        {/* Heading */}
+        <div style={{ marginTop: 18 }}>
+          <div style={{ fontSize: 32, fontWeight: 400, letterSpacing: -1, lineHeight: 1.08, color: c.ink }}>
+            One step<br />
+            <span style={{ color: c.primary }}>to go.</span>
+          </div>
+          <div style={{ fontSize: 13.5, fontWeight: 400, color: c.muted, marginTop: 10, lineHeight: 1.6 }}>
+            Code sent to{' '}
+            <span style={{ fontWeight: 500, color: c.ink }}>+91 {mobile || 'your number'}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              background: 'none', border: 'none', padding: 0, marginTop: 4,
+              fontSize: 12.5, fontWeight: 500, color: c.primary, cursor: 'pointer',
+            }}
+          >
+            Change number
+          </button>
+        </div>
+
+        {/* ── OTP form ── */}
+        <form onSubmit={handleSubmit} style={{ marginTop: 36 }}>
+
+          {/* Boxes — grid so each cell is always exactly 1/6 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${N}, 1fr)`,
+            gap: 8,
+          }}>
+            {digits.map((d, i) => {
+              const isFocused = focusIdx === i;
+              const isFilled  = d !== '';
+              return (
+                <input
+                  key={i}
+                  ref={el => { refs.current[i] = el; }}
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  value={d}
+                  autoComplete={i === 0 ? 'one-time-code' : 'off'}
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  onChange={e => handleChange(i, e)}
+                  onKeyDown={e => handleKeyDown(i, e)}
+                  onFocus={() => setFocusIdx(i)}
+                  onBlur={() => setFocusIdx(-1)}
+                  onPaste={handlePaste}
+                  style={{
+                    /* layout */
+                    display: 'block',
+                    width: '100%',
+                    height: 56,
+                    boxSizing: 'border-box',
+                    padding: 0,
+                    /* look */
+                    borderRadius: 14,
+                    border: `2px solid ${isFocused ? c.primary : isFilled ? 'rgba(15,107,83,0.55)' : c.line}`,
+                    boxShadow: isFocused ? `0 0 0 3px ${c.primaryGlow}` : 'none',
+                    background: isFilled ? c.primarySoft : '#fff',
+                    /* text — no color transition to avoid dark-on-dark flash */
+                    textAlign: 'center',
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: c.ink,
+                    fontFamily: 'inherit',
+                    /* remove default input chrome */
+                    outline: 'none',
+                    caretColor: 'transparent',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'textfield',
+                    /* only transition border + shadow, NOT background or color */
+                    transition: 'border-color 0.14s ease, box-shadow 0.14s ease',
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
             {digits.map((d, i) => (
-              <input
-                key={i}
-                id={`otp-${i}`}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={1}
-                value={d}
-                autoFocus={i === 0}
-                onChange={(e) => handleChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                style={{
-                  flex: 1, height: 64, borderRadius: 14,
-                  background: d ? '#fff' : '#fff',
-                  border: `1.5px solid ${i === digits.findIndex(x => x === '') && d === '' ? c.primary : (d ? c.line : 'transparent')}`,
-                  boxShadow: i === digits.findIndex(x => x === '') && d === '' ? `0 0 0 4px ${c.primaryGlow}` : 'none',
-                  textAlign: 'center', fontSize: 26, fontWeight: 500, color: c.ink,
-                  outline: 'none', fontFamily: 'inherit',
-                  transition: 'border-color 0.15s, box-shadow 0.15s',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = c.primary;
-                  e.target.style.boxShadow = `0 0 0 4px ${c.primaryGlow}`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = d ? c.line : 'transparent';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
+              <div key={i} style={{
+                flex: 1, height: 2.5, borderRadius: 2,
+                background: d ? c.primary : c.line,
+                transition: 'background 0.12s',
+              }} />
             ))}
           </div>
 
-          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 400, color: c.muted }}>Didn't get it?</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Icon name="clock" size={13} color={c.faint} stroke={1.8} />
-              <span style={{ fontSize: 12.5, fontWeight: 500, color: c.muted }}>Resend in 0:24</span>
-            </div>
-          </div>
-
-          {/* Auto-detect indicator */}
+          {/* Resend */}
           <div style={{
-            marginTop: 22, padding: 14, borderRadius: 14,
-            background: c.primarySoft, border: `1px solid rgba(15,107,83,0.13)`,
-            display: 'flex', alignItems: 'center', gap: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginTop: 16,
           }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 11,
-              background: c.primary,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon name="check" size={17} color="#fff" stroke={2.6} />
-            </div>
-            <div>
-              <div style={{ fontSize: 12.5, fontWeight: 500, color: c.ink }}>SMS detected · auto-filling</div>
-              <div style={{ fontSize: 11, fontWeight: 400, color: c.muted, marginTop: 2 }}>From DM-BUYTGR · 2 sec ago</div>
-            </div>
+            <span style={{ fontSize: 13, fontWeight: 400, color: c.muted }}>
+              {timer > 0
+                ? <>Resend in{' '}<span style={{ fontWeight: 500, color: c.ink }}>0:{String(timer).padStart(2, '0')}</span></>
+                : "Didn't receive it?"
+              }
+            </span>
+            <button
+              type="button"
+              disabled={timer > 0}
+              onClick={() => {
+                setTimer(29);
+                setDigits(Array(N).fill(''));
+                focus(0);
+              }}
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                fontSize: 13, fontWeight: 500,
+                color: timer > 0 ? c.faint : c.primary,
+                cursor: timer > 0 ? 'default' : 'pointer',
+                transition: 'color 0.15s',
+              }}
+            >
+              Resend OTP
+            </button>
           </div>
 
-          <div style={{ flex: 1, marginTop: 'auto', paddingTop: 32 }}>
+          {/* CTA */}
+          <div style={{ marginTop: 32 }}>
             <Button
-              type="submit" variant="primary" size="lg" full
+              type="submit"
+              variant="primary" size="lg" full
               iconRight={<Icon name="arrowR" size={16} color="#fff" stroke={2} />}
+              style={{ opacity: filled === N ? 1 : 0.45, transition: 'opacity 0.18s' }}
             >
-              Verify & continue
+              Verify &amp; continue
             </Button>
             <div style={{
-              textAlign: 'center', marginTop: 14, fontSize: 11.5, fontWeight: 400,
-              color: c.muted, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 6, marginTop: 14,
+              fontSize: 11.5, fontWeight: 400, color: c.muted,
             }}>
               <Icon name="lock" size={11} color={c.muted} stroke={1.8} />
               Secure · end-to-end encrypted
             </div>
           </div>
+
         </form>
       </div>
     </div>
