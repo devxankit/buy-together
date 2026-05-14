@@ -1,74 +1,103 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Plus, Tag, UserCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { c } from '../../design/tokens';
+import Icon from '../ui/Icon';
+
+const TABS = [
+  { id: 'home',    path: '/',             icon: 'home',     label: 'Home'    },
+  { id: 'groups',  path: '/groups',        icon: 'users',    label: 'Groups'  },
+  { id: 'create',  path: '/groups/create', icon: 'plus',     label: null,  create: true },
+  { id: 'deals',   path: '/deals',         icon: 'tag',      label: 'Deals'   },
+  { id: 'profile', path: '/profile',       icon: 'verified', label: 'Profile' },
+];
+
+const getActive = (pathname) => {
+  if (pathname === '/')                   return 'home';
+  if (pathname === '/groups/create')      return 'create';
+  if (pathname.startsWith('/groups'))     return 'groups';
+  if (pathname.startsWith('/deals'))      return 'deals';
+  if (pathname.startsWith('/profile'))    return 'profile';
+  if (pathname.startsWith('/notifications')) return 'home';
+  return 'home';
+};
 
 const BottomNav = () => {
-  const location = useLocation();
-  const path = location.pathname;
-
-  const tabs = [
-    { name: 'Home', icon: Home, path: '/' },
-    { name: 'Groups', icon: Users, path: '/groups' },
-    { name: 'Create', icon: Plus, path: '/groups/create', isAction: true },
-    { name: 'Deals', icon: Tag, path: '/deals' },
-    { name: 'Profile', icon: UserCircle, path: '/profile' },
-  ];
+  const { pathname } = useLocation();
+  const active = getActive(pathname);
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-2 pb-5 pt-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-lg lg:bg-white/90">
-      <div className="max-w-md mx-auto flex items-center justify-around">
-        {tabs.map((tab) => {
-          const isActive = path === tab.path;
-          const Icon = tab.icon;
-          
+    <nav
+      className="fixed-bottom-bar"
+      style={{
+        background: 'rgba(255,255,255,0.94)',
+        backdropFilter: 'blur(32px)',
+        WebkitBackdropFilter: 'blur(32px)',
+        borderTop: '1px solid rgba(229,229,234,0.70)',
+        boxShadow: '0 -6px 30px -8px rgba(15,15,18,0.07)',
+      }}
+    >
+      {/* Tab row */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        paddingInline: 4,
+      }}>
+        {TABS.map(tab => {
+          const isActive = active === tab.id;
+
+          /* ── Create (+) button ── */
+          if (tab.create) {
+            return (
+              <div key={tab.id} className="bn-create-slot">
+                <Link
+                  to={tab.path}
+                  className="bn-create"
+                  aria-label="Create group"
+                >
+                  <Icon name="plus" size={22} color="#fff" stroke={2.6} />
+                </Link>
+              </div>
+            );
+          }
+
+          /* ── Regular tab ── */
           return (
-            <Link 
-              key={tab.name}
+            <Link
+              key={tab.id}
               to={tab.path}
-              className="flex-1 relative flex flex-col items-center justify-center gap-0.5 group py-0.5"
+              className={`bn-tab${isActive ? ' active' : ''}`}
+              aria-current={isActive ? 'page' : undefined}
             >
-              {/* Active Background Indicator (Sliding) */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-x-2 inset-y-1 bg-[#ff7a00]/5 rounded-xl -z-10"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-              )}
+              {/* Soft background pill */}
+              <span className="bn-pill" />
 
-              {/* Icon Container */}
-              <motion.div
-                animate={{ 
-                  scale: isActive ? 1.12 : 1,
-                  y: isActive ? -1 : 0
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`relative p-1.5 rounded-xl transition-colors ${
-                  isActive ? 'text-[#ff7a00]' : 'text-gray-400'
-                }`}
-              >
-                <Icon 
-                  size={isActive ? 24 : 22} 
-                  strokeWidth={isActive ? 2.5 : 2}
+              {/* Icon */}
+              <span className="bn-icon">
+                <Icon
+                  name={tab.icon}
+                  size={22}
+                  stroke={isActive ? 2.2 : 1.5}
+                  color={isActive ? c.primary : c.faint}
                 />
-              </motion.div>
+              </span>
 
-              <motion.span 
-                animate={{ 
-                  opacity: isActive ? 1 : 0.6,
-                }}
-                className={`text-[9px] font-black tracking-widest uppercase ${
-                  isActive ? 'text-gray-900' : 'text-gray-400'
-                }`}
+              {/* Label */}
+              <span
+                className="bn-label"
+                style={{ color: isActive ? c.primary : c.faint }}
               >
-                {tab.name}
-              </motion.span>
+                {tab.label}
+              </span>
+
+              {/* Active indicator pip */}
+              <span className="bn-pip" />
             </Link>
           );
         })}
       </div>
-    </div>
+
+      {/* iOS home-bar spacer */}
+      <div style={{ height: 'max(16px, env(safe-area-inset-bottom, 0px))' }} />
+    </nav>
   );
 };
 

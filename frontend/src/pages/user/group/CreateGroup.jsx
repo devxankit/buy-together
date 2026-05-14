@@ -1,327 +1,199 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Smartphone, Car, Tv, Bike, ShoppingBag, Home, MapPin, Users, ChevronRight, CheckCircle2, Sparkles } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from '../../../hooks/useDispatch';
-import { createGroup } from '../../../redux/asyncActions/groupActions';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { c } from '../../../design/tokens';
+import Icon from '../../../components/ui/Icon';
+import Chip from '../../../components/ui/Chip';
+import Button from '../../../components/ui/Button';
+import Progress from '../../../components/ui/Progress';
 
-const CATEGORIES = [
-  { id: 'electronics', label: 'Electronics', icon: Smartphone, color: 'text-orange-500 bg-orange-50 border-orange-100' },
-  { id: 'cars', label: 'Cars', icon: Car, color: 'text-blue-500 bg-blue-50 border-blue-100' },
-  { id: 'appliances', label: 'Appliances', icon: Tv, color: 'text-purple-500 bg-purple-50 border-purple-100' },
-  { id: 'bikes', label: 'Bikes', icon: Bike, color: 'text-green-500 bg-green-50 border-green-100' },
-  { id: 'fashion', label: 'Fashion', icon: ShoppingBag, color: 'text-pink-500 bg-pink-50 border-pink-100' },
-  { id: 'home', label: 'Home & Living', icon: Home, color: 'text-yellow-600 bg-yellow-50 border-yellow-100' },
-];
-
-const STEPS = ['Product', 'Category', 'Target', 'Review'];
-
-const StepIndicator = ({ current }) => (
-  <div className="flex items-center justify-center gap-2 mb-8">
-    {STEPS.map((step, i) => (
-      <React.Fragment key={step}>
-        <div className="flex flex-col items-center gap-1">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-            i < current ? 'bg-green-500 text-white' :
-            i === current ? 'bg-gray-900 text-white' :
-            'bg-gray-100 text-gray-400'
-          }`}>
-            {i < current ? <CheckCircle2 size={14} /> : i + 1}
-          </div>
-          <span className={`text-[10px] font-black uppercase tracking-wide ${i === current ? 'text-gray-900' : 'text-gray-400'}`}>
-            {step}
-          </span>
-        </div>
-        {i < STEPS.length - 1 && (
-          <div className={`flex-1 h-0.5 mb-4 rounded-full transition-colors ${i < current ? 'bg-green-500' : 'bg-gray-100'}`} />
-        )}
-      </React.Fragment>
-    ))}
-  </div>
-);
+const CATEGORIES = ['Electronics', 'Smartphones', 'Laptops', 'Cars', 'Appliances', 'Gaming', 'Grocery', 'Property'];
 
 const CreateGroup = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(2);
+  const [product, setProduct] = useState('iPhone 16 Pro 256GB');
+  const [target, setTarget] = useState(10);
+  const [price, setPrice] = useState('1,19,900');
+  const [selectedCats, setSelectedCats] = useState(['Electronics', 'Smartphones']);
 
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    category: '',
-    targetCount: '',
-    location: '',
-    priceRange: '',
-  });
-
-  const update = (key, val) => setForm(f => ({ ...f, [key]: val }));
-  const next = () => setStep(s => s + 1);
-  const back = () => setStep(s => s - 1);
-
-  const handleLaunch = () => {
-    dispatch(createGroup({ name: form.name, description: form.description, category: form.category }));
-    navigate('/groups');
+  const toggleCat = (cat) => {
+    setSelectedCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
   };
 
-  const selectedCat = CATEGORIES.find(c => c.id === form.category);
-
   return (
-    <div className="flex flex-col min-h-screen pb-20 bg-[#fafafa]">
+    <div style={{ background: c.surfaceAlt, minHeight: '100vh', position: 'relative' }}>
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 bg-white border-b border-gray-50 flex items-center gap-3 sticky top-0 z-20">
-        {step > 0 ? (
-          <button onClick={back} className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
-            <ArrowLeft size={18} className="text-gray-600" />
-          </button>
-        ) : (
-          <Link to="/groups" className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
-            <ArrowLeft size={18} className="text-gray-600" />
-          </Link>
-        )}
+      <div style={{
+        padding: '16px 20px 14px', background: '#fff',
+        borderBottom: `1px solid ${c.line}`,
+        display: 'flex', alignItems: 'center', gap: 12,
+      }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{ width: 38, height: 38, borderRadius: 12, background: c.surfaceAlt, border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+        >
+          <Icon name="arrowL" size={18} color={c.ink} stroke={1.8} />
+        </button>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 500, color: c.ink, letterSpacing: -0.3 }}>New group</div>
+          <div style={{ fontSize: 11.5, fontWeight: 400, color: c.faint, marginTop: 1 }}>Step {step} of 4</div>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 500, color: c.faint, cursor: 'pointer' }}>Cancel</span>
+      </div>
+
+      {/* Stepper */}
+      <div style={{ padding: '16px 20px 0', display: 'flex', gap: 6 }}>
+        {[1,2,3,4].map(s => (
+          <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? c.primary : c.line }} />
+        ))}
+      </div>
+
+      {/* Form */}
+      <div style={{ padding: '20px 20px 140px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
-          <h1 className="font-black text-gray-900 text-base">Create Group</h1>
-          <p className="text-[11px] text-gray-400 font-bold">Step {step + 1} of {STEPS.length}</p>
+          <div style={{ fontSize: 24, fontWeight: 500, letterSpacing: -0.6, color: c.ink, lineHeight: 1.1 }}>
+            What are you<br />
+            <span style={{ color: c.primary }}>buying together?</span>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 400, color: c.muted, marginTop: 8 }}>
+            We'll suggest similar groups so you don't duplicate.
+          </div>
+        </div>
+
+        {/* Product name */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: c.muted, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>Product</div>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: '#fff', border: `1.5px solid ${c.primary}`,
+            borderRadius: 14, padding: '14px 16px',
+            boxShadow: `0 0 0 4px ${c.primaryGlow}`,
+          }}>
+            <input
+              value={product}
+              onChange={e => setProduct(e.target.value)}
+              style={{ flex: 1, fontSize: 14.5, fontWeight: 500, color: c.ink, background: 'none', border: 'none', outline: 'none', fontFamily: 'inherit' }}
+              placeholder="e.g. iPhone 16 Pro 256GB"
+            />
+            <Icon name="check" size={18} color={c.saving} stroke={2.8} />
+          </div>
+
+          {/* AI suggestion */}
+          <div style={{
+            marginTop: 10, padding: 12, borderRadius: 14,
+            background: c.infoSoft, border: `1px solid rgba(44,86,128,0.13)`,
+            display: 'flex', gap: 10,
+          }}>
+            <div style={{ width: 30, height: 30, borderRadius: 10, background: c.info, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="sparkle" size={14} color="#fff" stroke={2.6} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 500, color: c.ink }}>3 similar groups already exist</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: c.muted, marginTop: 2, lineHeight: 1.35 }}>iPhone 16 Pro · 7/10 joined · Lajpat Nagar</div>
+              <button style={{
+                marginTop: 8, fontSize: 11, fontWeight: 500, color: c.info,
+                background: 'transparent', border: `1px solid ${c.info}`,
+                padding: '6px 10px', borderRadius: 99, cursor: 'pointer',
+              }}>Join existing instead</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Category */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: c.muted, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>Category</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => toggleCat(cat)}
+                style={{
+                  padding: '8px 12px', borderRadius: 99,
+                  background: selectedCats.includes(cat) ? c.ink : '#fff',
+                  color: selectedCats.includes(cat) ? '#fff' : c.ink,
+                  fontSize: 12, fontWeight: 500,
+                  border: selectedCats.includes(cat) ? 'none' : `1px solid ${c.line}`,
+                  display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer',
+                }}
+              >
+                {cat}
+                {selectedCats.includes(cat) && <Icon name="check" size={12} color="#fff" stroke={3} />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Target & price */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 500, color: c.muted, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>Target buyers</div>
+            <div style={{ background: '#fff', borderRadius: 14, padding: 14, border: `1px solid ${c.line}` }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 28, fontWeight: 500, color: c.ink, letterSpacing: -0.6 }}>{target}</span>
+                <span style={{ fontSize: 12, fontWeight: 400, color: c.muted }}>people</span>
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <input
+                  type="range" min={2} max={50} value={target}
+                  onChange={e => setTarget(+e.target.value)}
+                  style={{ width: '100%', accentColor: c.primary }}
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 500, color: c.muted, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>Target price</div>
+            <div style={{ background: '#fff', borderRadius: 14, padding: 14, border: `1px solid ${c.line}` }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 16, fontWeight: 500, color: c.ink }}>₹</span>
+                <input
+                  value={price}
+                  onChange={e => setPrice(e.target.value)}
+                  style={{ fontSize: 18, fontWeight: 500, color: c.ink, background: 'none', border: 'none', outline: 'none', width: '100%', letterSpacing: -0.4, fontFamily: 'inherit' }}
+                />
+              </div>
+              <div style={{ fontSize: 10.5, fontWeight: 500, color: c.saving, marginTop: 6 }}>↓ ₹10,000 vs MRP</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Location */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: c.muted, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>Location</div>
+          <div style={{
+            background: '#fff', borderRadius: 14, padding: '14px 16px',
+            border: `1px solid ${c.line}`,
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <Icon name="pin" size={18} color={c.primary} stroke={2.4} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: c.ink }}>Lajpat Nagar, Delhi</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: c.faint, marginTop: 1 }}>Radius: 5 km · 12,400 users</div>
+            </div>
+            <Icon name="chevR" size={16} color={c.faint} stroke={2.4} />
+          </div>
         </div>
       </div>
 
-      <div className="px-5 pt-8 flex-1">
-        <StepIndicator current={step} />
-
-        {/* Step 0: Product Info */}
-        {step === 0 && (
-          <div key="step0">
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-1">What are you buying?</h2>
-              <p className="text-sm text-gray-400 font-medium">Tell us about the product you want to group buy.</p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 block">Group Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => update('name', e.target.value)}
-                  className="w-full px-4 py-4 bg-white rounded-2xl border border-gray-200 text-gray-900 font-medium text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder="e.g. iPhone 16 Pro Max Bulk Buy"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 block">Description</label>
-                <textarea
-                  rows={4}
-                  value={form.description}
-                  onChange={e => update('description', e.target.value)}
-                  className="w-full px-4 py-4 bg-white rounded-2xl border border-gray-200 text-gray-900 font-medium text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
-                  placeholder="Describe what you're looking for and the deal you expect..."
-                />
-              </div>
-
-              {form.name && (
-                <div className="flex items-center gap-2 bg-secondary/5 border border-secondary/10 rounded-2xl px-4 py-3">
-                  <Sparkles size={14} className="text-secondary shrink-0" />
-                  <p className="text-[12px] font-bold text-secondary">
-                    AI detected: <span className="font-black">Electronics</span> category
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={next}
-              disabled={!form.name.trim()}
-              className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-40 disabled:pointer-events-none"
-            >
-              Continue →
-            </button>
-          </div>
-        )}
-
-        {/* Step 1: Category */}
-        {step === 1 && (
-          <div key="step1">
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-1">Pick a category</h2>
-              <p className="text-sm text-gray-400 font-medium">This helps us connect you with the right buyers and vendors.</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {CATEGORIES.map(cat => {
-                const isSelected = form.category === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => update('category', cat.id)}
-                    className={`p-5 rounded-3xl border-2 flex flex-col items-center gap-3 transition-all ${
-                      isSelected
-                        ? 'border-gray-900 bg-gray-900 shadow-xl shadow-black/10'
-                        : `border-gray-100 bg-white ${cat.color.split(' ').slice(1).join(' ')}`
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                      isSelected ? 'bg-white/10' : cat.color.split(' ')[1]
-                    }`}>
-                      <cat.icon size={24} className={isSelected ? 'text-white' : cat.color.split(' ')[0]} />
-                    </div>
-                    <span className={`text-xs font-black ${isSelected ? 'text-white' : 'text-gray-700'}`}>
-                      {cat.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={next}
-              disabled={!form.category}
-              className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-40 disabled:pointer-events-none"
-            >
-              Continue →
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Target */}
-        {step === 2 && (
-          <div key="step2">
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-1">Set your target</h2>
-              <p className="text-sm text-gray-400 font-medium">How many buyers do you need to unlock the best deal?</p>
-            </div>
-
-            <div className="space-y-5">
-              {/* Target Count */}
-              <div>
-                <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 block">
-                  Number of Buyers Needed
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[5, 10, 15, 20].map(n => (
-                    <button
-                      key={n}
-                      onClick={() => update('targetCount', String(n))}
-                      className={`py-3 rounded-2xl font-black text-sm border-2 transition-all ${
-                        form.targetCount === String(n)
-                          ? 'border-gray-900 bg-gray-900 text-white'
-                          : 'border-gray-100 bg-white text-gray-700'
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="number"
-                  value={form.targetCount}
-                  onChange={e => update('targetCount', e.target.value)}
-                  className="w-full mt-3 px-4 py-4 bg-white rounded-2xl border border-gray-200 text-gray-900 font-medium text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder="Or enter custom number..."
-                  min="2"
-                />
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 block">
-                  Location
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
-                  <input
-                    type="text"
-                    value={form.location}
-                    onChange={e => update('location', e.target.value)}
-                    className="w-full pl-10 pr-4 py-4 bg-white rounded-2xl border border-gray-200 text-gray-900 font-medium text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                    placeholder="e.g. Delhi NCR, Mumbai..."
-                  />
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div>
-                <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider mb-2 block">
-                  Expected Price / Budget (optional)
-                </label>
-                <input
-                  type="text"
-                  value={form.priceRange}
-                  onChange={e => update('priceRange', e.target.value)}
-                  className="w-full px-4 py-4 bg-white rounded-2xl border border-gray-200 text-gray-900 font-medium text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder="e.g. ₹90,000 – ₹1,10,000"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={next}
-              disabled={!form.targetCount || !form.location}
-              className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-40 disabled:pointer-events-none"
-            >
-              Review Group →
-            </button>
-          </div>
-        )}
-
-        {/* Step 3: Review */}
-        {step === 3 && (
-          <div key="step3">
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-1">Review & Launch</h2>
-              <p className="text-sm text-gray-400 font-medium">Double-check your group details before going live.</p>
-            </div>
-
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-black/4 overflow-hidden mb-6">
-              {/* Preview Header */}
-              <div className="bg-gray-900 px-6 py-5">
-                <div className="flex items-center gap-1.5 mb-2">
-                  {selectedCat && (
-                    <span className="text-[10px] font-black text-white/50 uppercase tracking-wider">
-                      {selectedCat.label}
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-black text-white text-lg leading-tight">{form.name}</h3>
-                {form.description && (
-                  <p className="text-sm text-white/50 font-medium mt-1 line-clamp-2">{form.description}</p>
-                )}
-              </div>
-
-              <div className="p-6 space-y-4">
-                {[
-                  { icon: Users, label: 'Target buyers', value: form.targetCount },
-                  { icon: MapPin, label: 'Location', value: form.location },
-                  ...(form.priceRange ? [{ icon: ChevronRight, label: 'Budget', value: form.priceRange }] : []),
-                ].map(row => (
-                  <div key={row.label} className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center">
-                      <row.icon size={15} className="text-gray-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-[11px] font-bold text-gray-400">{row.label}</div>
-                      <div className="text-sm font-black text-gray-900">{row.value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-secondary/5 border border-secondary/10 rounded-2xl p-4 mb-6 flex items-start gap-3">
-              <Sparkles size={16} className="text-secondary shrink-0 mt-0.5" />
-              <p className="text-[12px] font-bold text-secondary leading-relaxed">
-                Your group will be visible to buyers in <span className="font-black">{form.location}</span>.
-                Vendors matching your category will be notified automatically.
-              </p>
-            </div>
-
-            <button
-              onClick={handleLaunch}
-              className="w-full bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/25 hover:bg-orange-600 transition-all"
-            >
-              🚀 Launch Group
-            </button>
-          </div>
-        )}
+      {/* Sticky CTA */}
+      <div className="fixed-bottom-bar" style={{
+        padding: '14px 20px',
+        paddingBottom: 'max(24px, env(safe-area-inset-bottom, 0px))',
+        background: 'rgba(246,246,248,0.96)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderTop: `1px solid ${c.line}`,
+        display: 'flex', gap: 10,
+      }}>
+        <Button variant="soft" size="lg" onClick={() => setStep(s => Math.max(1, s - 1))}>Back</Button>
+        <Button
+          variant="primary" size="lg"
+          iconRight={<Icon name="arrowR" size={18} color="#fff" stroke={2.4} />}
+          style={{ flex: 1 }}
+          onClick={() => step < 4 ? setStep(s => s + 1) : navigate('/groups')}
+        >
+          {step < 4 ? 'Continue' : 'Review & launch'}
+        </Button>
       </div>
     </div>
   );

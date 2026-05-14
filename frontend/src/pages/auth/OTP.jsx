@@ -1,156 +1,170 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ShieldCheck, ArrowLeft, ArrowRight } from 'lucide-react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from '../../hooks/useDispatch';
 import { setAuth } from '../../redux/slices/authSlice';
+import { c } from '../../design/tokens';
+import Icon from '../../components/ui/Icon';
+import Button from '../../components/ui/Button';
 
 const OTP = () => {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  
-  const { role, mobile, name, email, flow } = location.state || { role: 'user', mobile: '', flow: 'login' };
+  const { role = 'user', mobile = '', name, email, flow = 'login' } = location.state || {};
 
-  const handleChange = (index, value) => {
-    if (isNaN(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1);
-    setOtp(newOtp);
-    
-    // Auto focus next
-    if (value && index < 5) {
-      document.getElementById(`otp-${index + 1}`).focus();
-    }
+  const handleChange = (i, val) => {
+    if (isNaN(val)) return;
+    const next = [...digits];
+    next[i] = val.slice(-1);
+    setDigits(next);
+    if (val && i < 5) document.getElementById(`otp-${i + 1}`)?.focus();
   };
 
-  const handleKeyDown = (index, e) => {
-    // Handle backspace
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      document.getElementById(`otp-${index - 1}`).focus();
+  const handleKeyDown = (i, e) => {
+    if (e.key === 'Backspace' && !digits[i] && i > 0) {
+      document.getElementById(`otp-${i - 1}`)?.focus();
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const otpValue = otp.join('');
-    
-    if (otpValue.length === 6) {
-      // Mock Login logic
+    if (digits.join('').length === 6) {
       dispatch(setAuth({
-        user: { 
+        user: {
           name: name || (role === 'vendor' ? 'Premium Vendor' : 'Verified User'),
           email: email || '',
-          mobile: mobile,
-          role: role 
+          mobile,
+          role,
         },
-        token: 'mock-jwt-token-' + Date.now()
+        token: 'mock-jwt-' + Date.now(),
       }));
-
-      // Redirect to home page
-      navigate('/');
+      navigate(role === 'vendor' ? '/vendor/dashboard' : '/location');
     }
   };
 
-  const primaryColor = role === 'vendor' ? '#0052cc' : '#ff7a00';
-
   return (
-    <div className="min-h-screen bg-white md:bg-[#f8f9fa] md:flex md:items-center md:justify-center">
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="bg-white min-h-screen w-full md:min-h-0 md:h-auto md:max-w-[440px] md:rounded-[3rem] md:shadow-2xl md:shadow-black/5 overflow-hidden flex flex-col relative"
-      >
-        {/* Header with Curve */}
-        <div 
-          className="relative h-80 shrink-0 overflow-hidden transition-colors duration-500"
-          style={{ backgroundColor: primaryColor }}
-        >
-          <button 
+    <div style={{ minHeight: '100vh', background: c.surfaceAlt, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, padding: 'max(44px, calc(env(safe-area-inset-top, 0px) + 20px)) 24px 32px', display: 'flex', flexDirection: 'column' }}>
+        {/* Back + progress */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
             onClick={() => navigate(-1)}
-            className="absolute top-10 left-10 z-20 inline-flex items-center gap-2 text-white/80 hover:text-white font-bold transition-all group"
+            style={{
+              width: 40, height: 40, borderRadius: 12, background: '#fff',
+              border: `1px solid ${c.line}`,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}
           >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-xs uppercase tracking-widest">Back</span>
+            <Icon name="arrowL" size={18} color={c.ink} stroke={1.8} />
           </button>
-
-          <div className="absolute bottom-24 left-10 z-10">
-            <h1 className="text-[40px] font-bold text-white mb-2 leading-tight tracking-tight">Security <br /> Code</h1>
-            <p className="text-white/90 font-medium text-[15px]">Sent to +91 {mobile}</p>
-          </div>
-
-          {/* Curve SVG - Deepened */}
-          <div className="absolute bottom-0 left-0 w-full leading-[0] z-0">
-            <svg viewBox="0 0 500 150" preserveAspectRatio="none" className="w-full h-44">
-              <path d="M0,80 C150,160 350,0 500,80 L500,150 L0,150 Z" className="fill-white"></path>
-            </svg>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[1,2,3].map(s => (
+              <div key={s} style={{ width: 22, height: 3, background: s <= 2 ? c.primary : c.line, borderRadius: 2 }} />
+            ))}
           </div>
         </div>
 
-        {/* Form Section */}
-        <div className="px-10 pb-12 pt-6 -mt-12 relative z-10 bg-white flex-1 md:flex-none">
-          <div className="flex flex-col items-center mb-10">
-            <div 
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-black/5 border border-gray-50"
-              style={{ backgroundColor: `${primaryColor}08` }}
+        {/* Icon + heading */}
+        <div style={{ marginTop: 36 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 16,
+            background: c.primarySoft, border: `1px solid rgba(15,107,83,0.20)`,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="shield" size={24} color={c.primary} stroke={1.8} />
+          </div>
+          <div style={{ fontSize: 36, fontWeight: 400, letterSpacing: -1.2, lineHeight: 1.05, marginTop: 20, color: c.ink }}>
+            Verify it's<br />
+            <span style={{ color: c.primary }}>really you.</span>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 400, color: c.muted, marginTop: 12, lineHeight: 1.5 }}>
+            We've sent a 6-digit code to{' '}
+            <span style={{ color: c.ink, fontWeight: 500 }}>+91 {mobile}</span>.{' '}
+            <span onClick={() => navigate(-1)} style={{ color: c.primary, fontWeight: 500, cursor: 'pointer' }}>Change number</span>
+          </div>
+        </div>
+
+        {/* OTP inputs */}
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 32 }}>
+            {digits.map((d, i) => (
+              <input
+                key={i}
+                id={`otp-${i}`}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={1}
+                value={d}
+                autoFocus={i === 0}
+                onChange={(e) => handleChange(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(i, e)}
+                style={{
+                  flex: 1, height: 64, borderRadius: 14,
+                  background: d ? '#fff' : '#fff',
+                  border: `1.5px solid ${i === digits.findIndex(x => x === '') && d === '' ? c.primary : (d ? c.line : 'transparent')}`,
+                  boxShadow: i === digits.findIndex(x => x === '') && d === '' ? `0 0 0 4px ${c.primaryGlow}` : 'none',
+                  textAlign: 'center', fontSize: 26, fontWeight: 500, color: c.ink,
+                  outline: 'none', fontFamily: 'inherit',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = c.primary;
+                  e.target.style.boxShadow = `0 0 0 4px ${c.primaryGlow}`;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = d ? c.line : 'transparent';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            ))}
+          </div>
+
+          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 400, color: c.muted }}>Didn't get it?</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon name="clock" size={13} color={c.faint} stroke={1.8} />
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: c.muted }}>Resend in 0:24</span>
+            </div>
+          </div>
+
+          {/* Auto-detect indicator */}
+          <div style={{
+            marginTop: 22, padding: 14, borderRadius: 14,
+            background: c.primarySoft, border: `1px solid rgba(15,107,83,0.13)`,
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 11,
+              background: c.primary,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="check" size={17} color="#fff" stroke={2.6} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12.5, fontWeight: 500, color: c.ink }}>SMS detected · auto-filling</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: c.muted, marginTop: 2 }}>From DM-BUYTGR · 2 sec ago</div>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, marginTop: 'auto', paddingTop: 32 }}>
+            <Button
+              type="submit" variant="primary" size="lg" full
+              iconRight={<Icon name="arrowR" size={16} color="#fff" stroke={2} />}
             >
-              <ShieldCheck size={32} style={{ color: primaryColor }} />
+              Verify & continue
+            </Button>
+            <div style={{
+              textAlign: 'center', marginTop: 14, fontSize: 11.5, fontWeight: 400,
+              color: c.muted, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
+            }}>
+              <Icon name="lock" size={11} color={c.muted} stroke={1.8} />
+              Secure · end-to-end encrypted
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Verify OTP</h2>
-            <p className="text-gray-400 text-[15px] font-medium mt-1">Enter the 6-digit code</p>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-10">
-            <div className="flex justify-center gap-2.5">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength="1"
-                  value={digit}
-                  autoFocus={index === 0}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-[48px] h-[60px] text-center text-2xl font-bold bg-gray-50 border border-gray-100 rounded-2xl outline-none transition-all focus:bg-white focus:ring-4 placeholder:text-gray-200"
-                  style={{ '--tw-ring-color': `${primaryColor}0D` }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = primaryColor;
-                    e.target.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#f3f4f6';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="pt-2">
-              <button 
-                type="submit"
-                className="w-full text-white py-4.5 rounded-2xl font-bold text-lg shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-3"
-                style={{ backgroundColor: primaryColor, boxShadow: `0 20px 40px -12px ${primaryColor}33` }}
-              >
-                <span>Verify & Continue</span>
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-12 text-center">
-            <p className="text-gray-400 text-[15px] font-medium">
-              Didn't receive the code? <br />
-              <button className="font-bold mt-2 hover:opacity-80 transition-opacity" style={{ color: primaryColor }}>
-                Resend New Code
-              </button>
-            </p>
-          </div>
-        </div>
-      </motion.div>
+        </form>
+      </div>
     </div>
   );
 };

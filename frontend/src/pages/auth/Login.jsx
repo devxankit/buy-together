@@ -1,215 +1,190 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, User, Mail, ArrowRight, CheckCircle2, ChevronLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from '../../hooks/useDispatch';
-import { login, register } from '../../redux/asyncActions/authActions';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { c } from '../../design/tokens';
+import Icon from '../../components/ui/Icon';
+import Button from '../../components/ui/Button';
 
 const Login = () => {
-  const [role, setRole] = useState('user'); // 'user' or 'vendor'
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    mobile: ''
-  });
-  const dispatch = useDispatch();
+  const [role, setRole] = useState('user');
+  const [mobile, setMobile] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const navigate = useNavigate();
 
-  const primaryColor = role === 'vendor' ? '#0052cc' : '#ff7a00';
-  const hoverColor = role === 'vendor' ? '#0041a3' : '#e66e00';
-  const shadowColor = role === 'vendor' ? 'rgba(0, 82, 204, 0.2)' : 'rgba(255, 122, 0, 0.2)';
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleAuth = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (isLogin) {
-      navigate('/otp', { state: { role, mobile: formData.mobile, flow: 'login' } });
-    } else {
-      navigate('/otp', { state: { ...formData, role, flow: 'signup' } });
-    }
+    navigate('/otp', { state: { role, mobile } });
   };
 
   return (
-    <div className="min-h-screen bg-white md:bg-[#f8f9fa] md:flex md:items-center md:justify-center">
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="bg-white min-h-screen w-full md:min-h-0 md:h-auto md:max-w-[440px] md:rounded-[3rem] md:shadow-2xl md:shadow-black/5 overflow-hidden flex flex-col relative"
-      >
-        {/* Header with Deeper Curve */}
-        <div 
-          className="relative h-80 shrink-0 overflow-hidden transition-colors duration-500"
-          style={{ backgroundColor: primaryColor }}
-        >
-          <div className="absolute bottom-24 left-10 z-10">
-            <h1 className="text-[40px] font-bold text-white mb-2 leading-tight tracking-tight">
-              {role === 'vendor' ? 'Business' : (isLogin ? <>Welcome <br /> Back</> : <>Create <br /> Account</>)}
-              {role === 'vendor' && <div className="text-xl opacity-80 -mt-1">Partner Portal</div>}
-            </h1>
-            <p className="text-white/90 font-medium text-[15px]">
-              {isLogin ? "Sign in to your account" : "Sign up to get started"}
-            </p>
-          </div>
+    <div style={{ minHeight: '100vh', background: c.surfaceAlt, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, padding: 'max(44px, calc(env(safe-area-inset-top, 0px) + 20px)) 24px 32px', display: 'flex', flexDirection: 'column' }}>
+        {/* Back */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
+            onClick={() => navigate('/onboarding')}
+            style={{
+              width: 40, height: 40, borderRadius: 12, background: '#fff',
+              border: `1px solid ${c.line}`,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <Icon name="arrowL" size={18} color={c.ink} stroke={1.8} />
+          </button>
+          <span style={{ fontSize: 12, fontWeight: 400, color: c.muted }}>Need help?</span>
+        </div>
 
-          {/* Curve SVG - Deepened */}
-          <div className="absolute bottom-0 left-0 w-full leading-[0] z-0">
-            <svg viewBox="0 0 500 150" preserveAspectRatio="none" className="w-full h-44">
-              <path d="M0,80 C150,160 350,0 500,80 L500,150 L0,150 Z" className="fill-white"></path>
-            </svg>
+        {/* Heading */}
+        <div style={{ marginTop: 36 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 12px', borderRadius: 99, background: c.primarySoft,
+            border: `1px solid rgba(15,107,83,0.13)`,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.primary, display: 'inline-block' }} />
+            <span style={{ fontSize: 10.5, fontWeight: 500, color: c.primaryDeep, letterSpacing: 1.4, textTransform: 'uppercase' }}>
+              50,000+ buyers
+            </span>
+          </div>
+          <div style={{ fontSize: 42, fontWeight: 400, letterSpacing: -1.4, lineHeight: 1.0, color: c.ink, marginTop: 20 }}>
+            Welcome<br />
+            <span style={{ color: c.primary }}>back, friend.</span>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 400, color: c.muted, marginTop: 12 }}>
+            Sign in with your mobile number to continue saving together.
           </div>
         </div>
 
-        {/* Form Section */}
-        <div className="px-10 pb-12 pt-10 -mt-12 relative z-10 bg-white flex-1 md:flex-none">
-          <form onSubmit={handleAuth} className="space-y-5">
-            <AnimatePresence mode="wait">
-              {!isLogin && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="space-y-5"
-                >
-                  {/* Full Name */}
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-bold text-gray-500 ml-1">Full Name</label>
-                    <div className="relative">
-                      <input 
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-gray-900 transition-all focus:bg-white focus:ring-4 placeholder:text-gray-300"
-                        style={{ '--tw-ring-color': `${primaryColor}0D`, borderColor: 'var(--tw-border-opacity) transparent' }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = primaryColor;
-                          e.target.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = '#f3f4f6';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                        placeholder="e.g. Alex Johnson"
-                        required={!isLogin}
-                      />
-                      <User className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                    </div>
-                  </div>
+        {/* Role toggle */}
+        <div style={{
+          marginTop: 28, padding: 4, background: c.surfaceDeep,
+          borderRadius: 14, display: 'flex', gap: 4,
+        }}>
+          {['user', 'vendor'].map((r) => (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              style={{
+                flex: 1, padding: '11px 0', borderRadius: 10,
+                background: role === r ? '#fff' : 'transparent',
+                boxShadow: role === r ? '0 1px 2px rgba(15,15,18,0.04)' : 'none',
+                fontSize: 13, fontWeight: role === r ? 500 : 400,
+                color: role === r ? c.ink : c.muted, border: 'none', cursor: 'pointer',
+              }}
+            >
+              {r === 'user' ? "I'm a buyer" : "I'm a vendor"}
+            </button>
+          ))}
+        </div>
 
-                  {/* Email Address */}
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-bold text-gray-500 ml-1">Email Address</label>
-                    <div className="relative">
-                      <input 
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-gray-900 transition-all focus:bg-white focus:ring-4 placeholder:text-gray-300"
-                        onFocus={(e) => {
-                          e.target.style.borderColor = primaryColor;
-                          e.target.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = '#f3f4f6';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                        placeholder="alex@example.com"
-                      />
-                      <Mail className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Mobile Number */}
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-gray-500 ml-1">Mobile Number</label>
-              <div 
-                className="flex items-center bg-gray-50 border border-gray-100 rounded-2xl transition-all px-5"
-                id="mobile-container"
-              >
-                <span className="text-gray-400 font-bold text-sm mr-2">+91</span>
-                <input 
-                  type="tel"
-                  name="mobile"
-                  maxLength="10"
-                  value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })}
-                  onFocus={() => {
-                    const el = document.getElementById('mobile-container');
-                    el.style.borderColor = primaryColor;
-                    el.style.backgroundColor = 'white';
-                    el.style.boxShadow = `0 0 0 4px ${primaryColor}1A`;
-                  }}
-                  onBlur={() => {
-                    const el = document.getElementById('mobile-container');
-                    el.style.borderColor = '#f3f4f6';
-                    el.style.backgroundColor = '#f9fafb';
-                    el.style.boxShadow = 'none';
-                  }}
-                  className="flex-1 py-4 bg-transparent outline-none font-bold text-gray-900 placeholder:text-gray-300 tracking-wider"
-                  placeholder="98765 43210"
-                  required
-                />
-                <Phone className="text-gray-300" size={18} />
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <div style={{ fontSize: 10.5, fontWeight: 500, color: c.muted, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 10 }}>
+              Mobile number
+            </div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              border: `1.5px solid ${c.primary}`, borderRadius: 14,
+              padding: '14px 16px', background: '#fff',
+              boxShadow: `0 0 0 4px ${c.primaryGlow}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14 }}>🇮🇳</span>
+                <span style={{ fontSize: 13.5, fontWeight: 500, color: c.ink }}>+91</span>
+                <Icon name="chevD" size={12} color={c.faint} stroke={2} />
               </div>
-            </div>
-
-            <div className="pt-6">
-              <button 
-                type="submit"
-                className="w-full text-white py-4.5 rounded-2xl font-bold text-lg transition-all transform active:scale-95 flex items-center justify-center gap-3 shadow-xl"
-                style={{ backgroundColor: primaryColor, shadowColor: shadowColor }}
-              >
-                <span className="tracking-tight">{isLogin ? "Sign In" : "Create Account"}</span>
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-12 text-center space-y-4">
-            {role === 'user' && (
-              <button 
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-gray-400 text-[15px] font-medium transition-colors"
-                style={{ color: isLogin ? '' : primaryColor }}
-              >
-                {isLogin ? (
-                  <>New to Buytogether? <span className="font-bold" style={{ color: primaryColor }}>Sign up here</span></>
-                ) : (
-                  <>Already have an account? <span className="font-bold" style={{ color: primaryColor }}>Sign in here</span></>
-                )}
-              </button>
-            )}
-
-            <div className="pt-4 border-t border-gray-50 flex flex-col items-center gap-3">
-              <button 
-                onClick={() => {
-                  setRole(role === 'user' ? 'vendor' : 'user');
-                  setIsLogin(true);
+              <div style={{ height: 22, width: 1, background: c.line }} />
+              <input
+                type="tel"
+                value={mobile}
+                maxLength={10}
+                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                placeholder="98765 43210"
+                style={{
+                  flex: 1, fontSize: 16, fontWeight: 500, color: c.ink,
+                  background: 'none', border: 'none', outline: 'none',
+                  letterSpacing: 0.5, fontFamily: 'inherit',
                 }}
-                className="text-sm font-bold flex items-center gap-2 hover:opacity-80 transition-opacity"
-                style={{ color: role === 'user' ? '#0052cc' : '#ff7a00' }}
-              >
-                {role === 'user' ? 'Login as Vendor' : 'Login as Individual User'}
-                <ArrowRight size={14} />
-              </button>
-
-              {role === 'vendor' && (
-                <Link to="/vendor/signup" className="text-xs text-gray-400 font-bold uppercase tracking-widest hover:text-secondary transition-colors">
-                  Register as Business Partner
-                </Link>
-              )}
+                required
+              />
+              {mobile.length === 10 && <Icon name="check" size={18} color={c.primary} stroke={2.4} />}
             </div>
           </div>
-        </div>
-      </motion.div>
+
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 6, cursor: 'pointer' }}>
+            <div
+              onClick={() => setAgreed(!agreed)}
+              style={{
+                width: 18, height: 18, borderRadius: 5,
+                background: agreed ? c.primary : '#fff',
+                border: `1.5px solid ${agreed ? c.primary : c.line}`,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, marginTop: 1, cursor: 'pointer',
+              }}
+            >
+              {agreed && <Icon name="check" size={11} color="#fff" stroke={3} />}
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 400, color: c.muted, lineHeight: 1.45 }}>
+              I agree to the <span style={{ color: c.ink, fontWeight: 500 }}>Terms</span> and{' '}
+              <span style={{ color: c.ink, fontWeight: 500 }}>Privacy Policy</span>. I consent to receive WhatsApp updates.
+            </span>
+          </label>
+
+          <div style={{ flex: 1 }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
+            <Button
+              type="submit" variant="primary" size="lg" full
+              iconRight={<Icon name="arrowR" size={16} color="#fff" stroke={2} />}
+            >
+              Send OTP
+            </Button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ flex: 1, height: 1, background: c.line }} />
+              <span style={{ fontSize: 10, fontWeight: 500, color: c.muted, letterSpacing: 1.8, textTransform: 'uppercase' }}>or continue with</span>
+              <div style={{ flex: 1, height: 1, background: c.line }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="button" style={{
+                flex: 1, height: 48, borderRadius: 12, background: '#fff',
+                border: `1px solid ${c.line}`,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                gap: 8, fontWeight: 500, fontSize: 13, color: c.ink, cursor: 'pointer',
+              }}>
+                Google
+              </button>
+              <button type="button" style={{
+                flex: 1, height: 48, borderRadius: 12, background: c.ink,
+                color: '#fff', border: 'none',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                gap: 8, fontWeight: 500, fontSize: 13, cursor: 'pointer',
+              }}>
+                Apple
+              </button>
+            </div>
+
+            <div style={{ textAlign: 'center', fontSize: 12.5, fontWeight: 400, color: c.muted }}>
+              New here?{' '}
+              <span
+                onClick={() => navigate('/otp', { state: { role, mobile, flow: 'signup' } })}
+                style={{ color: c.primary, fontWeight: 500, cursor: 'pointer' }}
+              >
+                Create an account
+              </span>
+            </div>
+
+            {role === 'vendor' && (
+              <div style={{ textAlign: 'center' }}>
+                <Link to="/vendor/signup" style={{ fontSize: 12, color: c.muted, fontWeight: 500 }}>
+                  Register as Business Partner →
+                </Link>
+              </div>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

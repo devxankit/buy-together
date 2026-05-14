@@ -1,497 +1,287 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Flame, MapPin, Users, ArrowRight,
-  TrendingUp, Award, Star, Search, Sliders, Heart, ChevronRight
-} from 'lucide-react';
-
-import { useSelector } from '../../../hooks/useSelector';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from '../../../hooks/useSelector';
+import { c } from '../../../design/tokens';
+import Icon from '../../../components/ui/Icon';
+import { Avatar, AvatarStack } from '../../../components/ui/Avatar';
+import Progress from '../../../components/ui/Progress';
+import Chip from '../../../components/ui/Chip';
+import SearchBar from '../../../components/ui/SearchBar';
+import ProductGlyph from '../../../components/ui/ProductGlyph';
+import Button from '../../../components/ui/Button';
 
-import banner1 from '../../../assets/banner1.png';
-import banner2 from '../../../assets/banner2.png';
-import banner3 from '../../../assets/banner3.png';
-import appliancesImg from '../../../assets/Appliances.png';
-import bikeImg from '../../../assets/bike.png';
-import carImg from '../../../assets/car.png';
-import itImg from '../../../assets/IT.png';
-import laptopImg from '../../../assets/laptop.png';
-import phoneImg from '../../../assets/phone.png';
-import realEstateImg from '../../../assets/real state.png';
-import viewAllImg from '../../../assets/view all.png';
+const CATEGORIES = [
+  { glyph: 'phone', label: 'Phones',     dot: true,  path: '/categories?cat=phones' },
+  { glyph: 'laptop', label: 'Laptops',              path: '/categories?cat=laptops' },
+  { glyph: 'car',   label: 'Cars',                  path: '/categories?cat=cars' },
+  { glyph: 'home',  label: 'Property',              path: '/categories?cat=property' },
+  { glyph: 'fridge',label: 'Appliances',            path: '/categories?cat=appliances' },
+  { glyph: 'bike',  label: 'Bikes',                 path: '/categories?cat=bikes' },
+  { glyph: 'game',  label: 'Gaming',                path: '/categories?cat=gaming' },
+  { icon:  'grid',  label: 'View all',              path: '/categories' },
+];
 
+const TRENDING = [
+  { title: 'iPhone 16 Pro 256GB', vendor: 'Apple India', price: '₹1,19,900', original: '₹1,29,900', joined: 7, total: 10, tag: '3 LEFT', tagTone: 'ink', glyph: 'phone', bg: '#1F1F25' },
+  { title: 'Sony PlayStation 5',  vendor: 'Sony',        price: '₹44,990',   original: '₹54,990',   joined: 4, total: 6,  tag: 'HOT',    tagTone: 'primary', glyph: 'game', bg: null },
+  { title: 'MacBook Air M4',      vendor: 'Apple India', price: '₹89,990',   original: '₹1,09,990', joined: 8, total: 10, tag: '2 LEFT', tagTone: 'ink', glyph: 'laptop', bg: null },
+];
 
+const BANNERS = [
+  {
+    kicker: 'Featured · Electronics',
+    pre: 'Pool 9 friends.',
+    mid: 'iPhone 16 Pro',
+    post: 'for 22% less.',
+    bg: c.surfaceInk,
+    dark: true,
+    orb: 'radial-gradient(circle at 85% 20%, rgba(15,107,83,0.42), transparent 58%)',
+    glyph: 'phone',
+  },
+  {
+    kicker: 'Vendor · Maruti Suzuki',
+    pre: 'A new deal:',
+    mid: 'Baleno @ ₹8L',
+    post: 'for 10 buyers.',
+    bg: c.primary,
+    dark: true,
+    orb: 'radial-gradient(circle at 90% 80%, rgba(255,255,255,0.16), transparent 50%)',
+    glyph: 'car',
+  },
+];
 
-const Home = () => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-
-
-
-
-
-
-  /* ─── Existing home state ─────────────────────────────────── */
-  const banners = [
-    { id: 1, image: banner1 },
-    { id: 2, image: banner2 },
-    { id: 3, image: banner3 }
-  ];
-
-  const categories = [
-    { name: 'Phone', image: phoneImg },
-    { name: 'Car', image: carImg },
-    { name: 'Appliances', image: appliancesImg },
-    { name: 'Bike', image: bikeImg },
-    { name: 'Laptop', image: laptopImg },
-    { name: 'IT', image: itImg },
-    { name: 'Real Estate', image: realEstateImg },
-    { name: 'View All', image: viewAllImg },
-  ];
-
-  const activities = [
-    "Rahul joined iPhone 16 Pro deal",
-    "Sonia unlocked 20% discount on MacBooks",
-    "5 new spots opened in Tesla Group",
-    "Priya just created a group for Sony PS5"
-  ];
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [[page, direction], setPage] = useState([0, 0]);
-  const [activityIndex, setActivityIndex] = useState(0);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-
-  const searchPlaceholders = [
-    "Search for iPhone 16 Pro Deals...",
-    "Search for gym partners nearby...",
-    "Search for bulk grocery groups...",
-    "Search for split billing deals..."
-  ];
-
-  const currentBanner = Math.abs(page % banners.length);
-
-  const paginate = (dir) => setPage([page + dir, dir]);
-
-  useEffect(() => {
-    const t1 = setInterval(() => paginate(1), 6000);
-    const t2 = setInterval(() => setActivityIndex(p => (p + 1) % activities.length), 3000);
-    const t3 = setInterval(() => setPlaceholderIndex(p => (p + 1) % searchPlaceholders.length), 3000);
-    return () => { clearInterval(t1); clearInterval(t2); clearInterval(t3); };
-  }, [page]);
-
-  const slideVariants = {
-    enter: (d) => ({ x: d > 0 ? '100%' : '-100%', opacity: 0, scale: 1.08, filter: 'blur(8px)', zIndex: 0 }),
-    center: {
-      zIndex: 1, x: 0, opacity: 1, scale: 1, filter: 'blur(0px)',
-      transition: { x: { type: 'spring', stiffness: 280, damping: 28 }, opacity: { duration: 0.35 }, scale: { duration: 0.5 } }
-    },
-    exit: (d) => ({
-      zIndex: 0, x: d < 0 ? '100%' : '-100%', opacity: 0, scale: 0.88, filter: 'blur(12px)',
-      transition: { x: { type: 'spring', stiffness: 280, damping: 28 }, opacity: { duration: 0.28 } }
-    })
-  };
-
-  /* ─────────────────────────────────────────────────────────── */
+const BannerCard = ({ v }) => {
+  const text = v.dark ? '#fff' : c.ink;
+  const sub  = v.dark ? 'rgba(255,255,255,0.62)' : c.muted;
   return (
-    <>
-      <div className="flex flex-col pb-0">
-        <div
-          className="relative z-10 bg-[#fafafa] flex flex-col gap-2 pt-2"
-        >
-
-          {/* 0. GREETING */}
-          <section className="px-6 pt-1 pb-1">
-            <h1 className="text-[26px] font-bold text-[#1a2b4b] leading-tight tracking-tight">
-              Good morning, {isAuthenticated ? user?.name?.split(' ')[0] : 'Alex'}
-            </h1>
-            <p className="text-gray-400 text-[15px] font-medium mt-0.5">
-              Find our best deals. Save together.
-            </p>
-          </section>
-
-          {/* 1. SEARCH - Updated to match new unified style */}
-          <section
-            className="px-6 pt-2 pb-3 bg-[#fafafa]"
-          >
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none z-20">
-                <Search className="text-gray-400 group-focus-within:text-[#0052cc] transition-colors" size={18} />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-[54px] pl-14 pr-14 bg-gray-100 rounded-2xl outline-none transition-all text-gray-900 font-medium text-[14px]"
-              />
-              <AnimatePresence mode="wait">
-                {!searchQuery && (
-                  <div className="absolute inset-0 left-14 flex items-center pointer-events-none z-10">
-                    <motion.span
-                      key={placeholderIndex}
-                      initial={{ y: 18, opacity: 0 }}
-                      animate={{ y: 0, opacity: 0.45 }}
-                      exit={{ y: -18, opacity: 0 }}
-                      transition={{ duration: 0.45, ease: 'circOut' }}
-                      className="text-gray-900 font-medium text-[14px] absolute"
-                    >
-                      {searchPlaceholders[placeholderIndex]}
-                    </motion.span>
-                  </div>
-                )}
-              </AnimatePresence>
-
-              {/* Filter button inside search bar - Icon only */}
-              <button className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors active:scale-90 p-1">
-                <Sliders size={18} strokeWidth={2.5} />
-              </button>
-            </div>
-          </section>
-
-          {/* 1. HERO CAROUSEL */}
-          <section className="px-4 mt-1">
-            <div className="relative h-44 md:h-[350px] rounded-2xl overflow-hidden shadow-xl shadow-black/5 bg-white group">
-              <AnimatePresence initial={false} custom={direction}>
-                <motion.div
-                  key={page}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={1}
-                  onDragEnd={(_, { offset }) => {
-                    if (Math.abs(offset.x) > 50) paginate(offset.x > 0 ? -1 : 1);
-                  }}
-                  className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing overflow-hidden"
-                >
-                  <motion.img
-                    src={banners[currentBanner].image}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 1.2, ease: 'easeOut' }}
-                    className="w-full h-full object-cover pointer-events-none"
-                    alt=""
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-                  <motion.div
-                    initial={{ x: '-150%' }}
-                    animate={{ x: '150%' }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 5, ease: 'linear' }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12"
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </section>
-
-          {/* 2. CATEGORIES */}
-          <section className="mt-4">
-            <div className="flex items-center justify-between px-4 mb-5">
-              <h2 className="text-lg font-black text-gray-900">Categories</h2>
-            </div>
-            <div className="grid grid-cols-4 gap-y-3 gap-x-2 px-4 pb-2 text-center">
-              {categories.map((cat, i) => (
-                <Link 
-                  key={i} 
-                  to={cat.name === 'View All' ? '/categories' : `/groups?category=${cat.name.toLowerCase()}`}
-                  className="flex flex-col items-center gap-1.5"
-                >
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg shadow-black/5 bg-white transition-all active:scale-95 cursor-pointer hover:shadow-xl overflow-hidden border border-gray-50">
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                  </div>
-                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-tighter w-full line-clamp-1">{cat.name}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* 3. LIVE ACTIVITY */}
-          <section className="px-4 mt-4">
-            <div className="bg-secondary/5 border border-secondary/10 rounded-2xl p-3 flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                <TrendingUp size={16} className="text-white" />
-              </div>
-              <div className="flex-1 relative h-4">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={activityIndex}
-                    initial={{ y: 18, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -18, opacity: 0 }}
-                    className="text-xs font-bold text-secondary absolute inset-0 line-clamp-1"
-                  >
-                    {activities[activityIndex]}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-              <span className="text-[10px] font-black text-secondary/50 uppercase">Live</span>
-            </div>
-          </section>
-
-          {/* 4. TRENDING GROUPS */}
-          <section className="px-4 mt-6">
-            <div className="flex items-center justify-between mb-6 px-1">
-              <h2 className="text-xl font-bold text-[#1a2b4b] flex items-center gap-2">
-                <Flame className="text-orange-500 fill-orange-500" size={24} />
-                Trending Groups
-              </h2>
-              <Link to="/groups" className="text-[#0052cc] text-sm font-bold flex items-center gap-0.5 hover:underline">
-                View all <ChevronRight size={16} />
-              </Link>
-            </div>
-
-            <div className="flex overflow-x-auto gap-4 no-scrollbar pb-4 px-1">
-              <GroupCard
-                title="iPhone 16 Pro"
-                price="₹1,19,900"
-                originalPrice="₹1,29,900"
-                joined={7}
-                total={10}
-                rating="4.9"
-                image="https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop"
-                tag="MOST POPULAR"
-              />
-              <GroupCard
-                title="Sony PlayStation 5"
-                price="₹44,990"
-                originalPrice="₹54,990"
-                joined={4}
-                total={6}
-                rating="4.9"
-                image="https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?q=80&w=400&auto=format&fit=crop"
-                tag="LIMITED STOCK"
-              />
-              <GroupCard
-                title="Realme Pad X"
-                price="₹15,499"
-                originalPrice="₹19,999"
-                joined={8}
-                total={10}
-                rating="4.8"
-                image="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400&auto=format&fit=crop"
-                tag="HURRY! 2 LEFT"
-              />
-              <GroupCard
-                title="Samsung Galaxy S24 Ultra"
-                price="₹1,09,999"
-                originalPrice="₹1,29,999"
-                joined={3}
-                total={5}
-                rating="4.7"
-                image="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=400&auto=format&fit=crop"
-                tag="NEW ARRIVAL"
-              />
-              <GroupCard
-                title="BoAt Airdopes 161"
-                price="₹1,299"
-                originalPrice="₹2,499"
-                joined={6}
-                total={10}
-                rating="4.6"
-                image="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400&auto=format&fit=crop"
-                tag="HOT PRODUCT"
-              />
-            </div>
-
-            {/* Start your own group banner */}
-            <div className="mt-4 bg-[#f8faff] rounded-2xl p-4 border border-blue-50 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
-                  <Users size={20} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#1a2b4b] text-sm">Start your own group</h3>
-                  <p className="text-gray-400 text-[11px] font-medium">Invite friends & save together</p>
-                </div>
-              </div>
-              <button className="bg-[#eff2ff] text-[#4f46e5] px-4 py-2 rounded-lg font-bold text-[13px] hover:bg-blue-100 transition-colors">
-                Create Group
-              </button>
-            </div>
-          </section>
-
-          {/* 5. NEARBY GROUPS */}
-          <section className="px-4 mt-8">
-            <div className="flex items-center justify-between mb-5 px-1">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                  <MapPin className="text-[#0052cc]" size={20} fill="#0052cc" fillOpacity={0.1} />
-                </div>
-                <div className="flex flex-col">
-                  <h2 className="text-[19px] font-black text-[#1a2b4b] tracking-tight leading-none">Near You</h2>
-                  <span className="text-[10px] font-bold text-gray-400 mt-0.5">Lajpat Nagar, Delhi</span>
-                </div>
-              </div>
-              <Link to="/groups" className="text-[11px] font-black text-[#0052cc] uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
-                See All <ArrowRight size={14} />
-              </Link>
-            </div>
-
-            <div className="flex overflow-x-auto gap-5 no-scrollbar pb-2 px-1">
-              <NearbyCard
-                title="Grocery Haul"
-                vendor="Big Store"
-                distance="0.8 km"
-                joined={4}
-                total={5}
-                tag="🔥 Trending"
-              />
-              <NearbyCard
-                title="Home Cleaning Kit"
-                vendor="Essentials Hub"
-                distance="1.2 km"
-                joined={2}
-                total={8}
-                tag="⏳ 2 spots left"
-                tagColor="bg-orange-50 text-orange-500"
-              />
-            </div>
-          </section>
-
-
-
-          {/* 7. APP INFO / FOOTER */}
-          <section className="px-8 pt-8 pb-6 bg-gray-50/50 mt-0 rounded-t-[3rem] border-t border-gray-100">
-            <h2 className="text-[52px] font-black text-gray-300 leading-[1.1] tracking-wide mb-12 select-none uppercase">
-              TRULY <br /> INDIAN <br /> APP
-            </h2>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-[13px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-                  Made with
-                </span>
-                <Heart size={16} className="fill-red-500 text-red-500" />
-                <span className="text-[13px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-                  in Appzeto
-                </span>
-              </div>
-              <p className="text-[10px] font-medium text-gray-400/60 uppercase tracking-[0.3em]">
-                App Version 23.41.1
-              </p>
-            </div>
-          </section>
-
+    <div style={{
+      width: 290, height: 180, flexShrink: 0, marginRight: 12,
+      borderRadius: 22, background: v.bg, color: text,
+      padding: 20, position: 'relative', overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+    }}>
+      <div style={{ position: 'absolute', inset: 0, background: v.orb }} />
+      <div style={{ position: 'absolute', right: -12, bottom: -12, transform: 'rotate(-8deg)', opacity: 0.18 }}>
+        <ProductGlyph kind={v.glyph} size={160} tone="rgba(255,255,255,0.8)" />
+      </div>
+      <div style={{ position: 'relative' }}>
+        <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: 1.8, textTransform: 'uppercase', color: sub }}>{v.kicker}</span>
+      </div>
+      <div style={{ position: 'relative' }}>
+        <div style={{ fontSize: 12, fontWeight: 400, color: sub, marginBottom: 2 }}>{v.pre}</div>
+        <div style={{ fontSize: 26, fontWeight: 500, letterSpacing: -0.8, lineHeight: 1.0, color: text }}>{v.mid}</div>
+        <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: -0.2, marginTop: 4, color: text }}>{v.post}</div>
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 11px', borderRadius: 99,
+            background: v.dark ? 'rgba(255,255,255,0.12)' : c.ink,
+            color: '#fff', fontSize: 11, fontWeight: 500,
+            backdropFilter: v.dark ? 'blur(8px)' : 'none',
+            border: v.dark ? '1px solid rgba(255,255,255,0.14)' : 'none',
+          }}>
+            Explore <Icon name="arrowR" size={11} color="#fff" stroke={2} />
+          </div>
+          <AvatarStack count={3} more={4} size={22} />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
-/* ─── Tiny stat block ─────────────────────────────────────────── */
-const Stat = ({ value, label }) => (
-  <div className="flex flex-col gap-0.5">
-    <span className="text-white font-black text-[15px] leading-none">{value}</span>
-    <span className="text-white/40 text-[10px] font-bold leading-none">{label}</span>
+const TrendingCard = ({ item }) => (
+  <div style={{
+    minWidth: 210, marginRight: 12, flexShrink: 0,
+    background: '#fff', borderRadius: 22, overflow: 'hidden',
+    border: `1px solid ${c.line}`,
+  }}>
+    <div style={{
+      height: 120, position: 'relative',
+      background: item.bg ? `linear-gradient(170deg, ${item.bg}, #1F1F25)` : `linear-gradient(170deg, ${c.surface}, ${c.surfaceDeep})`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{ position: 'absolute', top: 10, left: 10 }}>
+        <Chip tone={item.tagTone} size="xs">{item.tag}</Chip>
+      </div>
+      <button style={{
+        position: 'absolute', top: 10, right: 10,
+        width: 30, height: 30, borderRadius: 10,
+        background: 'rgba(255,255,255,0.85)', border: `1px solid ${c.line}`,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name="heart" size={13} color={c.muted} stroke={1.8} />
+      </button>
+      <ProductGlyph kind={item.glyph} size={80} tone={item.bg ? 'rgba(255,255,255,0.55)' : c.muted} />
+    </div>
+    <div style={{ padding: '12px 14px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 500, color: c.muted, letterSpacing: 0.4, textTransform: 'uppercase' }}>{item.vendor}</div>
+      <div style={{ fontSize: 13.5, fontWeight: 500, color: c.ink, marginTop: 3, lineHeight: 1.2, letterSpacing: -0.3 }}>{item.title}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 8 }}>
+        <span style={{ fontSize: 15, fontWeight: 500, color: c.ink, letterSpacing: -0.4 }}>{item.price}</span>
+        <span style={{ fontSize: 10.5, fontWeight: 500, color: c.faint, textDecoration: 'line-through' }}>{item.original}</span>
+      </div>
+      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Progress value={item.joined} total={item.total} height={4} />
+        <span style={{ fontSize: 10, fontWeight: 500, color: c.ink, whiteSpace: 'nowrap' }}>{item.joined}/{item.total}</span>
+      </div>
+    </div>
   </div>
 );
 
-/* ─── Group card ─────────────────────────────────────────────── */
-const GroupCard = ({ title, price, originalPrice, joined, total, image, tag, rating }) => (
-  <motion.div
-    whileHover={{ y: -6, scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    className="min-w-[240px] bg-white rounded-[2.5rem] p-3 border border-gray-100 shadow-2xl shadow-black/[0.03] overflow-hidden group flex flex-col gap-3"
-  >
-    {/* Image container */}
-    <div className="h-40 rounded-[1.75rem] overflow-hidden relative shrink-0">
-      <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+const Home = () => {
+  const { user } = useSelector(s => s.auth);
+  const [actIdx, setActIdx] = useState(0);
 
-      {/* Floating Tag */}
-      {tag && (
-        <div className="absolute top-3 left-3 bg-[#ff7a00] text-white px-3 py-1.5 rounded-xl text-[9px] font-black tracking-widest uppercase shadow-lg shadow-orange-500/20">
-          {tag}
+  const activities = [
+    { who: 'Priya', action: 'unlocked', amount: '₹8,400', group: 'MacBook group' },
+    { who: 'Rahul', action: 'joined',   amount: null,      group: 'iPhone 16 Pro' },
+    { who: 'Aman',  action: 'saved',    amount: '₹4,200',  group: 'PS5 group' },
+  ];
+
+  useEffect(() => {
+    const t = setInterval(() => setActIdx(p => (p + 1) % activities.length), 3500);
+    return () => clearInterval(t);
+  }, []);
+
+  const act = activities[actIdx];
+
+  return (
+    <div style={{ background: c.surfaceAlt }}>
+      {/* Greeting */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ fontSize: 12.5, fontWeight: 400, color: c.muted }}>
+          Good morning, {user?.name?.split(' ')[0] || 'friend'}.
         </div>
-      )}
-
-      {/* Rating Badge */}
-      <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm border border-white/20">
-        <Star size={10} className="fill-[#ff7a00] text-[#ff7a00]" />
-        <span className="text-[10px] font-black text-[#1a2b4b]">{rating || '4.8'}</span>
-      </div>
-    </div>
-
-    {/* Content Section */}
-    <div className="px-1.5 pb-2 flex flex-col gap-3">
-      <div>
-        <h3 className="font-bold text-[#1a2b4b] tracking-tight text-[16px] line-clamp-1 mb-1">{title}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-[#0052cc] font-black text-lg leading-none">{price}</span>
-          <span className="text-gray-300 line-through text-[11px] font-bold">{originalPrice}</span>
+        <div style={{ fontSize: 30, lineHeight: 1.0, color: c.ink, marginTop: 6, letterSpacing: -1, fontWeight: 500 }}>
+          Find your group.<br />
+          <span style={{ color: c.primary, fontSize: 36 }}>Save together.</span>
         </div>
       </div>
 
-      {/* Progress & Social Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map(i => (
-              <img
-                key={i}
-                src={`https://i.pravatar.cc/100?u=${i + title.length + (Math.random() * 100)}`}
-                className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 shadow-sm"
-                alt=""
-              />
-            ))}
+      {/* Search */}
+      <div style={{ padding: '18px 20px 0' }}>
+        <SearchBar />
+      </div>
+
+      {/* Banner carousel */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', paddingLeft: 20, overflowX: 'auto' }} className="no-scrollbar">
+          {BANNERS.map((v, i) => <BannerCard key={i} v={v} />)}
+          <div style={{ width: 20, flexShrink: 0 }} />
+        </div>
+        <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginTop: 12 }}>
+          <div style={{ width: 18, height: 3, background: c.ink, borderRadius: 2 }} />
+          <div style={{ width: 3, height: 3, background: c.faint, borderRadius: 2 }} />
+          <div style={{ width: 3, height: 3, background: c.faint, borderRadius: 2 }} />
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div style={{ padding: '24px 20px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+          <div style={{ fontSize: 17, fontWeight: 500, color: c.ink, letterSpacing: -0.3 }}>
+            Browse <span style={{ color: c.primary }}>categories</span>
           </div>
-          <span className="text-[10px] font-black text-[#1a2b4b] uppercase tracking-tighter">{joined}/{total} Joined</span>
+          <Link to="/categories" style={{ fontSize: 10.5, fontWeight: 500, color: c.muted, letterSpacing: 1.4, textTransform: 'uppercase', textDecoration: 'none' }}>
+            View all
+          </Link>
         </div>
-
-        <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${(joined / total) * 100}%` }}
-            className="h-full bg-gradient-to-r from-[#0052cc] to-[#3b82f6] rounded-full"
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, rowGap: 16 }}>
+          {CATEGORIES.map((cat, i) => (
+            <Link key={i} to={cat.path} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+              <div style={{
+                width: 62, height: 62, borderRadius: 18,
+                background: '#fff', border: `1px solid ${c.line}`,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative',
+              }}>
+                {cat.icon
+                  ? <Icon name={cat.icon} size={22} color={c.muted} stroke={1.8} />
+                  : <ProductGlyph kind={cat.glyph} size={40} tone={c.inkSoft} />
+                }
+                {cat.dot && (
+                  <span style={{
+                    position: 'absolute', top: 6, right: 6,
+                    width: 6, height: 6, background: c.primary, borderRadius: '50%',
+                  }} />
+                )}
+              </div>
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: c.ink, letterSpacing: 0.2 }}>{cat.label}</span>
+            </Link>
+          ))}
         </div>
       </div>
-    </div>
-  </motion.div>
-);
 
-/* ─── Nearby card ─────────────────────────────────────────────── */
-const NearbyCard = ({ title, vendor, distance, joined, total, tag }) => (
-  <motion.div
-    whileHover={{ y: -2, scale: 0.99 }}
-    whileTap={{ scale: 0.97 }}
-    className="min-w-[240px] bg-white rounded-[1.75rem] p-4 border border-gray-100 shadow-xl shadow-black/[0.02] flex flex-col gap-3"
-  >
-    <div className="flex items-center gap-3">
-      <div className="w-12 h-12 bg-[#f0f7ff] rounded-2xl flex items-center justify-center shrink-0 border border-blue-50">
-        <MapPin size={22} className="text-[#0052cc]" strokeWidth={2.5} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-0.5">
-          <span className="text-[10px] font-black text-[#0052cc] uppercase tracking-tighter">{distance}</span>
-          {tag && <span className="text-[8px] font-black bg-orange-50 text-orange-500 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">Hot</span>}
-        </div>
-        <h3 className="font-bold text-[#1a2b4b] text-sm truncate leading-tight">{title}</h3>
-        <p className="text-[10px] font-medium text-gray-400 truncate">{vendor}</p>
-      </div>
-    </div>
-
-    <div className="flex items-center justify-between pt-1 border-t border-gray-50/50">
-      <div className="flex -space-x-1.5">
-        {[1, 2, 3].map(i => (
-          <img
-            key={i}
-            src={`https://i.pravatar.cc/100?u=${i + title.length}`}
-            className="w-6 h-6 rounded-full border border-white shadow-sm"
-            alt=""
-          />
-        ))}
-        {total > 3 && (
-          <div className="w-6 h-6 rounded-full bg-gray-50 border border-white flex items-center justify-center text-[8px] font-bold text-gray-400">
-            +{total - 3}
+      {/* Live activity */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{
+          background: '#fff', borderRadius: 14, padding: '12px 14px',
+          border: `1px solid ${c.line}`,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <Avatar seed={actIdx + 1} size={28} />
+          <div style={{ flex: 1, fontSize: 12.5, fontWeight: 400, color: c.ink }}>
+            <span style={{ fontWeight: 500 }}>{act.who}</span>{' '}
+            {act.action}{' '}
+            {act.amount && <span style={{ color: c.primary, fontWeight: 500 }}>{act.amount}</span>}
+            {act.amount ? ' off in ' : ' '}{act.group}
           </div>
-        )}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '4px 8px', borderRadius: 99,
+            background: c.primary, color: '#fff',
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
+            <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.6 }}>LIVE</span>
+          </div>
+        </div>
       </div>
 
-      <button className="bg-[#0052cc] text-white px-4 py-2 rounded-xl text-[10px] font-black tracking-wider uppercase shadow-lg shadow-blue-500/10 active:scale-95 transition-all">
-        Join {joined}/{total}
-      </button>
+      {/* Trending */}
+      <div style={{ padding: '24px 0 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px 14px', alignItems: 'baseline' }}>
+          <div style={{ fontSize: 17, fontWeight: 500, color: c.ink, letterSpacing: -0.3 }}>
+            Trending <span style={{ color: c.primary }}>now</span>
+          </div>
+          <Link to="/groups" style={{ fontSize: 10.5, fontWeight: 500, color: c.muted, letterSpacing: 1.4, textTransform: 'uppercase', textDecoration: 'none' }}>
+            View all
+          </Link>
+        </div>
+        <div style={{ display: 'flex', paddingLeft: 20, overflowX: 'auto' }} className="no-scrollbar">
+          {TRENDING.map((item, i) => <TrendingCard key={i} item={item} />)}
+          <div style={{ width: 20, flexShrink: 0 }} />
+        </div>
+      </div>
+
+      {/* CTA banner */}
+      <div style={{ padding: '24px 20px 32px' }}>
+        <div style={{
+          background: c.surfaceInk, color: '#fff', borderRadius: 20, padding: '20px 22px',
+          display: 'flex', alignItems: 'center', gap: 16, position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(circle at 100% 0%, rgba(15,107,83,0.35), transparent 55%)',
+          }} />
+          <div style={{ position: 'relative', flex: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 500, letterSpacing: -0.4, lineHeight: 1.15 }}>
+              Don't see your <span style={{ color: c.primarySoft }}>deal?</span>
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
+              Start a group · invite friends · save together
+            </div>
+          </div>
+          <Link to="/groups/create" style={{
+            position: 'relative', width: 44, height: 44, borderRadius: 12,
+            background: c.primary, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 18px 40px -16px rgba(15,107,83,0.50)', textDecoration: 'none',
+          }}>
+            <Icon name="plus" size={20} color="#fff" stroke={2} />
+          </Link>
+        </div>
+      </div>
     </div>
-  </motion.div>
-);
+  );
+};
+
 export default Home;
