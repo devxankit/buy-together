@@ -21,7 +21,7 @@ const UserMainLayout = ({
   const shouldShowHeader = showHeader && !isRootView;
 
   // Pages that already define their own internal padding in their components
-  const hasInternalPadding = ['/', '/deals', '/profile', '/categories'].includes(location.pathname);
+  const hasInternalPadding = ['/', '/groups', '/deals', '/profile', '/categories'].includes(location.pathname);
   const mainPaddingClass = hasInternalPadding ? 'px-0 py-0' : 'px-4 py-4';
 
   return (

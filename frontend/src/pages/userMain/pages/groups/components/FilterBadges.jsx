@@ -55,7 +55,7 @@ const FilterBadges = ({ selectedFilter, onChange }) => {
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar select-none">
+    <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-3.5 px-3.5 no-scrollbar select-none">
       {BADGES.map((badge) => {
         const isActive = selectedFilter === badge.id;
         return (

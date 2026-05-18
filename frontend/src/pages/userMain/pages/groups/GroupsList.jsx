@@ -128,7 +128,7 @@ const GroupsList = () => {
   }, [searchValue, selectedFilter]);
 
   return (
-    <div className="flex flex-col gap-4 px-4 pb-28 select-none animate-fadeIn">
+    <div className="flex flex-col gap-3.5 px-3.5 pb-24 select-none animate-fadeIn">
       {/* Groups Title & Create Button */}
       <GroupsHeader />
 

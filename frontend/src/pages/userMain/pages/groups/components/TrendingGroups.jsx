@@ -32,7 +32,7 @@ const TrendingGroups = ({ groups }) => {
       </div>
 
       {/* Horizontal Carousel */}
-      <div className="flex items-stretch gap-3.5 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
+      <div className="flex items-stretch gap-3.5 overflow-x-auto pb-2 -mx-3.5 px-3.5 no-scrollbar">
         {groups.map((group) => {
           const percentage = (group.spotsJoined / group.spotsTotal) * 100;
           return (
