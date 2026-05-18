@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 /**
  * Premium redesigned CategoryProductsList matching the custom cards layout from user mockup.
  * Incorporates:
- *  - Square left image with floating category badges (HOT, RISING, NEW)
+ *  - Boxless left image rendered directly inside the card (size reduced to 72px)
+ *  - Floating trending corner badge relative to the image
  *  - Inline title verify checkmark badge & member counts
  *  - Full location pin & creator profile avatar details
  *  - Subtle linear progress indicators alongside remaining metrics
@@ -33,18 +34,18 @@ const CategoryProductsList = ({ products }) => {
             key={prod.id}
             className="bg-white border border-[#E2E8F0]/70 rounded-[22px] p-3.5 flex gap-3.5 shadow-sm hover:shadow-md transition-all duration-300"
           >
-            {/* ── LEFT: SQUARE PRODUCT CONTAINER with float badge ── */}
-            <div className="w-[90px] h-[90px] bg-[#F8FAFC] border border-[#E2E8F0]/50 rounded-2xl overflow-hidden flex items-center justify-center p-2 flex-shrink-0 relative self-center">
+            {/* ── LEFT: DIRECT IMAGE (No visual styled box container!) ── */}
+            <div className="relative w-[72px] h-[72px] flex-shrink-0 self-center">
               <img
                 src={prod.image}
                 alt={prod.title}
-                className="w-full h-full object-contain mix-blend-multiply"
+                className="w-full h-full object-cover rounded-[14px]"
                 loading="lazy"
               />
 
-              {/* Floating Badge on top-left of image container */}
-              <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded-[5px] text-[7px] font-black uppercase tracking-wider shadow-sm flex items-center gap-0.5 leading-none ${badgeBg}`}>
-                <span className="w-1 h-1 rounded-full bg-current animate-pulse flex-shrink-0" />
+              {/* Floating Badge on top-left of image */}
+              <div className={`absolute -top-1.5 -left-1.5 px-1.5 py-0.5 rounded-[4.5px] text-[6.5px] font-black uppercase tracking-wider shadow-sm flex items-center gap-0.5 leading-none ${badgeBg}`}>
+                <span className="w-0.5 h-0.5 rounded-full bg-current animate-pulse flex-shrink-0" />
                 <span>{prod.badgeLabel || 'HOT'}</span>
               </div>
             </div>

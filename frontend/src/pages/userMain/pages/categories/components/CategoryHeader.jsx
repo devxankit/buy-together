@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 /**
  * Premium CategoryHeader matching the mockup's integrated top search and actions.
  * Renders in a clean white style matching the layout with location toggle and notification bell.
+ * Subtitle description has been removed as requested.
  */
 const CategoryHeader = ({ 
   title = "Groups", 
-  subtitle = "Find people with same interests. Build stronger together.", 
   currentLocation = "Indore", 
   onLocationClick, 
   onSearchChange,
@@ -23,9 +23,6 @@ const CategoryHeader = ({
           <h1 className="text-[26px] font-black text-[#1E293B] tracking-tight leading-none">
             {title}
           </h1>
-          <p className="text-[11px] font-bold text-[#64748B] mt-2.5 leading-snug">
-            {subtitle}
-          </p>
         </div>
 
         {/* Location chip & Bell Notification */}
