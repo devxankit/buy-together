@@ -36,34 +36,11 @@ const MyCategoriesCarousel = ({ selectedCategory, onChange }) => {
 
   return (
     <div className="flex flex-col gap-2.5 select-none">
-      {/* Title & Edit Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-1.5">
-          <h2 className="text-[14px] font-extrabold text-[#1E293B]">
-            My Categories
-          </h2>
-          <span className="text-[9.5px] font-semibold text-[#94A3B8]">
-            Long press to reorder or change
-          </span>
-        </div>
-
-        <button className="text-[10.5px] font-black text-[#0D9488] hover:text-[#0B7A70] flex items-center gap-0.5 active:scale-95 transition-all">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-3 h-3 text-[#0D9488]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-            />
-          </svg>
-          <span>Edit Categories</span>
-        </button>
+      {/* Title Row */}
+      <div className="flex items-center">
+        <h2 className="text-[14px] font-extrabold text-[#1E293B]">
+          Categories
+        </h2>
       </div>
 
       {/* Horizontal Carousel List */}
