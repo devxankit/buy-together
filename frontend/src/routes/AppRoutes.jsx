@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
-import Layout from '../components/layout/Layout';
+import Layout from '../userMain/components/layout/UserMainLayout';
 import VendorLayout from '../pages/vendor/layout/VendorLayout';
 
 // Auth & Onboarding
@@ -9,17 +9,19 @@ import Login from '../pages/auth/Login';
 import OTP from '../pages/auth/OTP';
 import Location from '../pages/auth/Location';
 
-// User Pages
-import Home from '../pages/user/home/Home';
-import DealConfirm from '../pages/user/group/DealConfirm';
-import Groups from '../pages/user/groups/Groups';
-import Deals from '../pages/user/deals/Deals';
-import GroupDetail from '../pages/user/group/GroupDetail';
-import CreateGroup from '../pages/user/group/CreateGroup';
-import GroupChat from '../pages/user/group/GroupChat';
-import Profile from '../pages/user/profile/Profile';
-import Notifications from '../pages/user/notifications/Notifications';
-import Categories from '../pages/user/categories/Categories';
+// User Pages (Consolidated inside userMain)
+import {
+  Home,
+  GroupsList as Groups,
+  GroupDetails as GroupDetail,
+  CreateGroup,
+  Deals,
+  Profile,
+  Notifications,
+  Categories,
+  GroupChat,
+  DealConfirm
+} from '../userMain/pages';
 
 // Vendor Pages
 import VendorSignup from '../pages/vendor/VendorSignup';

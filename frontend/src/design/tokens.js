@@ -2,11 +2,11 @@
 // Emerald primary · cool gray neutrals · Geist font
 
 export const c = {
-  primary:     '#0F6B53',
-  primarySoft: '#E4F0EC',
-  primaryDeep: '#0A4F3C',
-  primaryTint: '#F5FAF8',
-  primaryGlow: 'rgba(15,107,83,0.18)',
+  primary:     '#0D9488',
+  primarySoft: '#E6F4F2',
+  primaryDeep: '#0B7A70',
+  primaryTint: '#F2FAF9',
+  primaryGlow: 'rgba(13,148,136,0.18)',
 
   ink:         '#0F0F12',
   inkSoft:     '#2A2A30',
@@ -19,8 +19,8 @@ export const c = {
   surfaceDeep: '#EFEFF3',
   surfaceInk:  '#0E0E11',
 
-  saving:      '#0F6B53',
-  savingSoft:  '#E4F0EC',
+  saving:      '#0D9488',
+  savingSoft:  '#E6F4F2',
   danger:      '#B43A30',
   dangerSoft:  '#FAE3DF',
   info:        '#2C5680',
@@ -42,7 +42,7 @@ export const s = {
   md:      '0 4px 16px -4px rgba(15,15,18,0.07), 0 1px 2px rgba(15,15,18,0.03)',
   lg:      '0 16px 40px -12px rgba(15,15,18,0.10), 0 2px 6px rgba(15,15,18,0.03)',
   xl:      '0 30px 60px -18px rgba(15,15,18,0.16), 0 4px 12px rgba(15,15,18,0.05)',
-  glow:    '0 18px 40px -16px rgba(15,107,83,0.50)',
+  glow:    '0 18px 40px -16px rgba(13,148,136,0.50)',
   inkGlow: '0 18px 40px -16px rgba(15,15,18,0.40)',
   inset:   'inset 0 0 0 1px rgba(15,15,18,0.06)',
 };
