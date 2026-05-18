@@ -258,8 +258,14 @@ const Home = () => {
       {/* ── 5. POPULAR CATEGORIES GRID ── */}
       <CategoriesGrid
         categories={categories}
-        onCategoryClick={(id) => navigate('/groups')}
-        onViewAll={() => navigate('/groups')}
+        onCategoryClick={(id) => {
+          let targetId = id;
+          if (id === 'furniture') targetId = 'home-living';
+          if (id === 'groceries') targetId = 'appliances';
+          if (id === 'more') targetId = 'smartphones';
+          navigate('/categories', { state: { categoryId: targetId } });
+        }}
+        onViewAll={() => navigate('/categories')}
       />
 
       {/* ── 6. HOT BUYING GROUPS CAROUSEL ── */}

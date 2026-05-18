@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 // Category sub-components
 import CategoryHeader from './components/CategoryHeader';
 import MyCategoriesCarousel from './components/MyCategoriesCarousel';
@@ -8,10 +9,19 @@ import CategoryProductsList from './components/CategoryProductsList';
 import BottomCTA from './components/BottomCTA';
 
 const Categories = () => {
+  const location = useLocation();
+
   // 1. STATE MANAGEMENT
   const [selectedCategory, setSelectedCategory] = useState('smartphones');
   const [selectedSub, setSelectedSub] = useState('all');
   const [activeSort, setActiveSort] = useState('trending');
+
+  // Sync state when location.state changes
+  useEffect(() => {
+    if (location.state?.categoryId) {
+      setSelectedCategory(location.state.categoryId);
+    }
+  }, [location.state]);
 
   // 2. MOCK CATEGORIES META DATA
   const categoryMeta = {
