@@ -75,8 +75,8 @@ const BottomNav = () => {
           <div
             className="absolute h-[38px] bg-gradient-to-r from-[rgba(11,122,112,0.08)] to-[rgba(13,148,136,0.08)] border border-[rgba(13,148,136,0.12)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
             style={{
-              left: `calc(12px + ${activeIndex} * (100% - 24px) / 5 + 6px)`,
-              width: `calc((100% - 24px) / 5 - 12px)`,
+              left: `calc(12px + ${activeIndex} * (100% - 24px) / 5 + 3px)`,
+              width: `calc((100% - 24px) / 5 - 6px)`,
               pointerEvents: 'none'
             }}
           />
@@ -98,6 +98,7 @@ const BottomNav = () => {
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-5.5 h-5.5 stroke-[3]"
+                    viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeLinecap="round"
@@ -117,7 +118,7 @@ const BottomNav = () => {
             <NavLink
               key={idx}
               to={item.path}
-              className="flex items-center justify-center gap-1.5 h-[38px] w-full rounded-xl active:scale-95 transition-all text-center z-10"
+              className="flex items-center justify-center gap-1 h-[38px] w-full rounded-xl active:scale-95 transition-all text-center z-10"
               style={{
                 color: isActive ? 'var(--primary)' : 'rgba(107, 107, 114, 0.65)',
                 fontWeight: isActive ? '800' : '500',
@@ -128,7 +129,7 @@ const BottomNav = () => {
               </span>
               
               {isActive && (
-                <span className="text-[10.5px] font-black tracking-tight leading-none animate-fadeIn">
+                <span className="text-[9px] font-bold tracking-tight leading-none animate-fadeIn">
                   {item.label}
                 </span>
               )}
