@@ -1,152 +1,146 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-// Category sub-components
+
+// Import newly updated modular sub-components
 import CategoryHeader from './components/CategoryHeader';
 import MyCategoriesCarousel from './components/MyCategoriesCarousel';
-import SubcategoriesCarousel from './components/SubcategoriesCarousel';
 import SortTabs from './components/SortTabs';
 import CategoryProductsList from './components/CategoryProductsList';
 import BottomCTA from './components/BottomCTA';
 
+/**
+ * Premium mobile-first dynamic Categories Dashboard.
+ * Rebuilt from scratch to match the exact visual layout of the user's mockup image,
+ * strictly adapting to our project's teal branding color scheme (#0D9488).
+ */
 const Categories = () => {
   const location = useLocation();
 
   // 1. STATE MANAGEMENT
-  const [selectedCategory, setSelectedCategory] = useState('smartphones');
-  const [selectedSub, setSelectedSub] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeSort, setActiveSort] = useState('trending');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationName, setLocationName] = useState('Indore');
 
-  // Sync state when location.state changes
+  // Sync category state when location.state changes (from Home page navigation)
   useEffect(() => {
     if (location.state?.categoryId) {
       setSelectedCategory(location.state.categoryId);
     }
   }, [location.state]);
 
-  // 2. MOCK CATEGORIES META DATA
-  const categoryMeta = {
-    smartphones: {
-      title: 'Smartphones',
-      groups: 128,
-      buyers: '2.4K+',
-      desc: 'Find people who want to buy the same smartphone and get the best deals together.'
-    },
-    laptops: {
-      title: 'Laptops',
-      groups: 64,
-      buyers: '1.2K+',
-      desc: 'Get bulk discount on pro-laptops, gaming hubs, and sleek workbooks together.'
-    },
-    appliances: {
-      title: 'Appliances',
-      groups: 92,
-      buyers: '1.8K+',
-      desc: 'Form active groups to lower costs on premium washing machines, fridges, and home hubs.'
-    },
-    electronics: {
-      title: 'Electronics',
-      groups: 110,
-      buyers: '2.0K+',
-      desc: 'Secure minimum pricing on trending audio hubs, active noise cancellation headsets, and accessories.'
-    },
-    fashion: {
-      title: 'Fashion Hubs',
-      groups: 45,
-      buyers: '800+',
-      desc: 'Join seasonal active buyers to unlock special offers on curated jackets and apparel.'
-    },
-    'home-living': {
-      title: 'Home & Living',
-      groups: 38,
-      buyers: '600+',
-      desc: 'Collaborate to buy modern minimalist sofas, home tables, and design items.'
-    }
-  };
-
-  // 3. FULL DATASETS MAP FOR ALL CATEGORIES
+  // 2. COMPREHENSIVE DATASETS FOR POPULAR CATEGORIES (as per mockup image)
   const productsData = {
-    smartphones: [
+    'cars-bikes': [
       {
-        id: 'phone-g1',
-        title: 'iPhone 15 Pro Deal',
+        id: 'car-g1',
+        title: 'Thar ROXX Deal',
         status: 'active',
-        brand: 'Apple',
-        location: 'Mumbai, MH',
-        slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
-        image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+        brand: 'Mahindra',
+        location: 'Indore, MP',
+        slogan: 'Best possible deal on Thar ROXX in Indore.',
+        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=260&q=80',
         spotsJoined: 324,
         spotsTotal: 500,
         creatorName: 'Rohit Sharma',
         creatorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#iPhone15Pro', '#Apple', '#Deal'],
+        hashtags: ['#Thar', '#SUV', '#Indore'],
         badgeType: 'hot',
         badgeLabel: 'HOT',
-        daysLeft: '176 more needed',
-        targetPrice: 'Under ₹72,000',
-        bestOffer: '₹69,999 (8% OFF)',
-        myInterest: '2 Units'
-      },
+        daysLeft: '176 more needed'
+      }
+    ],
+    smartphones: [
       {
-        id: 'phone-g2',
-        title: 'Galaxy S24 Ultra Deal',
+        id: 'phone-g1',
+        title: 'iPhone 16 Under ₹60K',
         status: 'active',
-        brand: 'Samsung',
-        location: 'Pune, MH',
-        slogan: 'Planning to buy S24 Ultra. Join to get maximum bulk discount from official retail hubs.',
-        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=150&q=80',
+        brand: 'Apple',
+        location: 'Indore, MP',
+        slogan: "Let's get the best price on iPhone 16.",
+        image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=260&q=80',
         spotsJoined: 612,
         spotsTotal: 1000,
         creatorName: 'Neha Joshi',
         creatorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#S24Ultra', '#Samsung', '#Deal'],
-        badgeType: 'rising',
-        badgeLabel: 'RISING',
-        daysLeft: '388 more needed',
-        targetPrice: 'Under ₹85,000',
-        bestOffer: '₹81,999 (7% OFF)',
-        myInterest: '1 Unit'
-      },
+        hashtags: ['#iPhone16', '#Apple', '#Deal'],
+        badgeType: 'hot',
+        badgeLabel: 'HOT',
+        daysLeft: '388 more needed'
+      }
+    ],
+    travel: [
       {
-        id: 'phone-g3',
-        title: 'OnePlus 12 Deal',
-        status: 'closing',
-        brand: 'OnePlus',
-        location: 'Bengaluru, KA',
-        slogan: 'OnePlus 12 group deal. Limited slots! Hurry up and join now to lock final group price.',
-        image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=150&q=80',
+        id: 'travel-g1',
+        title: 'Goa Trip - June Plan',
+        status: 'active',
+        brand: 'IndoreTravel',
+        location: 'Indore, MP',
+        slogan: "Planning a trip to Goa in June. Let's go!",
+        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=260&q=80',
         spotsJoined: 281,
         spotsTotal: 350,
         creatorName: 'Aman Verma',
         creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#OnePlus12', '#Flagship', '#Deal'],
-        badgeType: 'new',
-        badgeLabel: 'NEW',
-        daysLeft: '69 more needed',
-        targetPrice: 'Under ₹55,000',
-        bestOffer: '₹51,999 (6% OFF)',
-        myInterest: '1 Unit'
+        hashtags: ['#Goa', '#Travel', '#Trip'],
+        badgeType: 'rising',
+        badgeLabel: 'RISING',
+        daysLeft: '69 more needed'
       }
     ],
-    laptops: [
+    'home-living': [
       {
-        id: 'laptop-g1',
-        title: 'MacBook Air M3 Deal',
+        id: 'gym-g1',
+        title: 'Gym Membership Indore',
         status: 'active',
-        brand: 'Apple',
-        location: 'Mumbai, MH',
-        slogan: 'Planning to buy MacBook Air M3. Join to get maximum discount with students benefit.',
-        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
+        brand: 'GoldGym',
+        location: 'Indore, MP',
+        slogan: 'Find the best & affordable gym in Indore.',
+        image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=260&q=80',
         spotsJoined: 119,
         spotsTotal: 200,
         creatorName: 'Kunal Singh',
         creatorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#MacBookM3', '#Apple', '#Indore'],
-        badgeType: 'hot',
-        badgeLabel: 'HOT',
-        daysLeft: '81 more needed',
-        targetPrice: 'Under ₹95,000',
-        bestOffer: '₹88,900 (7% OFF)',
-        myInterest: '1 Unit'
+        hashtags: ['#Gym', '#Fitness', '#Indore'],
+        badgeType: 'new',
+        badgeLabel: 'NEW',
+        daysLeft: '81 more needed'
+      }
+    ],
+    electronics: [
+      {
+        id: 'elect-g1',
+        title: 'PS5 Slim India Group',
+        status: 'active',
+        brand: 'Sony',
+        location: 'Indore, MP',
+        slogan: 'Looking for PS5 Slim at best price in India.',
+        image: 'https://images.unsplash.com/photo-1606813907291-d86edd9b94db?auto=format&fit=crop&w=260&q=80',
+        spotsJoined: 158,
+        spotsTotal: 300,
+        creatorName: 'Siddharth Yadav',
+        creatorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80',
+        hashtags: ['#PS5', '#Gaming', '#PlayStation'],
+        badgeType: 'rising',
+        badgeLabel: 'RISING',
+        daysLeft: '142 more needed'
+      },
+      {
+        id: 'elect-g2',
+        title: 'Sony WH-1000XM5 Deal',
+        status: 'active',
+        brand: 'Sony',
+        location: 'Delhi, DL',
+        slogan: 'Secure minimum pricing on trending active noise cancellation WH-1000XM5 headsets.',
+        image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=260&q=80',
+        spotsJoined: 281,
+        spotsTotal: 350,
+        creatorName: 'Aman Verma',
+        creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
+        hashtags: ['#Sony', '#ANC', '#Audio'],
+        badgeType: 'new',
+        badgeLabel: 'NEW',
+        daysLeft: '69 more needed'
       }
     ],
     appliances: [
@@ -157,7 +151,7 @@ const Categories = () => {
         brand: 'Samsung',
         location: 'Indore, MP',
         slogan: "Let's buy Samsung Washer in bulk and save up to ₹5,000.",
-        image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
+        image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=260&q=80',
         spotsJoined: 158,
         spotsTotal: 300,
         creatorName: 'Siddharth Yadav',
@@ -165,99 +159,88 @@ const Categories = () => {
         hashtags: ['#Samsung', '#HomeHub', '#Indore'],
         badgeType: 'rising',
         badgeLabel: 'RISING',
-        daysLeft: '142 more needed',
-        targetPrice: 'Under ₹25,000',
-        bestOffer: '₹23,200 (7% OFF)',
-        myInterest: '2 Units'
+        daysLeft: '142 more needed'
       }
-    ],
-    electronics: [
-      {
-        id: 'elect-g1',
-        title: 'Sony WH-1000XM5 Deal',
-        status: 'active',
-        brand: 'Sony',
-        location: 'Delhi, DL',
-        slogan: 'Secure minimum pricing on trending active noise cancellation WH-1000XM5 headsets.',
-        image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=150&q=80',
-        spotsJoined: 281,
-        spotsTotal: 350,
-        creatorName: 'Aman Verma',
-        creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Sony', '#ANC', '#Audio'],
-        badgeType: 'new',
-        badgeLabel: 'NEW',
-        daysLeft: '69 more needed',
-        targetPrice: 'Under ₹30,000',
-        bestOffer: '₹26,999 (10% OFF)',
-        myInterest: '1 Unit'
-      }
-    ],
-    fashion: [],
-    'home-living': []
+    ]
   };
 
-  // 4. DYNAMIC FILTER AND SORT LOGIC
-  const activeProducts = useMemo(() => {
-    const list = productsData[selectedCategory] || [];
-    
-    // Subcategory brand filter
-    return list.filter((p) => {
-      if (selectedSub === 'all') return true;
-      return p.brand.toLowerCase() === selectedSub.toLowerCase();
-    });
-  }, [selectedCategory, selectedSub]);
+  // Combine products for "All" filter selection
+  const allProductsList = useMemo(() => {
+    return Object.values(productsData).flat();
+  }, []);
 
-  const currentMeta = categoryMeta[selectedCategory] || {
-    title: 'Products',
-    groups: 0,
-    buyers: '0',
-    desc: 'Explore active groups in this section.'
-  };
+  // 3. OPTIMIZED SEARCH & TABS FILTER ENGINE
+  const filteredProducts = useMemo(() => {
+    let list = selectedCategory === 'all' || selectedCategory === 'more'
+      ? allProductsList 
+      : productsData[selectedCategory] || [];
+
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(p => 
+        p.title.toLowerCase().includes(q) || 
+        p.slogan.toLowerCase().includes(q) ||
+        p.hashtags.some(tag => tag.toLowerCase().includes(q))
+      );
+    }
+
+    // Sort tabs filter
+    if (activeSort === 'trending') {
+      // Sort by members count descending
+      return [...list].sort((a, b) => b.spotsJoined - a.spotsJoined);
+    } else if (activeSort === 'nearby') {
+      // Show only Indore, MP deals
+      return list.filter(p => p.location.includes('Indore'));
+    } else if (activeSort === 'new') {
+      // Filter by 'new' or 'rising' badge
+      return list.filter(p => p.badgeType === 'new' || p.badgeType === 'rising');
+    } else if (activeSort === 'my-groups') {
+      // Mock user groups (e.g. CreatorName "Rohit Sharma" or "Neha Joshi" representing items user is part of)
+      return list.filter(p => p.spotsJoined > 300);
+    }
+
+    return list;
+  }, [selectedCategory, activeSort, searchQuery, allProductsList]);
 
   return (
-    <div className="flex flex-col gap-4 select-none">
-      {/* 1. Custom Gorgeous Rounded Bottom Header */}
+    <div className="flex flex-col gap-4 select-none min-h-screen bg-white">
+      {/* 1. Header with custom dynamic title & search */}
       <CategoryHeader
-        categoryTitle={currentMeta.title}
-        groupsCount={currentMeta.groups}
-        buyersCount={currentMeta.buyers}
-        description={currentMeta.desc}
+        title="Groups"
+        subtitle="Find people with same interests. Build stronger together."
+        currentLocation={locationName}
+        onLocationClick={() => setLocationName(prev => prev === 'Indore' ? 'Mumbai' : 'Indore')}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
-      {/* Dynamic Content Container */}
-      <div className="flex flex-col gap-4 px-3.5 pb-24">
-        {/* 2. My Categories carousel switcher */}
+      {/* Dynamic Content Body Container */}
+      <div className="flex flex-col gap-4 px-4 pb-24">
+        
+        {/* 2. Horizontal categories list */}
         <MyCategoriesCarousel
           selectedCategory={selectedCategory}
-          onChange={(cat) => {
-            setSelectedCategory(cat);
-            setSelectedSub('all'); // Reset subcategory brand on main category change
-          }}
+          onChange={setSelectedCategory}
+          onViewAll={() => setSelectedCategory('all')}
         />
 
-        {/* 3. Subcategories filters badges row */}
-        <SubcategoriesCarousel
-          selectedSub={selectedSub}
-          onChange={setSelectedSub}
-        />
-
-        {/* 4. Active underline sorting headers row */}
+        {/* 3. Sort options pills switcher */}
         <SortTabs
           activeTab={activeSort}
           onChange={setActiveSort}
         />
 
-        {/* 5. Custom Categories product cards row */}
-        {activeProducts.length > 0 ? (
-          <CategoryProductsList products={activeProducts} />
+        {/* 4. Active category grid view */}
+        {filteredProducts.length > 0 ? (
+          <CategoryProductsList products={filteredProducts} />
         ) : (
-          <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-400 text-xs font-semibold shadow-sm my-2">
+          <div className="bg-[#F8FAFC] border border-slate-100 rounded-[22px] p-10 text-center text-slate-400 text-xs font-semibold shadow-sm my-2">
             No active group deals found under this filter. Create one below!
           </div>
         )}
 
-        {/* 6. Can't find what you are looking for box row */}
+        {/* 5. Bottom banner group creator */}
         <BottomCTA />
       </div>
     </div>
