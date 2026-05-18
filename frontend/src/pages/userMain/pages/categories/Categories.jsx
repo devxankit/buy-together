@@ -1,106 +1,242 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { c } from '../../../../design/tokens';
-import Icon from '../../../../components/ui/Icon';
-import Chip from '../../../../components/ui/Chip';
-import Progress from '../../../../components/ui/Progress';
-import SearchBar from '../../../../components/ui/SearchBar';
-import ProductGlyph from '../../../../components/ui/ProductGlyph';
-
-const FILTERS = ['Sort · Trending', 'Price · Any', 'Near me', '< 10 joined', 'Verified only'];
-
-const ITEMS = [
-  { title: 'iPhone 16 Pro', sub: '256GB · Titanium', vendor: 'Apple', price: '₹1,19,900', orig: '₹1,29,900', joined: 7, total: 10, save: '8%', glyph: 'phone' },
-  { title: 'Galaxy S24 Ultra', sub: '512GB · Stellar', vendor: 'Samsung', price: '₹1,09,999', orig: '₹1,29,999', joined: 3, total: 5, save: '15%', glyph: 'phone' },
-  { title: 'OnePlus 12R', sub: '256GB · Flowy', vendor: 'OnePlus', price: '₹38,999', orig: '₹42,999', joined: 9, total: 10, save: '9%', glyph: 'phone' },
-  { title: 'Nothing Phone 3', sub: '128GB · White', vendor: 'Nothing', price: '₹29,990', orig: '₹34,990', joined: 12, total: 15, save: '14%', glyph: 'phone' },
-  { title: 'Pixel 9 Pro', sub: '256GB · Obsidian', vendor: 'Google', price: '₹1,09,999', orig: '₹1,19,999', joined: 5, total: 8, save: '8%', glyph: 'phone' },
-  { title: 'iPhone 15 128GB', sub: '128GB · Black', vendor: 'Apple', price: '₹74,900', orig: '₹79,900', joined: 6, total: 10, save: '6%', glyph: 'phone' },
-];
+import React, { useState, useMemo } from 'react';
+// Category sub-components
+import CategoryHeader from './components/CategoryHeader';
+import MyCategoriesCarousel from './components/MyCategoriesCarousel';
+import SubcategoriesCarousel from './components/SubcategoriesCarousel';
+import SortTabs from './components/SortTabs';
+import CategoryProductsList from './components/CategoryProductsList';
+import BottomCTA from './components/BottomCTA';
 
 const Categories = () => {
-  const [search, setSearch] = useState('');
+  // 1. STATE MANAGEMENT
+  const [selectedCategory, setSelectedCategory] = useState('smartphones');
+  const [selectedSub, setSelectedSub] = useState('all');
+  const [activeSort, setActiveSort] = useState('trending');
 
-  const filtered = ITEMS.filter(it =>
-    it.title.toLowerCase().includes(search.toLowerCase()) ||
-    it.vendor.toLowerCase().includes(search.toLowerCase())
-  );
+  // 2. MOCK CATEGORIES META DATA
+  const categoryMeta = {
+    smartphones: {
+      title: 'Smartphones',
+      groups: 128,
+      buyers: '2.4K+',
+      desc: 'Find people who want to buy the same smartphone and get the best deals together.'
+    },
+    laptops: {
+      title: 'Laptops',
+      groups: 64,
+      buyers: '1.2K+',
+      desc: 'Get bulk discount on pro-laptops, gaming hubs, and sleek workbooks together.'
+    },
+    appliances: {
+      title: 'Appliances',
+      groups: 92,
+      buyers: '1.8K+',
+      desc: 'Form active groups to lower costs on premium washing machines, fridges, and home hubs.'
+    },
+    electronics: {
+      title: 'Electronics',
+      groups: 110,
+      buyers: '2.0K+',
+      desc: 'Secure minimum pricing on trending audio hubs, active noise cancellation headsets, and accessories.'
+    },
+    fashion: {
+      title: 'Fashion Hubs',
+      groups: 45,
+      buyers: '800+',
+      desc: 'Join seasonal active buyers to unlock special offers on curated jackets and apparel.'
+    },
+    'home-living': {
+      title: 'Home & Living',
+      groups: 38,
+      buyers: '600+',
+      desc: 'Collaborate to buy modern minimalist sofas, home tables, and design items.'
+    }
+  };
+
+  // 3. FULL DATASETS MAP FOR ALL CATEGORIES
+  const productsData = {
+    smartphones: [
+      {
+        id: 'phone-g1',
+        title: 'iPhone 15 Pro',
+        status: 'active',
+        brand: 'Apple',
+        location: 'Mumbai',
+        slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
+        image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 28,
+        spotsTotal: 50,
+        extraCount: 25,
+        highlightLabel: 'Trending',
+        statusLabel: 'Active',
+        daysLeft: '2d left',
+        targetPrice: 'Under ₹72,000',
+        bestOffer: '₹69,999 (8% OFF)',
+        myInterest: '2 Units'
+      },
+      {
+        id: 'phone-g2',
+        title: 'Samsung Galaxy S24 Ultra',
+        status: 'active',
+        brand: 'Samsung',
+        location: 'Pune',
+        slogan: 'Planning to buy S24 Ultra. Join to get maximum discount.',
+        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 32,
+        spotsTotal: 60,
+        extraCount: 18,
+        highlightLabel: '',
+        statusLabel: 'Active',
+        daysLeft: '3d left',
+        targetPrice: 'Under ₹85,000',
+        bestOffer: '₹81,999 (7% OFF)',
+        myInterest: '1 Unit'
+      },
+      {
+        id: 'phone-g3',
+        title: 'OnePlus 12',
+        status: 'closing',
+        brand: 'OnePlus',
+        location: 'Bengaluru',
+        slogan: 'OnePlus 12 group deal. Limited slots! Hurry up and join now.',
+        image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 40,
+        spotsTotal: 50,
+        extraCount: 12,
+        highlightLabel: 'Closing Soon',
+        statusLabel: 'Closing Soon',
+        daysLeft: '12h left',
+        targetPrice: 'Under ₹55,000',
+        bestOffer: '₹51,999 (6% OFF)',
+        myInterest: '1 Unit'
+      }
+    ],
+    laptops: [
+      {
+        id: 'laptop-g1',
+        title: 'MacBook Air M3',
+        status: 'active',
+        brand: 'Apple',
+        location: 'Pune',
+        slogan: 'Planning to buy MacBook Air M3. Join to get maximum discount.',
+        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 16,
+        spotsTotal: 30,
+        extraCount: 13,
+        highlightLabel: 'Trending',
+        statusLabel: 'Active',
+        daysLeft: '3d left',
+        targetPrice: 'Under ₹95,000',
+        bestOffer: '₹88,900 (7% OFF)',
+        myInterest: '1 Unit'
+      }
+    ],
+    appliances: [
+      {
+        id: 'appliance-g1',
+        title: 'Samsung Washer',
+        status: 'active',
+        brand: 'Samsung',
+        location: 'Navi Mumbai',
+        slogan: "Let's buy Samsung Washer in bulk and save more.",
+        image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 12,
+        spotsTotal: 40,
+        extraCount: 8,
+        highlightLabel: '',
+        statusLabel: 'Active',
+        daysLeft: '2d left',
+        targetPrice: 'Under ₹25,000',
+        bestOffer: '₹23,200 (7% OFF)',
+        myInterest: '2 Units'
+      }
+    ],
+    electronics: [
+      {
+        id: 'elect-g1',
+        title: 'Sony WH-1000XM5',
+        status: 'active',
+        brand: 'Sony',
+        location: 'Delhi',
+        slogan: 'Secure minimum pricing on trending active noise cancellation audio hubs.',
+        image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 50,
+        spotsTotal: 50,
+        extraCount: 31,
+        highlightLabel: 'Trending',
+        statusLabel: 'Active',
+        daysLeft: '0d left',
+        targetPrice: 'Under ₹30,000',
+        bestOffer: '₹26,999 (10% OFF)',
+        myInterest: '1 Unit'
+      }
+    ],
+    fashion: [],
+    'home-living': []
+  };
+
+  // 4. DYNAMIC FILTER AND SORT LOGIC
+  const activeProducts = useMemo(() => {
+    const list = productsData[selectedCategory] || [];
+    
+    // Subcategory brand filter
+    return list.filter((p) => {
+      if (selectedSub === 'all') return true;
+      return p.brand.toLowerCase() === selectedSub.toLowerCase();
+    });
+  }, [selectedCategory, selectedSub]);
+
+  const currentMeta = categoryMeta[selectedCategory] || {
+    title: 'Products',
+    groups: 0,
+    buyers: '0',
+    desc: 'Explore active groups in this section.'
+  };
 
   return (
-    <div style={{ background: c.surfaceAlt, minHeight: '100vh' }}>
-      {/* Header */}
-      <div style={{ padding: '20px 20px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 19, fontWeight: 500, color: c.ink, letterSpacing: -0.4 }}>Phones</div>
-          <div style={{ fontSize: 11.5, fontWeight: 400, color: c.faint, marginTop: 1 }}>284 active groups · 42 vendors</div>
-        </div>
-        <button style={{ width: 38, height: 38, borderRadius: 12, background: '#fff', border: `1px solid ${c.line}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <Icon name="grid" size={17} color={c.ink} stroke={1.8} />
-        </button>
-      </div>
+    <div className="flex flex-col gap-4 select-none">
+      {/* 1. Custom Gorgeous Rounded Bottom Header */}
+      <CategoryHeader
+        categoryTitle={currentMeta.title}
+        groupsCount={currentMeta.groups}
+        buyersCount={currentMeta.buyers}
+        description={currentMeta.desc}
+      />
 
-      {/* Search */}
-      <div style={{ padding: '14px 20px 12px' }}>
-        <SearchBar placeholder="iPhone 16 Pro, Samsung S24…" value={search} onChange={e => setSearch(e.target.value)} compact />
-      </div>
+      {/* Dynamic Content Container */}
+      <div className="flex flex-col gap-4 px-3.5 pb-24">
+        {/* 2. My Categories carousel switcher */}
+        <MyCategoriesCarousel
+          selectedCategory={selectedCategory}
+          onChange={(cat) => {
+            setSelectedCategory(cat);
+            setSelectedSub('all'); // Reset subcategory brand on main category change
+          }}
+        />
 
-      {/* Filters */}
-      <div style={{ padding: '0 20px 16px', display: 'flex', gap: 6, overflowX: 'auto' }} className="no-scrollbar">
-        {FILTERS.map((f, i) => (
-          <button key={i} style={{
-            padding: '8px 13px', borderRadius: 99, flexShrink: 0,
-            background: i === 0 ? c.ink : '#fff',
-            color: i === 0 ? '#fff' : c.ink,
-            border: i === 0 ? 'none' : `1px solid ${c.line}`,
-            fontSize: 11.5, fontWeight: 500,
-            display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-          }}>
-            {f}
-            {i === 0 && <Icon name="chevD" size={11} color="#fff" stroke={2} />}
-          </button>
-        ))}
-      </div>
+        {/* 3. Subcategories filters badges row */}
+        <SubcategoriesCarousel
+          selectedSub={selectedSub}
+          onChange={setSelectedSub}
+        />
 
-      {/* Grid */}
-      <div style={{ padding: '0 20px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {filtered.map((it, i) => (
-          <Link key={i} to="/groups/1" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: '#fff', borderRadius: 18, overflow: 'hidden',
-              border: `1px solid ${c.line}`,
-            }}>
-              <div style={{
-                height: 100, background: c.surfaceAlt,
-                position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <ProductGlyph kind={it.glyph} size={72} tone={c.inkSoft} />
-                <div style={{ position: 'absolute', top: 8, left: 8 }}>
-                  <Chip tone="saving" size="xs">↓ {it.save}</Chip>
-                </div>
-                <button style={{
-                  position: 'absolute', top: 8, right: 8,
-                  width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,0.9)',
-                  border: `1px solid ${c.line}`,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                }}>
-                  <Icon name="heart" size={13} color={c.muted} stroke={1.8} />
-                </button>
-              </div>
-              <div style={{ padding: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 500, color: c.muted, letterSpacing: 0.4, textTransform: 'uppercase' }}>{it.vendor}</div>
-                <div style={{ fontSize: 13.5, fontWeight: 500, color: c.ink, marginTop: 3, letterSpacing: -0.2, lineHeight: 1.2 }}>{it.title}</div>
-                <div style={{ fontSize: 11, fontWeight: 400, color: c.muted, marginTop: 2 }}>{it.sub}</div>
-                <div style={{ marginTop: 8, fontSize: 15, fontWeight: 500, color: c.ink, letterSpacing: -0.3 }}>{it.price}</div>
-                <div style={{ fontSize: 10.5, fontWeight: 400, color: c.faint, textDecoration: 'line-through' }}>{it.orig}</div>
-                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Progress value={it.joined} total={it.total} height={3} />
-                  <span style={{ fontSize: 9.5, fontWeight: 500, color: c.ink, whiteSpace: 'nowrap' }}>{it.joined}/{it.total}</span>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
+        {/* 4. Active underline sorting headers row */}
+        <SortTabs
+          activeTab={activeSort}
+          onChange={setActiveSort}
+        />
+
+        {/* 5. Custom Categories product cards row */}
+        {activeProducts.length > 0 ? (
+          <CategoryProductsList products={activeProducts} />
+        ) : (
+          <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-400 text-xs font-semibold shadow-sm my-2">
+            No active group deals found under this filter. Create one below!
+          </div>
+        )}
+
+        {/* 6. Can't find what you are looking for box row */}
+        <BottomCTA />
       </div>
     </div>
   );
