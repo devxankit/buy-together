@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { c } from '../../../design/tokens';
-import Icon from '../../../components/ui/Icon';
-import { Avatar } from '../../../components/ui/Avatar';
-import Progress from '../../../components/ui/Progress';
-import ProductGlyph from '../../../components/ui/ProductGlyph';
+import { c } from '../../../../design/tokens';
+import Icon from '../../../../components/ui/Icon';
+import { Avatar } from '../../../../components/ui/Avatar';
+import Progress from '../../../../components/ui/Progress';
+import ProductGlyph from '../../../../components/ui/ProductGlyph';
 
 const MESSAGES = [
   { type: 'system', text: 'Group started · 7 days ago' },

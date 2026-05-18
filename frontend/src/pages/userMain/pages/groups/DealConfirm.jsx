@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { c } from '../../../design/tokens';
-import Icon from '../../../components/ui/Icon';
-import { AvatarStack } from '../../../components/ui/Avatar';
-import Button from '../../../components/ui/Button';
-import ProductGlyph from '../../../components/ui/ProductGlyph';
+import { c } from '../../../../design/tokens';
+import Icon from '../../../../components/ui/Icon';
+import { AvatarStack } from '../../../../components/ui/Avatar';
+import Button from '../../../../components/ui/Button';
+import ProductGlyph from '../../../../components/ui/ProductGlyph';
 
 const CONFETTI_COLORS = [c.primary, c.saving, c.info, c.muted, c.faint];
 

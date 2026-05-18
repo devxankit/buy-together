@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { c } from '../../../design/tokens';
-import Icon from '../../../components/ui/Icon';
-import Chip from '../../../components/ui/Chip';
-import Progress from '../../../components/ui/Progress';
-import ProductGlyph from '../../../components/ui/ProductGlyph';
-import Button from '../../../components/ui/Button';
+import { c } from '../../../../design/tokens';
+import Icon from '../../../../components/ui/Icon';
+import Chip from '../../../../components/ui/Chip';
+import Progress from '../../../../components/ui/Progress';
+import ProductGlyph from '../../../../components/ui/ProductGlyph';
+import Button from '../../../../components/ui/Button';
 
 const TABS = ['All', 'Active', 'Confirmed', 'Expired'];
 

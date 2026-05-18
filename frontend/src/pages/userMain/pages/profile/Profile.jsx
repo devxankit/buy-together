@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from '../../../hooks/useSelector';
-import { useDispatch } from '../../../hooks/useDispatch';
-import { logout } from '../../../redux/slices/authSlice';
-import { c } from '../../../design/tokens';
-import Icon from '../../../components/ui/Icon';
-import { Avatar } from '../../../components/ui/Avatar';
-import Chip from '../../../components/ui/Chip';
-import Progress from '../../../components/ui/Progress';
+import { useSelector } from '../../../../hooks/useSelector';
+import { useDispatch } from '../../../../hooks/useDispatch';
+import { logout } from '../../../../redux/slices/authSlice';
+import { c } from '../../../../design/tokens';
+import Icon from '../../../../components/ui/Icon';
+import { Avatar } from '../../../../components/ui/Avatar';
+import Chip from '../../../../components/ui/Chip';
+import Progress from '../../../../components/ui/Progress';
 
 const MENU = [
   { icon: 'users',    label: 'My groups',    sub: '4 active · 8 completed',      to: '/groups' },

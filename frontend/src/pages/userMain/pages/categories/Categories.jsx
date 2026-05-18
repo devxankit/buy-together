@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { c } from '../../../design/tokens';
-import Icon from '../../../components/ui/Icon';
-import Chip from '../../../components/ui/Chip';
-import Progress from '../../../components/ui/Progress';
-import SearchBar from '../../../components/ui/SearchBar';
-import ProductGlyph from '../../../components/ui/ProductGlyph';
+import { c } from '../../../../design/tokens';
+import Icon from '../../../../components/ui/Icon';
+import Chip from '../../../../components/ui/Chip';
+import Progress from '../../../../components/ui/Progress';
+import SearchBar from '../../../../components/ui/SearchBar';
+import ProductGlyph from '../../../../components/ui/ProductGlyph';
 
 const FILTERS = ['Sort · Trending', 'Price · Any', 'Near me', '< 10 joined', 'Verified only'];
 

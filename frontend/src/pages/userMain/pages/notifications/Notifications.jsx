@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { c } from '../../../design/tokens';
-import Icon from '../../../components/ui/Icon';
+import { c } from '../../../../design/tokens';
+import Icon from '../../../../components/ui/Icon';
 
 const TABS = ['All', 'Groups', 'Deals', 'System'];
 
