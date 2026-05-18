@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
-import Layout from '../userMain/components/layout/UserMainLayout';
+import Layout from '../pages/userMain/components/layout/UserMainLayout';
 import VendorLayout from '../pages/vendor/layout/VendorLayout';
 
 // Auth & Onboarding
@@ -21,7 +21,7 @@ import {
   Categories,
   GroupChat,
   DealConfirm
-} from '../userMain/pages';
+} from '../pages/userMain/pages';
 
 // Vendor Pages
 import VendorSignup from '../pages/vendor/VendorSignup';
