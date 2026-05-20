@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
 
 /**
  * Premium redesigned CategoryProductsList matching the custom cards layout from user mockup.
@@ -13,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
  */
 const CategoryProductsList = ({ products }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const wishlistItems = useSelector((state) => state.wishlist.items);
 
   return (
     <div className="flex flex-col gap-4 select-none pb-4 animate-fadeIn">
@@ -120,13 +124,13 @@ const CategoryProductsList = ({ products }) => {
               </div>
 
               {/* Row 5: Tags Row AND CTA Join Group Button */}
-              <div className="flex items-center justify-between gap-2 mt-2">
+              <div className="flex items-center justify-between gap-2 mt-2 w-full">
                 {/* Hashtags list */}
-                <div className="flex items-center gap-1 flex-wrap">
+                <div className="flex items-center gap-1 overflow-hidden flex-1 flex-wrap h-[18px]">
                   {(prod.hashtags || []).map((tag, tIdx) => (
                     <span
                       key={tIdx}
-                      className="bg-[#E8F8F5] text-[#0D9488] text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none tracking-tight"
+                      className="bg-[#E8F8F5] text-[#0D9488] text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none tracking-tight whitespace-nowrap"
                     >
                       {tag}
                     </span>
@@ -134,12 +138,25 @@ const CategoryProductsList = ({ products }) => {
                 </div>
 
                 {/* Join Group / View Group Button */}
-                <button
-                  onClick={() => navigate(`/groups/${prod.id}`)}
-                  className="border border-[#0D9488] hover:bg-[#0D9488]/5 text-[#0D9488] px-3.5 py-1.5 rounded-xl text-[10px] font-black transition-all duration-200 active:scale-95 flex-shrink-0"
-                >
-                  Join Group
-                </button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(toggleWishlist(prod));
+                    }}
+                    className="p-1.5 active:scale-95 transition-all text-slate-300 hover:text-red-500"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill={wishlistItems.some(item => item.id === prod.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => navigate(`/groups/${prod.id}/chat`, { state: { group: prod, isJoined: false } })}
+                    className="border border-[#0D9488] hover:bg-[#0D9488]/5 text-[#0D9488] px-3 py-1.5 rounded-xl text-[10px] font-black transition-all duration-200 active:scale-95"
+                  >
+                    Join Group
+                  </button>
+                </div>
               </div>
 
             </div>

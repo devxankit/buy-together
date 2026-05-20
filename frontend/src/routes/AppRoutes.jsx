@@ -6,8 +6,8 @@ import VendorLayout from '../pages/vendor/layout/VendorLayout';
 // Auth & Onboarding
 import Onboarding from '../pages/auth/Onboarding';
 import Login from '../pages/auth/Login';
+import Signup from '../pages/auth/Signup';
 import OTP from '../pages/auth/OTP';
-import Location from '../pages/auth/Location';
 
 // User Pages (Consolidated inside userMain)
 import {
@@ -20,7 +20,19 @@ import {
   Notifications,
   Categories,
   GroupChat,
-  DealConfirm
+  DealConfirm,
+  Wishlist,
+  SavedAddresses,
+  PersonalInfo,
+  ChangePassword,
+  NotificationPreferences,
+  Language,
+  PrivacySettings,
+  HelpCenter,
+  TermsConditions,
+  PrivacyPolicy,
+  CommunityGuidelines,
+  AboutUs
 } from '../pages/userMain/pages';
 
 // Vendor Pages
@@ -37,8 +49,8 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/otp" element={<OTP />} />
-      <Route path="/location" element={<Location />} />
       <Route path="/vendor/signup" element={<VendorSignup />} />
 
       {/* Protected Routes */}
@@ -58,6 +70,18 @@ const AppRoutes = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/addresses" element={<SavedAddresses />} />
+          <Route path="/personal-info" element={<PersonalInfo />} />
+          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/notification-preferences" element={<NotificationPreferences />} />
+          <Route path="/language" element={<Language />} />
+          <Route path="/privacy-settings" element={<PrivacySettings />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/terms" element={<TermsConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+          <Route path="/about" element={<AboutUs />} />
 
           {/* Admin */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>

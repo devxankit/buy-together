@@ -12,21 +12,262 @@ const Profile = () => {
     navigate('/login');
   };
 
+  const stats = [
+    { label: 'Groups Joined', value: '12', icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg> },
+    { label: 'Groups Created', value: '3', icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
+    { label: 'Deals Booked', value: '24', icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg> },
+    { label: 'Rating', value: '4.8', icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> },
+    { label: 'Total Savings', value: '₹12,540', icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> },
+  ];
+
+  const shortcuts = [
+    { label: 'Wishlist', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /> },
+    { label: 'Saved Addresses', icon: <><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></> },
+    { label: 'Help & Support', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 12V8.928a6.5 6.5 0 00-12.728 0V12m12.728 0A2.5 2.5 0 0121 14.5V17a2.5 2.5 0 01-2.5 2.5h-1.5v-7h1.364zm-12.728 0A2.5 2.5 0 003 14.5V17a2.5 2.5 0 002.5 2.5h1.5v-7H5.636z" /> },
+  ];
+
+  const orders = [
+    { label: 'All Orders', value: '37', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /> },
+    { label: 'Confirmed', value: '12', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /> },
+    { label: 'In Progress', value: '5', color: 'text-orange-500', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /> }, // Actually truck icon below
+    { label: 'Completed', value: '18', color: 'text-green-500', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    { label: 'Cancelled', value: '2', color: 'text-red-500', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+  ];
+  // Truck replacement
+  orders[2].icon = <path d="M8 16a2 2 0 01-2 2m0 0a2 2 0 01-2-2m4 0h6m0 0a2 2 0 012 2m-2-2a2 2 0 012-2m0 0h2a1 1 0 001-1v-4a1 1 0 00-1-1h-2m-8 0h6m0 0V8a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2h2zm4-6v4m0 0H8" strokeLinecap="round" strokeLinejoin="round" />;
+
+  const settings = [
+    { label: 'Personal Information', route: '/personal-info', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
+    { label: 'Change Password', route: '/change-password', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /> },
+    { label: 'Notification Preferences', route: '/notification-preferences', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /> },
+    { label: 'Language', route: '/language', rightText: 'English', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    { label: 'Privacy Settings', route: '/privacy-settings', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /> },
+  ];
+
+  const legal = [
+    { label: 'Help Center', route: '/help-center', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    { label: 'Terms & Conditions', route: '/terms', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+    { label: 'Privacy Policy', route: '/privacy-policy', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /> },
+    { label: 'Community Guidelines', route: '/community-guidelines', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /> },
+    { label: 'About Us', route: '/about', rightText: 'Version 2.3.1', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+  ];
+
+  const handleRoute = (path) => {
+    navigate(path);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-      <div className="w-16 h-16 bg-[#0D9488]/10 text-[#0D9488] rounded-full flex items-center justify-center mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
+    <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans pb-28 relative">
+      
+      {/* Decorative Background Blob */}
+      <div className="absolute top-0 left-0 w-full h-[320px] overflow-hidden z-0">
+        <div className="absolute -top-[100px] -right-[100px] w-[400px] h-[400px] rounded-full bg-[#E6F4F2] blur-3xl opacity-60"></div>
+        <div className="absolute -top-[50px] -left-[150px] w-[350px] h-[350px] rounded-full bg-[#E0F2FE] blur-3xl opacity-40"></div>
       </div>
-      <h2 className="text-lg font-bold text-[#111112] mb-1">My Profile</h2>
-      <p className="text-sm text-[#6B6B72] mb-6">This screen will be rebuilt soon.</p>
-      <button 
-        onClick={handleLogout}
-        className="px-4 py-2 border border-red-500 text-red-500 text-sm font-medium rounded-xl hover:bg-red-50 transition-all"
-      >
-        Log out
-      </button>
+
+      {/* Header Area */}
+      <div className="relative z-10 px-5 pt-4 pb-6">
+        {/* Spacer for top */}
+        <div className="mb-6"></div>
+
+        <div className="flex items-center gap-4 relative">
+          <div className="relative flex-shrink-0">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" alt="Rohan Verma" className="w-[75px] h-[75px] rounded-full object-cover border-2 border-white shadow-md" />
+            <button className="absolute bottom-0 right-0 w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm text-[#0D9488] active:scale-95 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 flex flex-col items-start min-w-0 justify-center">
+            <div className="flex items-center gap-1.5 mb-1">
+              <h2 className="text-[17px] font-extrabold text-[#111112] truncate leading-none">Rohan Verma</h2>
+              <div className="w-4 h-4 bg-[#0D9488] rounded-full flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div className="bg-[#E6F4F2] text-[#097A6F] px-1.5 py-0.5 rounded text-[8.5px] font-bold tracking-tight mb-1.5 w-fit">
+              Verified Member
+            </div>
+            <p className="text-[10.5px] font-semibold text-[#475569] mb-1 w-full truncate">rohan.verma@gmail.com</p>
+            <p className="text-[9.5px] font-bold text-[#64748B] flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Mumbai, Maharashtra
+            </p>
+          </div>
+          <button className="flex-shrink-0 bg-white border border-slate-200/80 rounded-full px-2.5 py-1.5 shadow-sm text-[9.5px] font-bold text-[#0D9488] flex items-center gap-1 active:scale-95 transition-all self-center mt-2">
+            Edit Profile
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="relative z-10 px-5 flex flex-col gap-5">
+        
+        {/* Stats Row */}
+        <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 p-4 flex justify-between">
+          {stats.map((item, idx) => (
+            <React.Fragment key={idx}>
+              <div 
+                onClick={() => handleRoute('/groups')}
+                className="flex flex-col items-center flex-1 cursor-pointer active:scale-95 transition-transform"
+              >
+                <div className="text-[#0D9488] mb-1.5">
+                  {item.icon}
+                </div>
+                <span className="text-[14px] font-black text-[#1E293B] mb-0.5 leading-none">{item.value}</span>
+                <span className="text-[8px] font-bold text-[#64748B] text-center leading-tight max-w-[50px]">{item.label}</span>
+              </div>
+              {idx < stats.length - 1 && <div className="w-[1px] bg-slate-100 my-1"></div>}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Verified Banner */}
+        <div className="bg-gradient-to-r from-[#097A6F] to-[#0D9488] rounded-[20px] p-4 flex items-center justify-between shadow-md shadow-[#0D9488]/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-xl"></div>
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center flex-shrink-0 bg-white/10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 mb-1">
+                <h3 className="text-[13px] font-extrabold text-white">Verified Member</h3>
+                <div className="w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2 h-2 text-[#0D9488]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                </div>
+              </div>
+              <p className="text-[9.5px] font-medium text-white/90 leading-tight pr-2">Enjoy exclusive deals, priority access to closing soon groups and more benefits.</p>
+            </div>
+          </div>
+          <button className="flex-shrink-0 bg-white text-[#097A6F] text-[9.5px] font-bold rounded-full px-3 py-2 flex items-center gap-1 active:scale-95 transition-all shadow-sm">
+            View Benefits
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+          </button>
+        </div>
+
+        {/* My Shortcuts */}
+        <div>
+          <h3 className="text-[13px] font-extrabold text-[#111112] mb-3">My Shortcuts</h3>
+          <div className="grid grid-cols-3 gap-2.5">
+            {shortcuts.map((item, idx) => (
+              <div 
+                key={idx} 
+                onClick={() => {
+                  if (item.label === 'Wishlist') handleRoute('/wishlist');
+                  else if (item.label === 'Saved Addresses') handleRoute('/addresses');
+                  else handleRoute('/support');
+                }}
+                className="bg-white border border-slate-100 rounded-[18px] p-3 flex flex-col items-center justify-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-95 transition-all cursor-pointer hover:border-[#0D9488]/30"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-[22px] h-[22px] text-[#0D9488]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                  {item.icon}
+                </svg>
+                <span className="text-[9px] font-bold text-[#475569] text-center leading-tight">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* My Orders */}
+        <div className="bg-white border border-slate-100 rounded-[20px] p-4 shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-[13px] font-extrabold text-[#111112]">My Orders</h3>
+            <button 
+              onClick={() => handleRoute('/groups')}
+              className="text-[10px] font-extrabold text-[#0D9488] flex items-center gap-0.5 active:scale-95 transition-all"
+            >
+              View All
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+          <div className="flex justify-between">
+            {orders.map((item, idx) => (
+              <div 
+                key={idx} 
+                onClick={() => handleRoute('/groups')}
+                className="flex flex-col items-center flex-1 cursor-pointer group active:scale-95 transition-all"
+              >
+                <div className={`w-[40px] h-[40px] rounded-full flex items-center justify-center mb-1.5 transition-colors ${item.color || 'text-[#0D9488] bg-transparent group-hover:bg-[#E6F4F2]'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${item.color || 'text-[#0D9488]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                    {item.icon}
+                  </svg>
+                </div>
+                <span className="text-[9px] font-bold text-[#1E293B] text-center leading-tight mb-0.5">{item.label}</span>
+                <span className="text-[10px] font-black text-[#64748B]">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Account & Settings */}
+        <div>
+          <h3 className="text-[13px] font-extrabold text-[#111112] mb-3">Account & Settings</h3>
+          <div className="bg-white border border-slate-100 rounded-[20px] overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+            {settings.map((item, idx) => (
+              <div key={idx} onClick={() => handleRoute(item.route)} className={`flex items-center justify-between p-3.5 active:bg-slate-50 transition-colors cursor-pointer ${idx !== settings.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                <div className="flex items-center gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    {item.icon}
+                  </svg>
+                  <span className="text-[11.5px] font-bold text-[#475569]">{item.label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {item.rightText && <span className="text-[10px] font-bold text-[#94A3B8]">{item.rightText}</span>}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-[#CBD5E1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Support & Legal */}
+        <div>
+          <h3 className="text-[13px] font-extrabold text-[#111112] mb-3">Support & Legal</h3>
+          <div className="bg-white border border-slate-100 rounded-[20px] overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+            {legal.map((item, idx) => (
+              <div key={idx} onClick={() => handleRoute(item.route)} className={`flex items-center justify-between p-3.5 active:bg-slate-50 transition-colors cursor-pointer ${idx !== legal.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                <div className="flex items-center gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    {item.icon}
+                  </svg>
+                  <span className="text-[11.5px] font-bold text-[#475569]">{item.label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {item.rightText && <span className="text-[10px] font-bold text-[#94A3B8]">{item.rightText}</span>}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-[#CBD5E1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button 
+          onClick={handleLogout}
+          className="w-full bg-red-50 hover:bg-red-100 text-red-500 py-3.5 rounded-[16px] font-extrabold text-[12.5px] flex items-center justify-center gap-2 mt-2 active:scale-[0.98] transition-all border border-red-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
+
+      </div>
     </div>
   );
 };

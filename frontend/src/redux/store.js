@@ -6,6 +6,7 @@ import vendorReducer from './slices/vendorSlice';
 import dealReducer from './slices/dealSlice';
 import chatReducer from './slices/chatSlice';
 import notificationReducer from './slices/notificationSlice';
+import wishlistReducer from './slices/wishlistSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     deal: dealReducer,
     chat: chatReducer,
     notification: notificationReducer,
+    wishlist: wishlistReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -47,8 +47,8 @@ const PromoBanner = ({ onExplore }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Outer Banner Wrapper with compact height (h-[155px]) */}
-      <div className="relative bg-gradient-to-br from-[#E6F6F3] to-[#C9ECE5] rounded-[24px] p-4 pt-4.5 overflow-hidden flex flex-col items-start h-[155px] transition-all duration-500">
+      {/* Outer Banner Wrapper with compact height */}
+      <div className="relative bg-gradient-to-br from-[#E6F6F3] to-[#C9ECE5] rounded-[24px] p-3.5 pt-4 overflow-hidden flex flex-col items-start h-[142px] transition-all duration-500">
         
         {slides.map((slide, index) => {
           const isActive = index === activeSlide;
@@ -56,7 +56,7 @@ const PromoBanner = ({ onExplore }) => {
           return (
             <div
               key={index}
-              className={`absolute inset-0 p-4 pt-4.5 flex flex-col items-start justify-between transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+              className={`absolute inset-0 p-3.5 pt-4 flex flex-col items-start justify-between transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
             >
               {/* Badge capsule */}
               <div className="bg-white px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-line/10 active:scale-95 transition-all cursor-pointer">
@@ -67,12 +67,12 @@ const PromoBanner = ({ onExplore }) => {
               </div>
 
               {/* Title & Description stack */}
-              <div className="flex flex-col mt-1.5">
-                <h2 className="text-[17px] font-black tracking-tight leading-[1.1] text-ink">
+              <div className="flex flex-col mt-1">
+                <h2 className="text-[16px] font-black tracking-tight leading-[1.1] text-ink">
                   {slide.titleLine1}<br />
                   <span className="text-primary">{slide.titleHighlight}</span>
                 </h2>
-                <p className="text-[9px] font-semibold text-muted max-w-[190px] leading-snug mt-1">
+                <p className="text-[8.5px] font-semibold text-muted max-w-[180px] leading-snug mt-1">
                   {slide.description}
                 </p>
               </div>
@@ -82,7 +82,7 @@ const PromoBanner = ({ onExplore }) => {
                 variant="primary"
                 size="sm"
                 onClick={onExplore}
-                className="h-[28px] px-3 rounded-[10px] text-[10px] font-bold gap-1 mt-auto"
+                className="h-[26px] px-3 rounded-[10px] text-[9.5px] font-bold gap-1 mt-auto"
               >
                 Explore Groups
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -92,32 +92,32 @@ const PromoBanner = ({ onExplore }) => {
 
               {/* Graphics collage stack on the right */}
               <div className="absolute right-0 top-0 bottom-0 w-[140px] flex items-center justify-end pointer-events-none select-none">
-                <div className="absolute right-2 w-[100px] h-[100px] bg-primary/5 rounded-full border border-primary/10" />
+                <div className="absolute right-2 w-[90px] h-[90px] bg-primary/5 rounded-full border border-primary/10" />
 
                 <div className="relative w-full h-full">
                   {/* Phone Image Mockup */}
                   <img
                     src={slide.image}
                     alt="Mockup mockup"
-                    className="absolute right-2 top-6 w-16 h-16 object-contain rounded-xl shadow-lg border border-white/40"
+                    className="absolute right-2 top-5 w-14 h-14 object-contain rounded-xl shadow-lg border border-white/40"
                   />
                   
                   {/* Avatars */}
                   <img
                     src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&q=80"
                     alt="User 1"
-                    className="absolute left-6 top-12 w-6 h-6 rounded-full border-2 border-white object-cover shadow-sm"
+                    className="absolute left-7 top-10 w-5 h-5 rounded-full border border-white object-cover shadow-sm"
                   />
                   <img
                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=60&q=80"
                     alt="User 2"
-                    className="absolute right-10 top-2.5 w-6 h-6 rounded-full border-2 border-white object-cover shadow-sm"
+                    className="absolute right-9 top-2 w-5 h-5 rounded-full border border-white object-cover shadow-sm"
                   />
 
                   {/* Stat Card */}
-                  <div className="absolute bottom-2.5 right-4 bg-white rounded-lg p-1 px-2 shadow-md border border-line/10 flex flex-col items-center">
-                    <span className="text-[10px] font-black text-primary leading-none">{slide.activeBuyers}</span>
-                    <span className="text-[6.5px] font-black text-muted leading-none mt-0.5 uppercase tracking-wide">Active Buyers</span>
+                  <div className="absolute bottom-2.5 right-4 bg-white rounded-lg p-1 px-1.5 shadow-md border border-line/10 flex flex-col items-center">
+                    <span className="text-[9px] font-black text-primary leading-none">{slide.activeBuyers}</span>
+                    <span className="text-[6px] font-black text-muted leading-none mt-0.5 uppercase tracking-wide">Active Buyers</span>
                   </div>
                 </div>
               </div>

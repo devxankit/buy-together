@@ -38,7 +38,7 @@ const TrendingGroups = ({ groups }) => {
           return (
             <div
               key={group.id}
-              onClick={() => navigate(`/groups/${group.id}`)}
+              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
               className="w-[140px] bg-white border border-[#E2E8F0]/70 hover:border-[#0D9488]/20 rounded-2xl p-2.5 flex flex-col gap-2 relative shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.98] cursor-pointer flex-shrink-0"
             >
               {/* Floating Buyers Badge */}

@@ -32,8 +32,8 @@ const CategoriesGrid = ({ categories, onCategoryClick, onViewAll }) => {
             onClick={() => onCategoryClick(cat.id)}
             className="flex flex-col items-center cursor-pointer group select-none"
           >
-            {/* Top Icon Card (Solid white, rounded-2xl, subtle border) */}
-            <div className="w-[56px] h-[56px] bg-white border border-line/65 rounded-2xl flex items-center justify-center shadow-sm group-hover:border-primary/40 group-active:scale-90 transition-all overflow-hidden">
+            {/* Independent Circular Image */}
+            <div className="w-[64px] h-[64px] rounded-full flex items-center justify-center group-active:scale-95 transition-all overflow-hidden bg-slate-100">
               {cat.coverImage ? (
                 <img
                   src={cat.coverImage}
@@ -41,7 +41,7 @@ const CategoriesGrid = ({ categories, onCategoryClick, onViewAll }) => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-primary">
+                <span className="text-primary scale-125">
                   {cat.icon}
                 </span>
               )}

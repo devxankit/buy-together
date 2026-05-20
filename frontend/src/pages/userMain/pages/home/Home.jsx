@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import newAssetImg from '../../../../assets/7f4a33ac63a8121e371d2b2d1473ae55.jpg';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
 import HotGroupsCarousel from './components/HotGroupsCarousel';
 import TrustBadges from './components/TrustBadges';
-import NearYouCarousel from './components/NearYouCarousel';
+import LiveActivitySection from './components/LiveActivitySection';
+import ActiveGroupsList from './components/ActiveGroupsList';
+import CreateGroupBanner from './components/CreateGroupBanner';
 
 /**
  * High-performance, clean Homepage controller component.
@@ -12,6 +15,43 @@ import NearYouCarousel from './components/NearYouCarousel';
  */
 const Home = () => {
   const navigate = useNavigate();
+
+  // Search Placeholder Animation State
+  const placeholders = [
+    "Search 'iPhone 15 Pro'...",
+    "Search 'Macbook Air M3'...",
+    "Search 'Groceries'...",
+    "Search 'Gym memberships'...",
+    "Search 'Puma Shoes'..."
+  ];
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPlaceholderIdx(prev => (prev + 1) % placeholders.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [placeholders.length]);
+
+  // Location Dropdown State
+  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('Mumbai, Maharashtra');
+  const [locationSearch, setLocationSearch] = useState('');
+  const popularLocations = [
+    'Mumbai, Maharashtra',
+    'Delhi, NCR',
+    'Bengaluru, Karnataka',
+    'Hyderabad, Telangana',
+    'Chennai, Tamil Nadu',
+    'Pune, Maharashtra',
+    'Indore, Madhya Pradesh',
+    'Ahmedabad, Gujarat',
+    'Kolkata, West Bengal',
+    'Jaipur, Rajasthan',
+  ];
+  const filteredLocations = popularLocations.filter(l =>
+    l.toLowerCase().includes(locationSearch.toLowerCase())
+  );
 
   // Popular category configurations (exactly 7 categories for single-row layout)
   const categories = [
@@ -29,7 +69,7 @@ const Home = () => {
     {
       id: 'laptops',
       name: 'Laptops',
-      coverImage: 'https://images.unsplash.com/photo-1496181130204-7552cc14ac1a?auto=format&fit=crop&w=120&q=80',
+      coverImage: newAssetImg,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
           <rect x="3" y="5" width="18" height="11" rx="1.5" />
@@ -149,44 +189,69 @@ const Home = () => {
     }
   ];
 
-  // Regional buying groups list
-  const groupsNearYou = [
+
+
+  const fashionGroups = [
     {
-      id: 'n-1',
-      title: 'South Mumbai Buyers',
-      distance: '2.3 km away',
-      buyersCount: 124,
-      image: 'https://images.unsplash.com/photo-1598463216861-5942cb890214?auto=format&fit=crop&w=260&q=80'
+      id: 5,
+      title: 'Puma Running Shoes',
+      subtitle: 'Puma Factory Outlet',
+      spotsJoined: 15,
+      spotsTotal: 20,
+      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=200&q=80',
+      daysLeft: '3d left'
     },
     {
-      id: 'n-2',
-      title: 'Bandra & Khar Group',
-      distance: '3.1 km away',
-      buyersCount: 98,
-      image: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=260&q=80'
+      id: 6,
+      title: 'H&M Summer Collection',
+      subtitle: 'H&M Infinity Mall',
+      spotsJoined: 40,
+      spotsTotal: 50,
+      image: 'https://images.unsplash.com/photo-1489987707023-af827052efa1?auto=format&fit=crop&w=200&q=80',
+      daysLeft: '1d left'
     },
     {
-      id: 'n-3',
-      title: 'Andheri West Group',
-      distance: '3.8 km away',
-      buyersCount: 86,
-      image: 'https://images.unsplash.com/photo-1529250856085-cdd6c31885bc?auto=format&fit=crop&w=260&q=80'
-    },
-    {
-      id: 'n-4',
-      title: 'Navi Mumbai Buyers',
-      distance: '12 km away',
-      buyersCount: 76,
-      image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?auto=format&fit=crop&w=260&q=80'
-    },
-    {
-      id: 'n-5',
-      title: 'Thane Buyers',
-      distance: '15 km away',
-      buyersCount: 65,
-      image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=260&q=80'
+      id: 7,
+      title: 'Levi\'s Denim Jackets',
+      subtitle: 'Levi\'s Phoenix Market',
+      spotsJoined: 8,
+      spotsTotal: 15,
+      image: 'https://images.unsplash.com/photo-1542272454315-4c01d7abdf4a?auto=format&fit=crop&w=200&q=80',
+      daysLeft: '4h left'
     }
   ];
+
+  const groceriesGroups = [
+    {
+      id: 8,
+      title: 'Aashirvaad Atta 10kg',
+      subtitle: 'DMart Malad',
+      spotsJoined: 85,
+      spotsTotal: 100,
+      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80',
+      daysLeft: '5d left'
+    },
+    {
+      id: 9,
+      title: 'Fresh Alphonso Mangoes',
+      subtitle: 'APMC Market',
+      spotsJoined: 42,
+      spotsTotal: 50,
+      image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=200&q=80',
+      daysLeft: '12h left'
+    },
+    {
+      id: 10,
+      title: 'Amul Butter 500g',
+      subtitle: 'Star Bazaar',
+      spotsJoined: 120,
+      spotsTotal: 150,
+      image: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?auto=format&fit=crop&w=200&q=80',
+      daysLeft: '2d left'
+    }
+  ];
+
+
 
   return (
     <div className="flex flex-col gap-5 px-4 pb-24 animate-fadeIn select-none">
@@ -196,18 +261,83 @@ const Home = () => {
         
         {/* ── 1. LOCATION & PROFILE HEADER ── */}
         <div className="flex items-center justify-between px-0.5">
-          <button className="flex items-center gap-0.5 text-white active:scale-95 transition-all flex-shrink-0">
-            <svg className="w-2.5 h-2.5 text-teal-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <span className="text-[10px] font-bold tracking-tight text-white/90 whitespace-nowrap truncate max-w-[140px]">Mumbai, Maharashtra</span>
-            <svg className="w-2 h-2 text-white/80 flex-shrink-0 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
-              <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          {/* Location dropdown trigger */}
+          <div className="relative">
+            <button
+              onClick={() => { setLocationDropdownOpen(o => !o); setLocationSearch(''); }}
+              className="flex items-center gap-0.5 text-white active:scale-95 transition-all flex-shrink-0"
+            >
+              <svg className="w-2.5 h-2.5 text-teal-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-[10px] font-bold tracking-tight text-white/90 whitespace-nowrap truncate max-w-[130px]">{selectedLocation.split(',')[0]}</span>
+              <svg className={`w-2 h-2 text-white/80 flex-shrink-0 ml-0.5 transition-transform duration-200 ${locationDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* Dropdown panel */}
+            {locationDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-[230px] bg-white rounded-2xl shadow-2xl shadow-black/20 border border-slate-100 z-[200] overflow-hidden">
+                {/* Search input */}
+                <div className="px-3 pt-3 pb-2">
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 h-[36px] focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/15 transition-all">
+                    <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      autoFocus
+                      type="text"
+                      value={locationSearch}
+                      onChange={e => setLocationSearch(e.target.value)}
+                      placeholder="Search city..."
+                      className="flex-1 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 bg-transparent outline-none"
+                    />
+                    {locationSearch && (
+                      <button onClick={() => setLocationSearch('')} className="text-slate-400 active:scale-90 transition-all">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Location list */}
+                <div className="max-h-[200px] overflow-y-auto pb-2">
+                  {filteredLocations.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 text-center py-4 font-medium">No city found</p>
+                  ) : filteredLocations.map(loc => (
+                    <button
+                      key={loc}
+                      onClick={() => { setSelectedLocation(loc); setLocationDropdownOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-all active:scale-98 hover:bg-slate-50 ${
+                        selectedLocation === loc ? 'bg-[#F0FDF9]' : ''
+                      }`}
+                    >
+                      <svg className={`w-3.5 h-3.5 flex-shrink-0 ${selectedLocation === loc ? 'text-[#0D9488]' : 'text-slate-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className={`text-[12px] font-bold leading-none ${selectedLocation === loc ? 'text-[#0D9488]' : 'text-slate-700'}`}>
+                          {loc.split(',')[0]}
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{loc.split(',')[1]?.trim()}</p>
+                      </div>
+                      {selectedLocation === loc && (
+                        <svg className="w-3.5 h-3.5 text-[#0D9488] ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2.5">
-            <button className="w-[35px] h-[35px] bg-white/12 backdrop-blur-md border border-white/15 rounded-lg flex items-center justify-center relative active:scale-90 transition-all text-white">
+            <button onClick={() => navigate('/notifications')} className="w-[35px] h-[35px] bg-white/12 backdrop-blur-md border border-white/15 rounded-lg flex items-center justify-center relative active:scale-90 transition-all text-white">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
@@ -218,7 +348,8 @@ const Home = () => {
             <img
               src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80"
               alt="Profile Avatar"
-              className="w-[35px] h-[35px] rounded-full border border-white/20 object-cover shadow-sm active:scale-95 transition-all"
+              onClick={() => navigate('/profile')}
+              className="w-[35px] h-[35px] rounded-full border border-white/20 object-cover shadow-sm active:scale-95 transition-all cursor-pointer"
             />
           </div>
         </div>
@@ -234,17 +365,45 @@ const Home = () => {
 
         {/* ── 3. SEARCH & FILTER ── */}
         <div className="flex gap-2.5 w-full px-0.5">
-          <div className="relative flex-1 flex items-center">
-            <svg className="w-3.5 h-3.5 absolute left-3.5 text-faint pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+          <div className="relative flex-1 flex items-center bg-white rounded-xl overflow-hidden h-10 shadow-inner cursor-text">
+            <svg className="w-3.5 h-3.5 absolute left-3.5 text-faint z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              placeholder="Search for a product you want to buy together..."
-              className="w-full h-10 bg-white text-[11.5px] font-semibold text-ink placeholder:text-faint/80 rounded-xl pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-teal-300 transition-all border-none"
+              className="w-full h-full text-[11.5px] font-semibold text-ink pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-teal-300 transition-all border-none relative z-10 bg-transparent"
+              onFocus={(e) => e.target.parentElement.classList.add('focused')}
+              onBlur={(e) => {
+                if (!e.target.value) e.target.parentElement.classList.remove('focused');
+              }}
+              onChange={(e) => {
+                if (e.target.value) e.target.parentElement.classList.add('has-value');
+                else e.target.parentElement.classList.remove('has-value');
+              }}
             />
+            {/* Animated Placeholder Wrapper */}
+            <div className="absolute inset-0 pl-10 pr-3 flex flex-col justify-center pointer-events-none transition-opacity duration-200 [.focused_&]:opacity-0 [.has-value_&]:opacity-0">
+              <div className="relative h-[16px] overflow-hidden">
+                {placeholders.map((text, i) => (
+                  <span
+                    key={i}
+                    className="absolute left-0 w-full text-[11.5px] font-semibold text-faint/80 truncate transition-all duration-500 ease-in-out"
+                    style={{
+                      top: 0,
+                      transform: `translateY(${(i - placeholderIdx) * 100}%)`,
+                      opacity: i === placeholderIdx ? 1 : 0
+                    }}
+                  >
+                    {text}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-          <button className="w-10 h-10 bg-white text-[#0D9488] rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all flex-shrink-0">
+          <button 
+            onClick={() => navigate('/categories')} 
+            className="w-10 h-10 bg-white text-[#0D9488] rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all flex-shrink-0"
+          >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
@@ -253,7 +412,9 @@ const Home = () => {
       </div>
 
       {/* ── 4. AUTO-SLIDING BANNER ── */}
-      <PromoBanner onExplore={() => navigate('/groups')} />
+      <div className="-mt-1">
+        <PromoBanner onExplore={() => navigate('/groups')} />
+      </div>
 
       {/* ── 5. POPULAR CATEGORIES GRID ── */}
       <CategoriesGrid
@@ -271,19 +432,34 @@ const Home = () => {
       {/* ── 6. HOT BUYING GROUPS CAROUSEL ── */}
       <HotGroupsCarousel
         groups={hotGroups}
-        onGroupClick={(id) => navigate(`/groups/${id}`)}
+        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: hotGroups.find(g => g.id === id), isJoined: false } })}
         onViewAll={() => navigate('/groups')}
       />
 
-      {/* ── 7. TRUST BADGES ROW ── */}
-      <TrustBadges />
+      {/* ── 8. LIVE ACTIVITY ── */}
+      <LiveActivitySection />
 
-      {/* ── 8. GROUPS NEAR YOU CAROUSEL ── */}
-      <NearYouCarousel
-        groups={groupsNearYou}
-        onGroupClick={(id) => navigate(`/groups/g-h1`)}
-        onViewAll={() => navigate('/groups')}
+      {/* ── 9. ACTIVE GROUPS YOU MIGHT LIKE ── */}
+      <ActiveGroupsList />
+
+      {/* ── 10. TRENDING IN FASHION ── */}
+      <HotGroupsCarousel
+        title="Trending in Fashion"
+        groups={fashionGroups}
+        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: fashionGroups.find(g => g.id === id), isJoined: false } })}
+        onViewAll={() => navigate('/categories', { state: { categoryId: 'fashion' } })}
       />
+
+      {/* ── 11. WEEKLY GROCERIES DEALS ── */}
+      <HotGroupsCarousel
+        title="Weekly Groceries Deals"
+        groups={groceriesGroups}
+        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: groceriesGroups.find(g => g.id === id), isJoined: false } })}
+        onViewAll={() => navigate('/categories', { state: { categoryId: 'groceries' } })}
+      />
+
+      {/* ── 12. CREATE GROUP BANNER ── */}
+      <CreateGroupBanner />
 
     </div>
   );

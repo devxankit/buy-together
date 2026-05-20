@@ -1,8 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
 
 const AllGroupsList = ({ groups, onSortChange }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const wishlistItems = useSelector((state) => state.wishlist.items);
 
   // Overlapping avatar assets
   const AVATARS = [
@@ -41,11 +45,12 @@ const AllGroupsList = ({ groups, onSortChange }) => {
         {groups.map((group) => {
           const percentage = (group.spotsJoined / group.spotsTotal) * 100;
           const isClosingSoon = group.status === 'closing';
+          const isWishlisted = wishlistItems.some(item => item.id === group.id);
 
           return (
             <div
               key={group.id}
-              onClick={() => navigate(`/groups/${group.id}`)}
+              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
               className="bg-white border border-[#E2E8F0]/70 hover:border-[#0D9488]/15 rounded-2xl p-3 flex gap-3 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] cursor-pointer"
             >
               {/* Product Image on the left */}
@@ -116,29 +121,18 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                 </div>
               </div>
 
-              {/* Right Section: 3-dots, spots indicator & time */}
+              {/* Right Section: wishlist, spots indicator & time */}
               <div className="flex flex-col items-end justify-between flex-shrink-0 pl-1">
-                {/* 3-dots menu button */}
+                {/* Wishlist Button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    // trigger quick context menu action if desired
+                    dispatch(toggleWishlist(group));
                   }}
-                  className="text-[#94A3B8] hover:text-[#64748B] p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                  className={`p-1.5 rounded-full transition-colors active:scale-95 ${isWishlisted ? 'text-red-500 bg-red-50' : 'text-[#94A3B8] hover:bg-slate-100 hover:text-red-500'}`}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                    />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </button>
 

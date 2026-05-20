@@ -13,7 +13,8 @@ const JoinedGroupsList = ({ groups }) => {
         return (
           <div
             key={group.id}
-            className="bg-white border border-[#E2E8F0]/70 hover:border-[#0D9488]/15 rounded-[22px] p-3.5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
+            onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true } })}
+            className="bg-white border border-[#E2E8F0]/70 hover:border-[#0D9488]/15 rounded-[22px] p-3.5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
           >
             {/* ── TOP SECTION (Product Image and Info) ── */}
             <div className="flex gap-3">
@@ -174,7 +175,10 @@ const JoinedGroupsList = ({ groups }) => {
 
               {/* View Group Button CTA */}
               <button
-                onClick={() => navigate(`/groups/${group.id}`)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true } });
+                }}
                 className="bg-white hover:bg-[#0D9488]/5 text-[#0D9488] border border-[#0D9488]/25 hover:border-[#0D9488]/40 px-3 py-1.5 rounded-xl text-[10.5px] font-extrabold transition-all duration-200 active:scale-95 flex-shrink-0 self-center"
               >
                 View Group

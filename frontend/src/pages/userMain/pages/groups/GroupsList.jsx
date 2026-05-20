@@ -283,11 +283,11 @@ const GroupsList = () => {
         onClose={() => setIsBannerVisible(false)}
       />
 
-      {/* Trending Horizontal list */}
-      <TrendingGroups groups={trendingGroupsData} />
-
       {/* All Groups List */}
       <AllGroupsList groups={filteredGroups} />
+
+      {/* Trending Horizontal list */}
+      <TrendingGroups groups={trendingGroupsData} />
     </div>
   );
 };

@@ -21,6 +21,7 @@ const Categories = () => {
   const [activeSort, setActiveSort] = useState('trending');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationName, setLocationName] = useState('Indore');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Sync category state when location.state changes (from Home page navigation)
   useEffect(() => {
@@ -204,15 +205,14 @@ const Categories = () => {
   }, [selectedCategory, activeSort, searchQuery, allProductsList]);
 
   return (
-    <div className="flex flex-col gap-4 select-none min-h-screen bg-white">
+    <div className="flex flex-col gap-4 select-none min-h-screen bg-white relative overflow-hidden">
       {/* 1. Header with custom dynamic title & search */}
       <CategoryHeader
         title="Groups"
-        subtitle="Find people with same interests. Build stronger together."
         currentLocation={locationName}
-        onLocationClick={() => setLocationName(prev => prev === 'Indore' ? 'Mumbai' : 'Indore')}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
+        onFilterClick={() => setIsFilterOpen(true)}
       />
 
       {/* Dynamic Content Body Container */}
@@ -243,6 +243,60 @@ const Categories = () => {
         {/* 5. Bottom banner group creator */}
         <BottomCTA />
       </div>
+
+      {/* 6. Filter Bottom Sheet Overlay */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-ink/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsFilterOpen(false)}
+          />
+          {/* Slider Panel */}
+          <div className="relative bg-white w-full rounded-t-[30px] p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6" />
+            
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-ink">Filters</h2>
+              <button onClick={() => setIsFilterOpen(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 text-slate-500">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-5">
+              <div>
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Price Range</h3>
+                <div className="flex items-center gap-3">
+                  <input type="text" placeholder="Min" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:border-teal-500 focus:outline-none" />
+                  <span className="text-slate-400 font-bold">-</span>
+                  <input type="text" placeholder="Max" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:border-teal-500 focus:outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Distance</h3>
+                <input type="range" min="1" max="50" defaultValue="15" className="w-full accent-teal-500 h-1 bg-slate-200 rounded-lg appearance-none" />
+                <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-2">
+                  <span>1 km</span>
+                  <span>15 km</span>
+                  <span>50+ km</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button onClick={() => setIsFilterOpen(false)} className="flex-1 py-3.5 rounded-xl border-2 border-slate-200 text-slate-500 font-bold text-sm active:scale-95 transition-all">
+                Reset
+              </button>
+              <button onClick={() => setIsFilterOpen(false)} className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold text-sm shadow-lg shadow-teal-500/30 active:scale-95 transition-all">
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,9 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from '../../hooks/useDispatch';
 import { setAuth } from '../../redux/slices/authSlice';
-import { c } from '../../design/tokens';
-import Icon from '../../components/ui/Icon';
-import Button from '../../components/ui/Button';
 
 const N = 6;
 
@@ -16,7 +13,9 @@ const OTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { role = 'user', mobile = '', name, email } = location.state || {};
+  const { role = 'user', mobile = '', name, email, flow } = location.state || {};
+
+  const contactDisplay = email || (mobile ? `+91 ${mobile}` : 'your email/phone');
 
   /* countdown timer */
   useEffect(() => {
@@ -32,7 +31,6 @@ const OTP = () => {
     const el = refs.current[i];
     if (!el) return;
     el.focus();
-    /* place cursor at end so typing replaces cleanly */
     setTimeout(() => el.setSelectionRange(1, 1), 0);
   };
 
@@ -80,7 +78,7 @@ const OTP = () => {
     if (digits.join('').length < N) return;
     dispatch(setAuth({
       user: {
-        name: name || (role === 'vendor' ? 'Apple India' : 'Verified User'),
+        name: name || 'Verified User',
         email: email || '',
         mobile,
         role,
@@ -88,90 +86,65 @@ const OTP = () => {
       },
       token: 'mock-jwt-' + Date.now(),
     }));
-    navigate(role === 'vendor' ? '/vendor/dashboard' : '/location');
+    navigate(role === 'vendor' ? '/vendor/dashboard' : '/');
   };
 
   const filled = digits.filter(Boolean).length;
+  const progress = (filled / N) * 100;
 
   return (
-    <div style={{ minHeight: '100dvh', background: c.surfaceAlt }}>
-      <div style={{
-        maxWidth: 430,
-        margin: '0 auto',
-        padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 24px 48px',
-      }}>
+    <div className="min-h-screen w-full max-w-[430px] mx-auto flex flex-col bg-[#EAF6F6] font-sans">
 
-        {/* Back + step indicator */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            style={{
-              width: 40, height: 40, borderRadius: 12, background: '#fff',
-              border: `1px solid ${c.line}`,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', flexShrink: 0,
-            }}
-          >
-            <Icon name="arrowL" size={18} color={c.ink} stroke={1.8} />
-          </button>
-          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-            {[0, 1, 2].map(s => (
-              <div key={s} style={{
-                height: 6, borderRadius: 3,
-                width: s === 1 ? 22 : 6,
-                background: s <= 1 ? c.primary : c.line,
-              }} />
-            ))}
-          </div>
+      {/* === TOP SECTION === */}
+      <div className="flex-shrink-0 bg-gradient-to-br from-[#E0F5F3] to-[#C8EDE9] px-6 pt-8 pb-10 relative overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute top-2 right-10 w-24 h-24 rounded-full bg-[#B2E3DE]/40 pointer-events-none" />
+        <div className="absolute -bottom-4 right-0 w-16 h-16 rounded-full bg-[#B2E3DE]/30 pointer-events-none" />
+
+        {/* Back button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 bg-white/70 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/60 shadow-sm active:scale-90 transition-all mb-6"
+        >
+          <svg className="w-4 h-4 text-[#1E293B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Shield icon */}
+        <div className="w-14 h-14 bg-[#0D9488] rounded-2xl flex items-center justify-center shadow-lg shadow-teal-600/30 mb-4">
+          <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
         </div>
 
-        {/* Icon */}
-        <div style={{ marginTop: 40 }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 17,
-            background: c.primarySoft,
-            border: `1px solid rgba(15,107,83,0.18)`,
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name="shield" size={24} color={c.primary} stroke={1.8} />
-          </div>
-        </div>
+        <h1 className="text-[26px] font-black text-[#0F172A] leading-tight">Verify OTP</h1>
+        <p className="text-[12.5px] text-[#475569] mt-1.5 leading-snug">
+          We've sent a 6-digit code to<br />
+          <span className="font-bold text-[#0D9488]">{contactDisplay}</span>
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="text-[11px] font-bold text-[#0D9488] mt-1.5 active:opacity-70 transition-all"
+        >
+          Change →
+        </button>
+      </div>
 
-        {/* Heading */}
-        <div style={{ marginTop: 18 }}>
-          <div style={{ fontSize: 32, fontWeight: 400, letterSpacing: -1, lineHeight: 1.08, color: c.ink }}>
-            One step<br />
-            <span style={{ color: c.primary }}>to go.</span>
-          </div>
-          <div style={{ fontSize: 13.5, fontWeight: 400, color: c.muted, marginTop: 10, lineHeight: 1.6 }}>
-            Code sent to{' '}
-            <span style={{ fontWeight: 500, color: c.ink }}>+91 {mobile || 'your number'}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            style={{
-              background: 'none', border: 'none', padding: 0, marginTop: 4,
-              fontSize: 12.5, fontWeight: 500, color: c.primary, cursor: 'pointer',
-            }}
-          >
-            Change number
-          </button>
-        </div>
+      {/* === FORM CARD === */}
+      <div className="flex-1 bg-white rounded-t-[28px] -mt-5 px-5 pt-7 pb-8 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]">
 
-        {/* ── OTP form ── */}
-        <form onSubmit={handleSubmit} style={{ marginTop: 36 }}>
+        <h2 className="text-[16px] font-black text-[#0F172A] mb-1">Enter verification code</h2>
+        <p className="text-[11.5px] text-[#94A3B8] font-medium mb-6">Type the 6-digit OTP sent to you</p>
 
-          {/* Boxes — grid so each cell is always exactly 1/6 */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${N}, 1fr)`,
-            gap: 8,
-          }}>
+        <form onSubmit={handleSubmit}>
+
+          {/* OTP Boxes */}
+          <div className="grid grid-cols-6 gap-2.5 mb-3">
             {digits.map((d, i) => {
               const isFocused = focusIdx === i;
-              const isFilled  = d !== '';
+              const isFilled = d !== '';
               return (
                 <input
                   key={i}
@@ -190,99 +163,83 @@ const OTP = () => {
                   onFocus={() => setFocusIdx(i)}
                   onBlur={() => setFocusIdx(-1)}
                   onPaste={handlePaste}
+                  className="block w-full text-center text-[22px] font-black outline-none transition-all duration-150 rounded-2xl"
                   style={{
-                    /* layout */
-                    display: 'block',
-                    width: '100%',
-                    height: 56,
-                    boxSizing: 'border-box',
-                    padding: 0,
-                    /* look */
-                    borderRadius: 14,
-                    border: `2px solid ${isFocused ? c.primary : isFilled ? 'rgba(15,107,83,0.55)' : c.line}`,
-                    boxShadow: isFocused ? `0 0 0 3px ${c.primaryGlow}` : 'none',
-                    background: isFilled ? c.primarySoft : '#fff',
-                    /* text — no color transition to avoid dark-on-dark flash */
-                    textAlign: 'center',
-                    fontSize: 22,
-                    fontWeight: 600,
-                    color: c.ink,
-                    fontFamily: 'inherit',
-                    /* remove default input chrome */
-                    outline: 'none',
+                    height: 54,
+                    border: `2px solid ${isFocused ? '#0D9488' : isFilled ? 'rgba(13,148,136,0.5)' : '#E2E8F0'}`,
+                    boxShadow: isFocused ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none',
+                    background: isFilled ? '#F0FDF9' : '#F8FAFC',
+                    color: '#0F172A',
                     caretColor: 'transparent',
                     WebkitAppearance: 'none',
                     MozAppearance: 'textfield',
-                    /* only transition border + shadow, NOT background or color */
-                    transition: 'border-color 0.14s ease, box-shadow 0.14s ease',
                   }}
                 />
               );
             })}
           </div>
 
-          {/* Progress bar */}
-          <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+          {/* Progress dots */}
+          <div className="flex gap-1.5 mb-5">
             {digits.map((d, i) => (
-              <div key={i} style={{
-                flex: 1, height: 2.5, borderRadius: 2,
-                background: d ? c.primary : c.line,
-                transition: 'background 0.12s',
-              }} />
+              <div
+                key={i}
+                className="flex-1 h-[3px] rounded-full transition-all duration-200"
+                style={{ background: d ? '#0D9488' : '#E2E8F0' }}
+              />
             ))}
           </div>
 
-          {/* Resend */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginTop: 16,
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 400, color: c.muted }}>
-              {timer > 0
-                ? <>Resend in{' '}<span style={{ fontWeight: 500, color: c.ink }}>0:{String(timer).padStart(2, '0')}</span></>
-                : "Didn't receive it?"
-              }
-            </span>
+          {/* Resend row */}
+          <div className="flex items-center justify-between mb-6 bg-[#F8FAFC] rounded-2xl px-4 py-3 border border-[#F1F5F9]">
+            <div className="flex items-center gap-2">
+              {timer > 0 ? (
+                <>
+                  <div className="w-7 h-7 rounded-full bg-[#E0F5F3] flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-[#0D9488]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-[12px] text-[#64748B] font-medium">
+                    Resend in <span className="font-black text-[#0F172A]">0:{String(timer).padStart(2, '0')}</span>
+                  </span>
+                </>
+              ) : (
+                <span className="text-[12px] text-[#64748B] font-medium">Didn't receive the code?</span>
+              )}
+            </div>
             <button
               type="button"
               disabled={timer > 0}
-              onClick={() => {
-                setTimer(29);
-                setDigits(Array(N).fill(''));
-                focus(0);
-              }}
-              style={{
-                background: 'none', border: 'none', padding: 0,
-                fontSize: 13, fontWeight: 500,
-                color: timer > 0 ? c.faint : c.primary,
-                cursor: timer > 0 ? 'default' : 'pointer',
-                transition: 'color 0.15s',
-              }}
+              onClick={() => { setTimer(29); setDigits(Array(N).fill('')); focus(0); }}
+              className={`text-[12px] font-black transition-all active:scale-95 ${timer > 0 ? 'text-[#CBD5E1] cursor-default' : 'text-[#0D9488]'}`}
             >
               Resend OTP
             </button>
           </div>
 
-          {/* CTA */}
-          <div style={{ marginTop: 32 }}>
-            <Button
-              type="submit"
-              variant="primary" size="lg" full
-              iconRight={<Icon name="arrowR" size={16} color="#fff" stroke={2} />}
-              style={{ opacity: filled === N ? 1 : 0.45, transition: 'opacity 0.18s' }}
-            >
-              Verify &amp; continue
-            </Button>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: 6, marginTop: 14,
-              fontSize: 11.5, fontWeight: 400, color: c.muted,
-            }}>
-              <Icon name="lock" size={11} color={c.muted} stroke={1.8} />
-              Secure · end-to-end encrypted
-            </div>
-          </div>
+          {/* Verify Button */}
+          <button
+            type="submit"
+            disabled={filled < N}
+            className="w-full h-[52px] bg-[#0D9488] rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-teal-500/30 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
+          >
+            <svg className="w-4.5 h-4.5 w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            Verify & Continue
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </button>
 
+          {/* Security note */}
+          <div className="flex items-center justify-center gap-2 mt-4 text-[11px] text-[#94A3B8]">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Secure · End-to-end encrypted · Never share your OTP
+          </div>
         </form>
       </div>
     </div>
