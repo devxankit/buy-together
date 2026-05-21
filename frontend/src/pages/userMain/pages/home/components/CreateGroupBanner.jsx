@@ -12,7 +12,7 @@ const CreateGroupBanner = () => {
         <img 
           src="https://img.freepik.com/free-vector/team-goals-concept-illustration_114360-5175.jpg?w=360" 
           alt="Team" 
-          className="absolute -bottom-4 -left-4 w-[140px] mix-blend-multiply opacity-90"
+          className="absolute -bottom-4 -left-4 w-[140px]  opacity-90"
         />
       </div>
 

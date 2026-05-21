@@ -7,7 +7,7 @@ const SearchAndFilter = ({ searchValue, onSearchChange, onFilterClick }) => {
       <div className="relative flex-1 flex items-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4 absolute left-4 text-[#94A3B8] pointer-events-none"
+          className="w-4 h-4 absolute left-4 text-muted pointer-events-none"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -24,14 +24,14 @@ const SearchAndFilter = ({ searchValue, onSearchChange, onFilterClick }) => {
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search groups by product, brand or category..."
-          className="w-full h-11 bg-[#F8FAFC] text-xs font-semibold text-[#1E293B] placeholder:text-[#94A3B8]/95 rounded-2xl pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 transition-all border border-[#E2E8F0]/80 focus:border-[#0D9488]"
+          className="w-full h-11 bg-surface-alt text-xs font-semibold text-ink placeholder:text-muted/95 rounded-2xl pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 transition-all border border-line/80 focus:border-primary"
         />
       </div>
 
       {/* Filter Icon Button */}
       <button
         onClick={onFilterClick}
-        className="w-11 h-11 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#0D9488] rounded-2xl flex items-center justify-center border border-[#E2E8F0]/80 active:scale-95 transition-all flex-shrink-0 duration-200"
+        className="w-11 h-11 bg-surface-alt hover:bg-[#F1F5F9] text-[#64748B] hover:text-primary rounded-2xl flex items-center justify-center border border-line/80 active:scale-95 transition-all flex-shrink-0 duration-200"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

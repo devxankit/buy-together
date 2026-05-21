@@ -17,18 +17,18 @@ const HelpCenter = () => {
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans">
-      <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-white border-b border-slate-100 sticky top-0 z-20">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center active:scale-90 transition-all">
-          <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-surface border-b border-line sticky top-0 z-20">
+        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all">
+          <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <h1 className="text-[15px] font-black text-slate-800">Help Center</h1>
+        <h1 className="text-[15px] font-black text-ink">Help Center</h1>
       </div>
 
       <div className="flex-1 px-5 py-5 flex flex-col gap-4 pb-10">
         {/* Search */}
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 h-[44px] focus-within:border-[#0D9488] transition-all">
-          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search FAQs..." className="flex-1 text-[13px] font-medium text-slate-700 placeholder:text-slate-400 bg-transparent outline-none" />
+        <div className="flex items-center gap-2 bg-surface border border-slate-200 rounded-2xl px-4 h-[44px] focus-within:border-primary transition-all">
+          <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search FAQs..." className="flex-1 text-[13px] font-medium text-ink placeholder:text-muted bg-transparent outline-none" />
         </div>
 
         {/* Quick Contact */}
@@ -37,26 +37,26 @@ const HelpCenter = () => {
             { icon: '📧', label: 'Email Us', sub: 'support@buytogether.in' },
             { icon: '💬', label: 'Live Chat', sub: 'Available 9AM–9PM' },
           ].map(c => (
-            <div key={c.label} className="flex-1 bg-white border border-slate-100 rounded-2xl p-3.5 text-center active:scale-95 transition-all cursor-pointer">
+            <div key={c.label} className="flex-1 bg-surface border border-line rounded-2xl p-3.5 text-center active:scale-95 transition-all cursor-pointer">
               <span className="text-xl">{c.icon}</span>
-              <p className="text-[12px] font-bold text-slate-700 mt-1.5">{c.label}</p>
-              <p className="text-[9px] text-slate-400 mt-0.5">{c.sub}</p>
+              <p className="text-[12px] font-bold text-ink mt-1.5">{c.label}</p>
+              <p className="text-[9px] text-muted mt-0.5">{c.sub}</p>
             </div>
           ))}
         </div>
 
         {/* FAQs */}
-        <h3 className="text-[12px] font-black text-slate-500 uppercase tracking-wide mt-1">Frequently Asked Questions</h3>
+        <h3 className="text-[12px] font-black text-faint uppercase tracking-wide mt-1">Frequently Asked Questions</h3>
         <div className="flex flex-col gap-2.5">
           {filtered.map((faq, idx) => (
-            <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
+            <div key={idx} className="bg-surface border border-line rounded-2xl overflow-hidden">
               <button onClick={() => setOpenIdx(openIdx === idx ? null : idx)} className="w-full flex items-center justify-between px-4 py-3.5 text-left">
-                <p className="text-[13px] font-bold text-slate-700 flex-1 pr-3">{faq.q}</p>
-                <svg className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${openIdx === idx ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                <p className="text-[13px] font-bold text-ink flex-1 pr-3">{faq.q}</p>
+                <svg className={`w-4 h-4 text-muted flex-shrink-0 transition-transform ${openIdx === idx ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
               </button>
               {openIdx === idx && (
                 <div className="px-4 pb-4 pt-0">
-                  <p className="text-[12px] text-slate-500 leading-relaxed">{faq.a}</p>
+                  <p className="text-[12px] text-faint leading-relaxed">{faq.a}</p>
                 </div>
               )}
             </div>

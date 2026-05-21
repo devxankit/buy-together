@@ -236,26 +236,7 @@ const GroupsList = () => {
     });
   }, [joinedSubTab]);
 
-  // 5. CONDITIONAL RENDER BY ACTIVE TAB
-  if (activeTab === 'joined-groups') {
-    return (
-      <div className="flex flex-col gap-4 select-none">
-        {/* Custom Gorgeous Teal Header with navigation */}
-        <JoinedHeader onBackClick={() => setActiveTab('my-groups')} />
-
-        {/* Dynamic content container */}
-        <div className="flex flex-col gap-4 px-3.5 pb-24">
-          {/* Segmented Pills count filters */}
-          <JoinedTabs selectedTab={joinedSubTab} onChange={setJoinedSubTab} />
-
-          {/* Detailed joined groups list cards */}
-          <JoinedGroupsList groups={filteredJoinedGroups} />
-        </div>
-      </div>
-    );
-  }
-
-  // DEFAULT MY GROUPS TAB
+  // 5. RENDER FLOW (Unified Page Layout)
   return (
     <div className="flex flex-col gap-3.5 px-3.5 pb-24 select-none animate-fadeIn">
       {/* Groups Title & Create Button */}
@@ -264,30 +245,42 @@ const GroupsList = () => {
       {/* Tabs Selector (My Groups / Joined Groups) */}
       <GroupTabs activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Search Input & Filtering options */}
-      <SearchAndFilter
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        onFilterClick={() => setSelectedFilter('all-groups')}
-      />
+      {activeTab === 'my-groups' ? (
+        <>
+          {/* Search Input & Filtering options */}
+          <SearchAndFilter
+            searchValue={searchValue}
+            onSearchChange={setSearchValue}
+            onFilterClick={() => setSelectedFilter('all-groups')}
+          />
 
-      {/* Horizontal pill filters */}
-      <FilterBadges
-        selectedFilter={selectedFilter}
-        onChange={setSelectedFilter}
-      />
+          {/* Horizontal pill filters */}
+          <FilterBadges
+            selectedFilter={selectedFilter}
+            onChange={setSelectedFilter}
+          />
 
-      {/* Promo Alert Information Banner */}
-      <PromoBanner
-        isVisible={isBannerVisible}
-        onClose={() => setIsBannerVisible(false)}
-      />
+          {/* Promo Alert Information Banner */}
+          <PromoBanner
+            isVisible={isBannerVisible}
+            onClose={() => setIsBannerVisible(false)}
+          />
 
-      {/* All Groups List */}
-      <AllGroupsList groups={filteredGroups} />
+          {/* All Groups List */}
+          <AllGroupsList groups={filteredGroups} />
 
-      {/* Trending Horizontal list */}
-      <TrendingGroups groups={trendingGroupsData} />
+          {/* Trending Horizontal list */}
+          <TrendingGroups groups={trendingGroupsData} />
+        </>
+      ) : (
+        <div className="flex flex-col gap-4 mt-1">
+          {/* Segmented Pills count filters */}
+          <JoinedTabs selectedTab={joinedSubTab} onChange={setJoinedSubTab} />
+
+          {/* Detailed joined groups list cards */}
+          <JoinedGroupsList groups={filteredJoinedGroups} />
+        </div>
+      )}
     </div>
   );
 };

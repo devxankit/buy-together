@@ -15,7 +15,7 @@ const LiveActivitySection = () => {
       label: 'Active Groups',
       trend: '+12% today',
       trendColor: 'text-green-500',
-      bg: 'bg-white'
+      bg: 'bg-surface'
     },
     {
       id: 2,
@@ -72,7 +72,7 @@ const LiveActivitySection = () => {
 
       <div className="flex gap-3 w-max animate-marquee pb-1 px-4 select-none">
         {[...stats, ...stats].map((stat, idx) => (
-          <div key={`${stat.id}-${idx}`} className={`flex-shrink-0 w-[125px] rounded-xl ${stat.bg} border border-slate-100 p-2.5 shadow-sm flex flex-col justify-between`}>
+          <div key={`${stat.id}-${idx}`} className={`flex-shrink-0 w-[125px] rounded-xl ${stat.bg} border border-line p-2.5 shadow-sm flex flex-col justify-between`}>
             <div className="flex items-center gap-2 mb-1.5">
               <div className="scale-75 origin-left -ml-1">
                 {stat.icon}
@@ -80,7 +80,7 @@ const LiveActivitySection = () => {
               <span className="text-[13px] font-black text-ink">{stat.value}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-slate-500 leading-tight">{stat.label}</span>
+              <span className="text-[9px] font-bold text-faint leading-tight">{stat.label}</span>
               <span className={`text-[8.5px] font-extrabold ${stat.trendColor} mt-0.5 flex items-center gap-0.5`}>
                 {stat.trend}
                 {stat.trend.includes('%') && (

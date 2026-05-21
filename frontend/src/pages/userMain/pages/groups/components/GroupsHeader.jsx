@@ -6,12 +6,12 @@ const GroupsHeader = () => {
 
   return (
     <div className="flex items-center justify-between py-2 mt-2 select-none">
-      <h1 className="text-[26px] font-extrabold tracking-tight text-[#1E293B]">
+      <h1 className="text-[26px] font-extrabold tracking-tight text-ink">
         Groups
       </h1>
       <button
         onClick={() => navigate('/groups/create')}
-        className="flex items-center gap-1 bg-[#0D9488]/10 hover:bg-[#0D9488]/15 text-[#0D9488] px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 duration-200"
+        className="flex items-center gap-1 bg-primary/10 hover:bg-primary/15 text-primary px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 duration-200"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

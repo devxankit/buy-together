@@ -19,7 +19,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
     <div className="flex flex-col gap-3 select-none pb-4">
       {/* Header section with sorting options */}
       <div className="flex items-center justify-between mt-1">
-        <h2 className="text-[15px] font-extrabold text-[#1E293B]">
+        <h2 className="text-[15px] font-extrabold text-ink">
           All Groups
         </h2>
         <button
@@ -29,7 +29,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
           <span>Sort: Recently Active</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-3 h-3 text-[#94A3B8] ml-0.5"
+            className="w-3 h-3 text-muted ml-0.5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -51,14 +51,14 @@ const AllGroupsList = ({ groups, onSortChange }) => {
             <div
               key={group.id}
               onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
-              className="bg-white border border-[#E2E8F0]/70 hover:border-[#0D9488]/15 rounded-2xl p-3 flex gap-3 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] cursor-pointer"
+              className="bg-surface border border-line/70 hover:border-primary/15 rounded-2xl p-3 flex gap-3 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] cursor-pointer"
             >
               {/* Product Image on the left */}
-              <div className="w-[84px] h-[84px] bg-[#F8FAFC] border border-[#E2E8F0]/40 rounded-xl overflow-hidden flex items-center justify-center p-1.5 flex-shrink-0 self-center">
+              <div className="w-[84px] h-[84px] bg-surface-alt border border-line/40 rounded-xl overflow-hidden flex items-center justify-center p-1.5 flex-shrink-0 self-center">
                 <img
                   src={group.image}
                   alt={group.title}
-                  className="w-full h-full object-contain mix-blend-multiply"
+                  className="w-full h-full object-contain "
                   loading="lazy"
                 />
               </div>
@@ -68,7 +68,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                 <div>
                   {/* Title & Status Badge row */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <h3 className="text-xs font-black text-[#1E293B] truncate max-w-[125px]">
+                    <h3 className="text-xs font-black text-ink truncate max-w-[125px]">
                       {group.title}
                     </h3>
                     {isClosingSoon ? (
@@ -83,7 +83,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                   </div>
 
                   {/* Location & Category string */}
-                  <p className="text-[9.5px] font-extrabold text-[#94A3B8] mt-0.5">
+                  <p className="text-[9.5px] font-extrabold text-muted mt-0.5">
                     {group.category} • {group.location}
                   </p>
 
@@ -102,11 +102,11 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                         key={idx}
                         src={avatar}
                         alt="Member avatar"
-                        className="w-5 h-5 rounded-full border border-white object-cover -mr-1.5"
+                        className="w-5 h-5 rounded-full border border-surface object-cover -mr-1.5"
                         style={{ zIndex: 3 - idx }}
                       />
                     ))}
-                    <div className="w-5 h-5 rounded-full bg-[#E2E8F0] border border-white text-[8px] font-black text-[#475569] flex items-center justify-center -mr-1.5 z-[0]">
+                    <div className="w-5 h-5 rounded-full bg-[#E2E8F0] border border-surface text-[8px] font-black text-[#475569] flex items-center justify-center -mr-1.5 z-[0]">
                       +{group.spotsJoined - 3 > 0 ? group.spotsJoined - 3 : 9}
                     </div>
                   </div>
@@ -114,7 +114,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                   {/* Progress Line */}
                   <div className="flex-1 min-w-[70px] h-[5px] bg-[#F1F5F9] rounded-full overflow-hidden self-center">
                     <div
-                      className="h-full bg-[#0D9488] rounded-full transition-all duration-500"
+                      className="h-full bg-primary rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -129,7 +129,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                     e.stopPropagation();
                     dispatch(toggleWishlist(group));
                   }}
-                  className={`p-1.5 rounded-full transition-colors active:scale-95 ${isWishlisted ? 'text-red-500 bg-red-50' : 'text-[#94A3B8] hover:bg-slate-100 hover:text-red-500'}`}
+                  className={`p-1.5 rounded-full transition-colors active:scale-95 ${isWishlisted ? 'text-red-500 bg-red-50' : 'text-muted hover:bg-surface-alt hover:text-red-500'}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -137,11 +137,11 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                 </button>
 
                 {/* Spots Progress Stack Box */}
-                <div className="bg-[#F8FAFC] border border-[#E2E8F0]/50 px-2 py-1.5 rounded-xl text-center min-w-[60px]">
-                  <p className="text-[10px] font-black text-[#1E293B] leading-none">
+                <div className="bg-surface-alt border border-line/50 px-2 py-1.5 rounded-xl text-center min-w-[60px]">
+                  <p className="text-[10px] font-black text-ink leading-none">
                     {group.spotsJoined}/{group.spotsTotal}
                   </p>
-                  <p className="text-[8.5px] font-bold text-[#94A3B8] mt-0.5 leading-none">
+                  <p className="text-[8.5px] font-bold text-muted mt-0.5 leading-none">
                     Buyers
                   </p>
                 </div>
@@ -149,12 +149,12 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                 {/* Clock indicator & Time left */}
                 <div
                   className={`flex items-center gap-0.5 text-[9.5px] font-bold ${
-                    isClosingSoon ? 'text-[#EF4444]' : 'text-[#94A3B8]'
+                    isClosingSoon ? 'text-[#EF4444]' : 'text-muted'
                   }`}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`w-2.5 h-2.5 ${isClosingSoon ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}
+                    className={`w-2.5 h-2.5 ${isClosingSoon ? 'text-[#EF4444]' : 'text-muted'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

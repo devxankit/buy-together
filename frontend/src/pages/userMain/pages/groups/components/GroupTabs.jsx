@@ -8,14 +8,14 @@ const GroupTabs = ({ activeTab, onChange }) => {
         onClick={() => onChange('my-groups')}
         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[13px] text-xs font-bold transition-all duration-300 ${
           activeTab === 'my-groups'
-            ? 'bg-white text-[#0D9488] shadow-sm shadow-[#0F172A]/5 scale-[1.01]'
+            ? 'bg-surface text-primary shadow-sm shadow-[#0F172A]/5 scale-[1.01]'
             : 'text-[#64748B] hover:text-[#475569]'
         }`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className={`w-4 h-4 transition-colors ${
-            activeTab === 'my-groups' ? 'text-[#0D9488]' : 'text-[#94A3B8]'
+            activeTab === 'my-groups' ? 'text-primary' : 'text-muted'
           }`}
           fill="none"
           viewBox="0 0 24 24"
@@ -36,14 +36,14 @@ const GroupTabs = ({ activeTab, onChange }) => {
         onClick={() => onChange('joined-groups')}
         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[13px] text-xs font-bold transition-all duration-300 ${
           activeTab === 'joined-groups'
-            ? 'bg-white text-[#0D9488] shadow-sm shadow-[#0F172A]/5 scale-[1.01]'
+            ? 'bg-surface text-primary shadow-sm shadow-[#0F172A]/5 scale-[1.01]'
             : 'text-[#64748B] hover:text-[#475569]'
         }`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className={`w-4 h-4 transition-colors ${
-            activeTab === 'joined-groups' ? 'text-[#0D9488]' : 'text-[#94A3B8]'
+            activeTab === 'joined-groups' ? 'text-primary' : 'text-muted'
           }`}
           fill="none"
           viewBox="0 0 24 24"

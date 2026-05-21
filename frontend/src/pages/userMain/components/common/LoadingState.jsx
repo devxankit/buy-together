@@ -40,7 +40,7 @@ export const LoadingState = ({
     return (
       <div className={`flex flex-col gap-4 w-full animate-pulse ${className}`}>
         {[...Array(rows)].map((_, i) => (
-          <div key={i} className="bg-white border border-line/40 rounded-2xl p-5 flex flex-col gap-3">
+          <div key={i} className="bg-surface border border-line/40 rounded-2xl p-5 flex flex-col gap-3">
             <div className="flex justify-between items-center">
               <div className="h-4 bg-surface-deep rounded-md w-1/3" />
               <div className="h-4 bg-surface-deep rounded-md w-12" />

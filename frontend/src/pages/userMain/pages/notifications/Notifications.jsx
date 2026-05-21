@@ -52,19 +52,19 @@ const Notifications = () => {
         {notifications.map(notification => (
           <div 
             key={notification.id} 
-            className={`bg-white rounded-[20px] p-4 flex gap-3.5 shadow-sm border ${notification.read ? 'border-transparent' : 'border-primary/20'} active:scale-[0.98] transition-transform cursor-pointer w-full`}
+            className={`bg-surface rounded-[20px] p-4 flex gap-3.5 shadow-sm border ${notification.read ? 'border-transparent' : 'border-primary/20'} active:scale-[0.98] transition-transform cursor-pointer w-full`}
           >
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-surface-alt flex items-center justify-center flex-shrink-0">
               {notification.icon}
             </div>
             <div className="flex-1 flex flex-col justify-center">
               <div className="flex justify-between items-start mb-0.5">
-                <h4 className={`text-[13px] font-black ${notification.read ? 'text-slate-700' : 'text-ink'}`}>
+                <h4 className={`text-[13px] font-black ${notification.read ? 'text-ink' : 'text-ink'}`}>
                   {notification.title}
                 </h4>
-                <span className="text-[9px] font-bold text-slate-400 mt-0.5">{notification.time}</span>
+                <span className="text-[9px] font-bold text-muted mt-0.5">{notification.time}</span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 leading-snug pr-2">
+              <p className="text-[11px] font-medium text-faint leading-snug pr-2">
                 {notification.message}
               </p>
             </div>

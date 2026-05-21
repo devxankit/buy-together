@@ -53,7 +53,7 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
                     e.stopPropagation();
                     dispatch(toggleWishlist(group));
                   }}
-                  className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full transition-colors active:scale-95 text-[#94A3B8] hover:text-red-500 shadow-sm"
+                  className="absolute top-2 right-2 p-1.5 bg-surface/80 backdrop-blur-sm rounded-full transition-colors active:scale-95 text-muted hover:text-red-500 shadow-sm"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill={isWishlisted ? "#EF4444" : "none"} viewBox="0 0 24 24" stroke={isWishlisted ? "#EF4444" : "currentColor"} strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -61,7 +61,7 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
                 </button>
                 
                 {/* Floating Joined counter badge */}
-                <div className="absolute right-2 bottom-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm border border-line/10 scale-[0.88] origin-bottom-right">
+                <div className="absolute right-2 bottom-2 bg-surface/90 backdrop-blur-sm px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm border border-line/10 scale-[0.88] origin-bottom-right">
                   <span className="text-[9.5px] font-black text-primary leading-none">
                     {group.spotsJoined}
                   </span>

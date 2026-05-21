@@ -17,7 +17,7 @@ const Card = ({
     <div
       onClick={onClick}
       className={`
-        bg-white 
+        bg-surface 
         border border-line/60 
         shadow-card 
         ${rounded} 

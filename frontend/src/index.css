@@ -15,8 +15,9 @@
   --line-soft:    #F0F0F3;
   --surface:      #FFFFFF;
   --surface-alt:  #F6F6F8;
-  --surface-deep: #EFEFF3;
+  --surface-deep: #EEF7F5; /* Matches layout shell background */
   --surface-ink:  #0E0E11;
+  --nav-bg:       rgba(241, 245, 249, 0.9); /* Slate 100 */
   --saving:       #0D9488;
   --saving-soft:  #E6F4F2;
   --danger:       #B43A30;
@@ -27,29 +28,80 @@
   --shadow-md:    0 4px 16px -4px rgba(15,15,18,0.07), 0 1px 2px rgba(15,15,18,0.03);
   --shadow-lg:    0 16px 40px -12px rgba(15,15,18,0.10), 0 2px 6px rgba(15,15,18,0.03);
   --nav-width: min(100vw, 430px);
+  
+  /* Centralized dynamic gradients */
+  --home-gradient-from: #EDF8F7;
+  --home-gradient-via: #F5FCFC;
+  --home-gradient-to: #FFFFFF;
+  
+  --ad-gradient-from: #064E3B;
+  --ad-gradient-via: #0B7A70;
+  --ad-gradient-to: #0D9488;
+  
+  --header-gradient-from: #0B7A70;
+  --header-gradient-to: #0D9488;
+}
+
+[data-theme='dark'] {
+  --primary:      #E11D48; /* Red 600 */
+  --primary-soft: rgba(225, 29, 72, 0.12);
+  --primary-deep: #BE123C; /* Red 700 */
+  --primary-tint: #1C1113;
+  --primary-glow: rgba(225, 29, 72, 0.25);
+  --ink:          #F4F4F5; /* Zinc 100 */
+  --ink-soft:     #E4E4E7; /* Zinc 200 */
+  --muted:        #A1A1AA; /* Zinc 400 */
+  --faint:        #71717A; /* Zinc 500 */
+  --line:         #27272A; /* Zinc 800 */
+  --line-soft:    #18181B; /* Zinc 900 */
+  --surface:      #0A0A0C; /* Zinc 950 / Pitch black */
+  --surface-alt:  #121214; /* Off-black */
+  --surface-deep: #000000; /* Pure pitch black */
+  --surface-ink:  #FFFFFF;
+  --nav-bg:       rgba(30, 41, 59, 0.9); /* Slate 800 */
+  --saving:       #E11D48;
+  --saving-soft:  rgba(225, 29, 72, 0.12);
+  --danger:       #E11D48;
+  --danger-soft:  rgba(225, 29, 72, 0.15);
+  --info:         #3B82F6;
+  --info-soft:    rgba(59, 130, 246, 0.15);
+  --shadow-glow:  0 18px 40px -16px rgba(225, 29, 72, 0.35);
+  --shadow-md:    0 4px 16px -4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg:    0 16px 40px -12px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.3);
+  
+  --home-gradient-from: #09090B;
+  --home-gradient-via: #030303;
+  --home-gradient-to: #000000;
+  
+  --ad-gradient-from: #450A0A; /* Deep red-maroon */
+  --ad-gradient-via: #1C0303;
+  --ad-gradient-to: #000000;
+  
+  --header-gradient-from: #121214;
+  --header-gradient-to: #09090B;
 }
 
 @theme {
   --font-sans: 'Geist', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
-  --color-primary:      #0D9488;
-  --color-primary-soft: #E6F4F2;
-  --color-primary-deep: #0B7A70;
-  --color-surface:      #FFFFFF;
-  --color-surface-alt:  #F6F6F8;
-  --color-ink:          #0F0F12;
-  --color-muted:        #6B6B72;
-  --color-faint:        #A8A8AE;
-  --color-line:         #E5E5EA;
-  --color-danger:       #B43A30;
-  --color-info:         #2C5680;
+  --color-primary:      var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-deep: var(--primary-deep);
+  --color-surface:      var(--surface);
+  --color-surface-alt:  var(--surface-alt);
+  --color-ink:          var(--ink);
+  --color-muted:        var(--muted);
+  --color-faint:        var(--faint);
+  --color-line:         var(--line);
+  --color-danger:       var(--danger);
+  --color-info:         var(--info);
 }
 
 @layer base {
   html, body {
     font-family: 'Geist', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     background: #0E0E11;
-    color: #0F0F12;
+    color: var(--ink);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     font-feature-settings: 'ss01' on, 'cv11' on;
@@ -63,7 +115,8 @@
     margin: 0 auto;
     min-height: 100vh;
     min-height: 100dvh;
-    background: #EEF7F5;
+    background: var(--surface-deep);
+    color: var(--ink);
     overflow-x: hidden;
     position: relative;
     /* NO transform here — that breaks position:fixed viewport anchoring */
@@ -96,7 +149,7 @@
 
 @layer components {
   .card {
-    background: #fff;
+    background: var(--surface);
     border-radius: 20px;
     border: 1px solid var(--line);
     box-shadow: var(--shadow-md);
@@ -120,7 +173,7 @@
     letter-spacing: -0.1px;
   }
   .btn-soft {
-    background: #fff;
+    background: var(--surface);
     color: var(--ink);
     border-radius: 16px;
     font-weight: 600;

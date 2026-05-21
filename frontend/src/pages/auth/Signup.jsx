@@ -25,12 +25,12 @@ const Signup = () => {
         <div className="flex items-center justify-between gap-3">
           {/* Left: Icon + Text */}
           <div className="flex flex-col flex-1 min-w-0">
-            <div className="w-11 h-11 bg-[#0D9488] rounded-2xl flex items-center justify-center shadow-lg shadow-teal-600/30 mb-2.5">
+            <div className="w-11 h-11 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 mb-2.5">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h1 className="text-[26px] font-black text-[#0F172A] leading-tight">Join Us!</h1>
+            <h1 className="text-[26px] font-black text-ink leading-tight">Join Us!</h1>
           </div>
 
           {/* Right: Phone + Shopping Illustration */}
@@ -39,26 +39,26 @@ const Signup = () => {
               <div className="w-[78px] h-[140px] bg-[#1E293B] rounded-[16px] shadow-xl flex flex-col overflow-hidden border-[3px] border-[#334155]">
                 <div className="w-7 h-1 bg-[#334155] rounded-full mx-auto mt-1.5" />
                 <div className="flex-1 bg-gradient-to-b from-[#E0F5F3] to-[#C8EDE9] flex flex-col items-center justify-center gap-1 p-1.5">
-                  <div className="w-7 h-7 bg-[#0D9488] rounded-xl flex items-center justify-center">
+                  <div className="w-7 h-7 bg-primary rounded-xl flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </div>
-                  <span className="text-[8px] font-black text-[#0F172A]">Group Deals</span>
+                  <span className="text-[8px] font-black text-ink">Group Deals</span>
                 </div>
               </div>
               {/* Shopping bag */}
-              <div className="absolute -left-8 bottom-3 w-9 h-11 bg-[#0D9488] rounded-lg flex items-center justify-center shadow-lg">
+              <div className="absolute -left-8 bottom-3 w-9 h-11 bg-primary rounded-lg flex items-center justify-center shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
               </div>
               {/* Star/Gift */}
-              <div className="absolute -left-4 bottom-14 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md border border-slate-100">
+              <div className="absolute -left-4 bottom-14 w-7 h-7 bg-surface rounded-lg flex items-center justify-center shadow-md border border-line">
                 <span className="text-base">⭐</span>
               </div>
               {/* % */}
-              <div className="absolute -right-4 bottom-6 w-9 h-9 bg-[#0D9488] rounded-xl flex items-center justify-center shadow-lg rotate-12">
+              <div className="absolute -right-4 bottom-6 w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg rotate-12">
                 <span className="text-white text-[12px] font-black">%</span>
               </div>
             </div>
@@ -67,16 +67,16 @@ const Signup = () => {
       </div>
 
       {/* === FORM CARD === */}
-      <div className="flex-1 bg-white rounded-t-[28px] -mt-3 px-5 pt-5 pb-6 shadow-[0_-4px_30px_rgba(0,0,0,0.06)] flex flex-col overflow-y-auto">
+      <div className="flex-1 bg-surface rounded-t-[28px] -mt-3 px-5 pt-5 pb-6 shadow-[0_-4px_30px_rgba(0,0,0,0.06)] flex flex-col overflow-y-auto">
 
-        <h2 className="text-[17px] font-black text-[#0F172A]">Create your account</h2>
-        <p className="text-[12px] text-[#94A3B8] font-medium mt-0.5 mb-4">Fill in your details to get started</p>
+        <h2 className="text-[17px] font-black text-ink">Create your account</h2>
+        <p className="text-[12px] text-muted font-medium mt-0.5 mb-4">Fill in your details to get started</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
 
           {/* Full Name */}
-          <div className="flex items-center gap-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl px-4 h-[50px] focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/15 transition-all">
-            <svg className="w-4 h-4 text-[#94A3B8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
+            <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <input
@@ -84,14 +84,14 @@ const Signup = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Full Name"
-              className="flex-1 bg-transparent text-[13px] font-medium text-[#0F172A] placeholder:text-[#CBD5E1] outline-none"
+              className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-[#CBD5E1] outline-none"
               required
             />
           </div>
 
           {/* Email */}
-          <div className="flex items-center gap-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl px-4 h-[50px] focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/15 transition-all">
-            <svg className="w-4 h-4 text-[#94A3B8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
+            <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <input
@@ -99,14 +99,14 @@ const Signup = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email Address"
-              className="flex-1 bg-transparent text-[13px] font-medium text-[#0F172A] placeholder:text-[#CBD5E1] outline-none"
+              className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-[#CBD5E1] outline-none"
               required
             />
           </div>
 
           {/* Phone */}
-          <div className="flex items-center gap-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl px-4 h-[50px] focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/15 transition-all">
-            <svg className="w-4 h-4 text-[#94A3B8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
+            <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
             <input
@@ -114,7 +114,7 @@ const Signup = () => {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
               placeholder="Phone Number"
-              className="flex-1 bg-transparent text-[13px] font-medium text-[#0F172A] placeholder:text-[#CBD5E1] outline-none"
+              className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-[#CBD5E1] outline-none"
               required
             />
           </div>
@@ -123,7 +123,7 @@ const Signup = () => {
 
           {/* Terms checkbox */}
           <label className="flex items-start gap-2.5 cursor-pointer mt-0.5" onClick={() => setAgreed(!agreed)}>
-            <div className={`w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${agreed ? 'bg-[#0D9488] border-[#0D9488]' : 'bg-white border-[#CBD5E1]'}`}>
+            <div className={`w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${agreed ? 'bg-primary border-primary' : 'bg-surface border-line'}`}>
               {agreed && (
                 <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -132,9 +132,9 @@ const Signup = () => {
             </div>
             <span className="text-[11.5px] text-[#475569] leading-relaxed">
               I agree to the{' '}
-              <span className="text-[#0D9488] font-bold">Terms & Conditions</span>
+              <span className="text-primary font-bold">Terms & Conditions</span>
               {' '}and{' '}
-              <span className="text-[#0D9488] font-bold">Privacy Policy</span>
+              <span className="text-primary font-bold">Privacy Policy</span>
             </span>
           </label>
 
@@ -142,7 +142,7 @@ const Signup = () => {
           <button
             type="submit"
             disabled={!agreed}
-            className="w-full h-[52px] bg-[#0D9488] rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-teal-500/30 active:scale-95 transition-all mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-[52px] bg-primary rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create Account
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -151,22 +151,22 @@ const Signup = () => {
           </button>
 
           {/* Already have account */}
-          <div className="flex items-center justify-between bg-[#F0FDF9] border border-[#CCFBF1] rounded-2xl px-4 py-3 mt-1">
+          <div className="flex items-center justify-between bg-primary-soft border border-[#CCFBF1] rounded-2xl px-4 py-3 mt-1">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 bg-[#CCFBF1] rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-[#0D9488]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
               </div>
               <div>
-                <p className="text-[12px] font-bold text-[#0F172A]">Already have an account?</p>
+                <p className="text-[12px] font-bold text-ink">Already have an account?</p>
                 <p className="text-[10px] text-[#64748B]">Login and start saving today!</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="flex items-center gap-1 text-[12px] font-black text-[#0D9488] whitespace-nowrap active:opacity-70 transition-all"
+              className="flex items-center gap-1 text-[12px] font-black text-primary whitespace-nowrap active:opacity-70 transition-all"
             >
               Login
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -183,13 +183,13 @@ const Signup = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <span>Need help?</span>
-            <span className="text-[#0D9488] font-bold">Contact Support</span>
+            <span className="text-primary font-bold">Contact Support</span>
           </div>
-          <p className="text-[9.5px] text-[#94A3B8] text-center leading-snug">
+          <p className="text-[9.5px] text-muted text-center leading-snug">
             By continuing, you agree to our{' '}
-            <span className="text-[#0D9488] font-semibold">Terms & Conditions</span>
+            <span className="text-primary font-semibold">Terms & Conditions</span>
             {' '}and{' '}
-            <span className="text-[#0D9488] font-semibold">Privacy Policy</span>
+            <span className="text-primary font-semibold">Privacy Policy</span>
           </p>
         </div>
       </div>

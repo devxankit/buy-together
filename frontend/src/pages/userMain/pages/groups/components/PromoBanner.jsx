@@ -4,12 +4,12 @@ const PromoBanner = ({ isVisible, onClose }) => {
   if (!isVisible) return null;
 
   return (
-    <div className="flex items-center gap-3 bg-[#E6F4F2]/50 border border-[#0D9488]/10 p-3.5 rounded-2xl relative transition-all duration-300 animate-fadeIn select-none">
+    <div className="flex items-center gap-3 bg-primary-soft/50 border border-primary/10 p-3.5 rounded-2xl relative transition-all duration-300 animate-fadeIn select-none">
       {/* Custom Teal Circular Group Avatar Icon */}
-      <div className="w-10 h-10 bg-[#0D9488]/15 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm shadow-[#0D9488]/5">
+      <div className="w-10 h-10 bg-primary/15 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm shadow-[#0D9488]/5">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-5 h-5 text-[#0D9488]"
+          className="w-5 h-5 text-primary"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -27,7 +27,7 @@ const PromoBanner = ({ isVisible, onClose }) => {
       <div className="pr-6 flex-1">
         <p className="text-[11.5px] leading-relaxed text-[#334155] font-semibold">
           Create or join a group to buy together and unlock{' '}
-          <span className="text-[#0D9488] font-bold">better prices</span> on your
+          <span className="text-primary font-bold">better prices</span> on your
           favorite products.
         </p>
       </div>
@@ -35,7 +35,7 @@ const PromoBanner = ({ isVisible, onClose }) => {
       {/* Close Action Button */}
       <button
         onClick={onClose}
-        className="absolute top-3.5 right-3.5 text-[#94A3B8] hover:text-[#64748B] transition-colors p-0.5 rounded-full hover:bg-slate-100/80 active:scale-90"
+        className="absolute top-3.5 right-3.5 text-muted hover:text-[#64748B] transition-colors p-0.5 rounded-full hover:bg-surface-alt/80 active:scale-90"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

@@ -33,7 +33,7 @@ const CategoriesGrid = ({ categories, onCategoryClick, onViewAll }) => {
             className="flex flex-col items-center cursor-pointer group select-none"
           >
             {/* Independent Circular Image */}
-            <div className="w-[64px] h-[64px] rounded-full flex items-center justify-center group-active:scale-95 transition-all overflow-hidden bg-slate-100">
+            <div className="w-[64px] h-[64px] rounded-full flex items-center justify-center group-active:scale-95 transition-all overflow-hidden bg-surface-alt">
               {cat.coverImage ? (
                 <img
                   src={cat.coverImage}

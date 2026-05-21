@@ -64,11 +64,11 @@ const FilterBadges = ({ selectedFilter, onChange }) => {
             onClick={() => onChange(badge.id)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all active:scale-95 duration-200 border ${
               isActive
-                ? 'bg-[#E6F4F2] text-[#0D9488] border-[#0D9488]/15 shadow-sm shadow-[#0D9488]/5 font-bold'
-                : 'bg-white text-[#64748B] hover:text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]'
+                ? 'bg-primary-soft text-primary border-primary/15 shadow-sm shadow-[#0D9488]/5 font-bold'
+                : 'bg-surface text-[#64748B] hover:text-[#475569] border-line hover:border-[#CBD5E1]'
             }`}
           >
-            <span className={isActive ? 'text-[#0D9488]' : 'text-[#94A3B8]'}>
+            <span className={isActive ? 'text-primary' : 'text-muted'}>
               {badge.icon}
             </span>
             <span>{badge.label}</span>

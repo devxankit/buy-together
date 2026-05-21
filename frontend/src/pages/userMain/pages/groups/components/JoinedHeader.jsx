@@ -8,7 +8,7 @@ const JoinedHeader = ({ onBackClick }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={onBackClick}
-            className="text-white hover:text-teal-100 p-1.5 rounded-full hover:bg-white/10 active:scale-90 transition-all"
+            className="text-white hover:text-teal-100 p-1.5 rounded-full hover:bg-surface/10 active:scale-90 transition-all"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +34,7 @@ const JoinedHeader = ({ onBackClick }) => {
 
         {/* Action icons */}
         <div className="flex items-center gap-1.5">
-          <button className="w-9 h-9 bg-white/12 hover:bg-white/18 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all active:scale-90">
+          <button className="w-9 h-9 bg-surface/12 hover:bg-surface/18 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all active:scale-90">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-4.5 h-4.5"
@@ -47,7 +47,7 @@ const JoinedHeader = ({ onBackClick }) => {
             </svg>
           </button>
 
-          <button className="w-9 h-9 bg-white/12 hover:bg-white/18 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all active:scale-90">
+          <button className="w-9 h-9 bg-surface/12 hover:bg-surface/18 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all active:scale-90">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-4.5 h-4.5"

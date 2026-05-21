@@ -104,39 +104,39 @@ const OTP = () => {
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 bg-white/70 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/60 shadow-sm active:scale-90 transition-all mb-6"
+          className="w-9 h-9 bg-surface/70 backdrop-blur-sm rounded-xl flex items-center justify-center border border-surface/60 shadow-sm active:scale-90 transition-all mb-6"
         >
-          <svg className="w-4 h-4 text-[#1E293B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-4 h-4 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
         {/* Shield icon */}
-        <div className="w-14 h-14 bg-[#0D9488] rounded-2xl flex items-center justify-center shadow-lg shadow-teal-600/30 mb-4">
+        <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 mb-4">
           <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
         </div>
 
-        <h1 className="text-[26px] font-black text-[#0F172A] leading-tight">Verify OTP</h1>
+        <h1 className="text-[26px] font-black text-ink leading-tight">Verify OTP</h1>
         <p className="text-[12.5px] text-[#475569] mt-1.5 leading-snug">
           We've sent a 6-digit code to<br />
-          <span className="font-bold text-[#0D9488]">{contactDisplay}</span>
+          <span className="font-bold text-primary">{contactDisplay}</span>
         </p>
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="text-[11px] font-bold text-[#0D9488] mt-1.5 active:opacity-70 transition-all"
+          className="text-[11px] font-bold text-primary mt-1.5 active:opacity-70 transition-all"
         >
           Change →
         </button>
       </div>
 
       {/* === FORM CARD === */}
-      <div className="flex-1 bg-white rounded-t-[28px] -mt-5 px-5 pt-7 pb-8 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]">
+      <div className="flex-1 bg-surface rounded-t-[28px] -mt-5 px-5 pt-7 pb-8 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]">
 
-        <h2 className="text-[16px] font-black text-[#0F172A] mb-1">Enter verification code</h2>
-        <p className="text-[11.5px] text-[#94A3B8] font-medium mb-6">Type the 6-digit OTP sent to you</p>
+        <h2 className="text-[16px] font-black text-ink mb-1">Enter verification code</h2>
+        <p className="text-[11.5px] text-muted font-medium mb-6">Type the 6-digit OTP sent to you</p>
 
         <form onSubmit={handleSubmit}>
 
@@ -166,7 +166,7 @@ const OTP = () => {
                   className="block w-full text-center text-[22px] font-black outline-none transition-all duration-150 rounded-2xl"
                   style={{
                     height: 54,
-                    border: `2px solid ${isFocused ? '#0D9488' : isFilled ? 'rgba(13,148,136,0.5)' : '#E2E8F0'}`,
+                    border: `2px solid ${isFocused ? 'var(--primary)' : isFilled ? 'var(--primary-soft)' : 'var(--line)'}`,
                     boxShadow: isFocused ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none',
                     background: isFilled ? '#F0FDF9' : '#F8FAFC',
                     color: '#0F172A',
@@ -185,23 +185,23 @@ const OTP = () => {
               <div
                 key={i}
                 className="flex-1 h-[3px] rounded-full transition-all duration-200"
-                style={{ background: d ? '#0D9488' : '#E2E8F0' }}
+                style={{ background: d ? 'var(--primary)' : 'var(--line)' }}
               />
             ))}
           </div>
 
           {/* Resend row */}
-          <div className="flex items-center justify-between mb-6 bg-[#F8FAFC] rounded-2xl px-4 py-3 border border-[#F1F5F9]">
+          <div className="flex items-center justify-between mb-6 bg-surface-alt rounded-2xl px-4 py-3 border border-[#F1F5F9]">
             <div className="flex items-center gap-2">
               {timer > 0 ? (
                 <>
-                  <div className="w-7 h-7 rounded-full bg-[#E0F5F3] flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-[#0D9488]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <div className="w-7 h-7 rounded-full bg-primary-soft flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <span className="text-[12px] text-[#64748B] font-medium">
-                    Resend in <span className="font-black text-[#0F172A]">0:{String(timer).padStart(2, '0')}</span>
+                    Resend in <span className="font-black text-ink">0:{String(timer).padStart(2, '0')}</span>
                   </span>
                 </>
               ) : (
@@ -212,7 +212,7 @@ const OTP = () => {
               type="button"
               disabled={timer > 0}
               onClick={() => { setTimer(29); setDigits(Array(N).fill('')); focus(0); }}
-              className={`text-[12px] font-black transition-all active:scale-95 ${timer > 0 ? 'text-[#CBD5E1] cursor-default' : 'text-[#0D9488]'}`}
+              className={`text-[12px] font-black transition-all active:scale-95 ${timer > 0 ? 'text-faint cursor-default' : 'text-primary'}`}
             >
               Resend OTP
             </button>
@@ -222,7 +222,7 @@ const OTP = () => {
           <button
             type="submit"
             disabled={filled < N}
-            className="w-full h-[52px] bg-[#0D9488] rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-teal-500/30 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
+            className="w-full h-[52px] bg-primary rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
           >
             <svg className="w-4.5 h-4.5 w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -234,7 +234,7 @@ const OTP = () => {
           </button>
 
           {/* Security note */}
-          <div className="flex items-center justify-center gap-2 mt-4 text-[11px] text-[#94A3B8]">
+          <div className="flex items-center justify-center gap-2 mt-4 text-[11px] text-muted">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>

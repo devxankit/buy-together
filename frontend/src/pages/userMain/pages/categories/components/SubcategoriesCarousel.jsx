@@ -64,7 +64,7 @@ const SubcategoriesCarousel = ({ selectedSub, onChange }) => {
 
   return (
     <div className="flex flex-col gap-2.5 select-none">
-      <h2 className="text-[14px] font-extrabold text-[#1E293B]">
+      <h2 className="text-[14px] font-extrabold text-ink">
         Subcategories
       </h2>
 
@@ -78,8 +78,8 @@ const SubcategoriesCarousel = ({ selectedSub, onChange }) => {
               onClick={() => onChange(sub.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 duration-200 border ${
                 isActive
-                  ? 'bg-[#0D9488] text-white border-[#0D9488] shadow-sm'
-                  : 'bg-white text-[#64748B] hover:text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]'
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface text-[#64748B] hover:text-[#475569] border-line hover:border-[#CBD5E1]'
               }`}
             >
               <span>{sub.icon}</span>

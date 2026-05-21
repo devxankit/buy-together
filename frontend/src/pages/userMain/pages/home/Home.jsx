@@ -135,19 +135,17 @@ const Home = () => {
       )
     },
     {
-      id: 'more',
-      name: 'More',
-      coverImage: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=120&q=80',
+      id: 'properties',
+      name: 'Property',
+      coverImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=120&q=80',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <rect x="4" y="4" width="5" height="5" rx="1.2" />
-          <rect x="15" y="4" width="5" height="5" rx="1.2" />
-          <rect x="4" y="15" width="5" height="5" rx="1.2" />
-          <rect x="15" y="15" width="5" height="5" rx="1.2" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       )
     }
   ];
+
 
   // Hot buying groups list
   const hotGroups = [
@@ -251,13 +249,71 @@ const Home = () => {
     }
   ];
 
+  const propertyGroups = [
+    {
+      id: 'prop-1',
+      title: 'Fractional Beach Villa',
+      subtitle: 'Goa co-buy: 10% Share',
+      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=200&q=80',
+      spotsJoined: 4,
+      spotsTotal: 10,
+      daysLeft: '15d left'
+    },
+    {
+      id: 'prop-2',
+      title: 'Commercial Office Space',
+      subtitle: 'Bengaluru Tech Park',
+      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=200&q=80',
+      spotsJoined: 7,
+      spotsTotal: 15,
+      daysLeft: '8d left'
+    },
+    {
+      id: 'prop-3',
+      title: 'Premium Co-Living Hub',
+      subtitle: 'Mumbai Rent & Deposit Split',
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=200&q=80',
+      spotsJoined: 3,
+      spotsTotal: 4,
+      daysLeft: '2d left'
+    }
+  ];
 
+  const vehicleGroups = [
+    {
+      id: 'veh-1',
+      title: 'Tesla Model Y Lease',
+      subtitle: 'Pune premium co-lease pool',
+      image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=200&q=80',
+      spotsJoined: 2,
+      spotsTotal: 5,
+      daysLeft: '12d left'
+    },
+    {
+      id: 'veh-2',
+      title: 'Ather 450X EV Scooter',
+      subtitle: 'Bulk discount of ₹15,000',
+      image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=200&q=80',
+      spotsJoined: 12,
+      spotsTotal: 20,
+      daysLeft: '4d left'
+    },
+    {
+      id: 'veh-3',
+      title: 'Thar Roxx Offroader',
+      subtitle: 'Indore club bulk deal',
+      image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=200&q=80',
+      spotsJoined: 18,
+      spotsTotal: 25,
+      daysLeft: '6d left'
+    }
+  ];
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-24 animate-fadeIn select-none">
+    <div className="flex flex-col gap-5 pb-24 animate-fadeIn select-none bg-gradient-to-b from-[var(--home-gradient-from)] via-[var(--home-gradient-via)] to-[var(--home-gradient-to)] px-4 pt-0">
       
-      {/* ── HEADER CONTAINER with gorgeous dark-to-light teal gradient (Optimized Spacing) ── */}
-      <div className="flex flex-col gap-2.5 bg-gradient-to-r from-[#0B7A70] to-[#0D9488] px-4 pt-3.5 pb-4 -mx-4 mt-0 rounded-b-[22px] shadow-lg shadow-[#0D9488]/15">
+      {/* ── HEADER CONTAINER with gorgeous dark-to-light gradient (Optimized Spacing) ── */}
+      <div className="flex flex-col gap-2.5 bg-gradient-to-r from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] px-4 pt-5 pb-4 -mx-4 mt-0 rounded-b-[22px] shadow-lg shadow-primary/15">
         
         {/* ── 1. LOCATION & PROFILE HEADER ── */}
         <div className="flex items-center justify-between px-0.5">
@@ -267,22 +323,22 @@ const Home = () => {
               onClick={() => { setLocationDropdownOpen(o => !o); setLocationSearch(''); }}
               className="flex items-center gap-0.5 text-white active:scale-95 transition-all flex-shrink-0"
             >
-              <svg className="w-2.5 h-2.5 text-teal-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-2.5 h-2.5 text-primary-soft flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
               </svg>
               <span className="text-[10px] font-bold tracking-tight text-white/90 whitespace-nowrap truncate max-w-[130px]">{selectedLocation.split(',')[0]}</span>
-              <svg className={`w-2 h-2 text-white/80 flex-shrink-0 ml-0.5 transition-transform duration-200 ${locationDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+              <svg className={`w-2.5 h-2.5 text-white/80 flex-shrink-0 ml-0.5 transition-transform duration-200 ${locationDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                 <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
             {/* Dropdown panel */}
             {locationDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-[230px] bg-white rounded-2xl shadow-2xl shadow-black/20 border border-slate-100 z-[200] overflow-hidden">
+              <div className="absolute top-full left-0 mt-2 w-[230px] bg-surface rounded-2xl shadow-2xl shadow-black/20 border border-line z-[200] overflow-hidden animate-fadeIn">
                 {/* Search input */}
                 <div className="px-3 pt-3 pb-2">
-                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 h-[36px] focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/15 transition-all">
-                    <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <div className="flex items-center gap-2 bg-surface-alt border border-line rounded-xl px-3 h-[36px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
+                    <svg className="w-3.5 h-3.5 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
@@ -291,10 +347,10 @@ const Home = () => {
                       value={locationSearch}
                       onChange={e => setLocationSearch(e.target.value)}
                       placeholder="Search city..."
-                      className="flex-1 text-[12px] font-medium text-slate-700 placeholder:text-slate-400 bg-transparent outline-none"
+                      className="flex-1 text-[12px] font-medium text-ink placeholder:text-muted bg-transparent outline-none border-none"
                     />
                     {locationSearch && (
-                      <button onClick={() => setLocationSearch('')} className="text-slate-400 active:scale-90 transition-all">
+                      <button onClick={() => setLocationSearch('')} className="text-muted active:scale-90 transition-all">
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -306,26 +362,26 @@ const Home = () => {
                 {/* Location list */}
                 <div className="max-h-[200px] overflow-y-auto pb-2">
                   {filteredLocations.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 text-center py-4 font-medium">No city found</p>
+                    <p className="text-[11px] text-muted text-center py-4 font-medium">No city found</p>
                   ) : filteredLocations.map(loc => (
                     <button
                       key={loc}
                       onClick={() => { setSelectedLocation(loc); setLocationDropdownOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-all active:scale-98 hover:bg-slate-50 ${
-                        selectedLocation === loc ? 'bg-[#F0FDF9]' : ''
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-all active:scale-98 hover:bg-surface-alt ${
+                        selectedLocation === loc ? 'bg-primary-soft' : ''
                       }`}
                     >
-                      <svg className={`w-3.5 h-3.5 flex-shrink-0 ${selectedLocation === loc ? 'text-[#0D9488]' : 'text-slate-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <svg className={`w-3.5 h-3.5 flex-shrink-0 ${selectedLocation === loc ? 'text-primary' : 'text-muted/40'}`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                       </svg>
                       <div>
-                        <p className={`text-[12px] font-bold leading-none ${selectedLocation === loc ? 'text-[#0D9488]' : 'text-slate-700'}`}>
+                        <p className={`text-[12px] font-bold leading-none ${selectedLocation === loc ? 'text-primary' : 'text-ink'}`}>
                           {loc.split(',')[0]}
                         </p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{loc.split(',')[1]?.trim()}</p>
+                        <p className="text-[10px] text-muted mt-0.5">{loc.split(',')[1]?.trim()}</p>
                       </div>
                       {selectedLocation === loc && (
-                        <svg className="w-3.5 h-3.5 text-[#0D9488] ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <svg className="w-3.5 h-3.5 text-primary ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -337,11 +393,11 @@ const Home = () => {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <button onClick={() => navigate('/notifications')} className="w-[35px] h-[35px] bg-white/12 backdrop-blur-md border border-white/15 rounded-lg flex items-center justify-center relative active:scale-90 transition-all text-white">
+            <button onClick={() => navigate('/notifications')} className="w-[35px] h-[35px] bg-surface/12 backdrop-blur-md border border-surface/15 rounded-lg flex items-center justify-center relative active:scale-90 transition-all text-white">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              <span className="absolute top-1 right-1 w-3 h-3 bg-danger text-white text-[7.5px] font-black rounded-full flex items-center justify-center border border-white">
+              <span className="absolute top-1 right-1 w-3 h-3 bg-danger text-white text-[7.5px] font-black rounded-full flex items-center justify-center border border-surface">
                 3
               </span>
             </button>
@@ -349,7 +405,7 @@ const Home = () => {
               src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80"
               alt="Profile Avatar"
               onClick={() => navigate('/profile')}
-              className="w-[35px] h-[35px] rounded-full border border-white/20 object-cover shadow-sm active:scale-95 transition-all cursor-pointer"
+              className="w-[35px] h-[35px] rounded-full border border-surface/20 object-cover shadow-sm active:scale-95 transition-all cursor-pointer"
             />
           </div>
         </div>
@@ -358,20 +414,20 @@ const Home = () => {
         <div className="px-0.5 mt-[-6px] mb-[-2px]">
           <h1 className="text-[21.5px] font-black tracking-tight leading-none flex items-center">
             <span className="text-white">Buy</span>
-            <span className="text-teal-200">Together</span>
-            <sup className="text-teal-200 text-[10px] font-black ml-0.5 mt-0.5">+</sup>
+            <span className="text-primary-soft">Together</span>
+            <sup className="text-primary-soft text-[10px] font-black ml-0.5 mt-0.5">+</sup>
           </h1>
         </div>
 
         {/* ── 3. SEARCH & FILTER ── */}
         <div className="flex gap-2.5 w-full px-0.5">
-          <div className="relative flex-1 flex items-center bg-white rounded-xl overflow-hidden h-10 shadow-inner cursor-text">
+          <div className="relative flex-1 flex items-center bg-surface border border-line rounded-xl overflow-hidden h-10 shadow-inner cursor-text">
             <svg className="w-3.5 h-3.5 absolute left-3.5 text-faint z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              className="w-full h-full text-[11.5px] font-semibold text-ink pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-teal-300 transition-all border-none relative z-10 bg-transparent"
+              className="w-full h-full text-[11.5px] font-semibold text-ink pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all border-none relative z-10 bg-transparent"
               onFocus={(e) => e.target.parentElement.classList.add('focused')}
               onBlur={(e) => {
                 if (!e.target.value) e.target.parentElement.classList.remove('focused');
@@ -402,7 +458,7 @@ const Home = () => {
           </div>
           <button 
             onClick={() => navigate('/categories')} 
-            className="w-10 h-10 bg-white text-[#0D9488] rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all flex-shrink-0"
+            className="w-10 h-10 bg-surface border border-line text-primary rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all flex-shrink-0"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -442,6 +498,9 @@ const Home = () => {
       {/* ── 9. ACTIVE GROUPS YOU MIGHT LIKE ── */}
       <ActiveGroupsList />
 
+      {/* ── 14. CREATE GROUP BANNER (Shifted here as requested) ── */}
+      <CreateGroupBanner />
+
       {/* ── 10. TRENDING IN FASHION ── */}
       <HotGroupsCarousel
         title="Trending in Fashion"
@@ -458,8 +517,80 @@ const Home = () => {
         onViewAll={() => navigate('/categories', { state: { categoryId: 'groceries' } })}
       />
 
-      {/* ── 12. CREATE GROUP BANNER ── */}
-      <CreateGroupBanner />
+      {/* ── 12. CO-OWN REAL ESTATE & PROPERTIES ── */}
+      <HotGroupsCarousel
+        title="Co-Own Properties & Spaces"
+        groups={propertyGroups}
+        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: propertyGroups.find(g => g.id === id), isJoined: false } })}
+        onViewAll={() => navigate('/categories', { state: { categoryId: 'properties' } })}
+      />
+
+      {/* ── PREMIUM CO-BUYING AD BANNER (COMPACT & MODERN REDESIGN) ── */}
+      <div 
+        onClick={() => navigate('/groups/create')}
+        className="relative overflow-hidden bg-gradient-to-br from-[var(--ad-gradient-from)] via-[var(--ad-gradient-via)] to-[var(--ad-gradient-to)] rounded-[24px] p-4.5 shadow-md shadow-primary/10 border border-primary/20 flex flex-col justify-between min-h-[125px] cursor-pointer hover:shadow-lg transition-all duration-300 group active:scale-[0.99] select-none my-1"
+      >
+        {/* Modern glowing glassmorphism gradients */}
+        <div className="absolute -top-10 -right-10 w-28 h-28 bg-surface/10 rounded-full blur-2xl group-hover:bg-surface/15 transition-all"></div>
+        <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-primary/20 rounded-full blur-xl"></div>
+        
+        {/* Upper Banner Section */}
+        <div className="relative z-10 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 bg-surface/12 backdrop-blur-md border border-surface/15 rounded-full px-2.5 py-0.5 w-fit">
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+            <span className="text-[9px] font-black tracking-widest text-white/95 uppercase">Save Big Together</span>
+          </div>
+          
+          <h2 className="text-[16px] font-black tracking-tight text-white leading-tight mt-0.5">
+            Unlock Direct Wholesale Pricing
+          </h2>
+          
+          <p className="text-[10.5px] font-bold text-white/85 leading-snug max-w-[95%]">
+            Start a custom group buying pool, share with friends, and unlock massive manufacturing price cuts.
+          </p>
+        </div>
+
+        {/* Lower Banner Section */}
+        <div className="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-surface/10">
+          <div className="flex items-baseline gap-1">
+            <span className="text-[9.5px] font-semibold text-white/70">Discounts up to</span>
+            <span className="text-[15px] font-black text-white leading-none">40% OFF</span>
+          </div>
+          
+          <div className="bg-surface text-primary border border-line font-black text-[11px] px-4 py-2 rounded-xl shadow-sm group-hover:bg-surface-alt group-hover:scale-[1.03] transition-all flex items-center gap-1">
+            <span>Start a Pool</span>
+            <svg className="w-3 h-3 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 13. VEHICLE CO-LEASING & BULK BUYS ── */}
+      <HotGroupsCarousel
+        title="Vehicle Co-Leasing & EV Pools"
+        groups={vehicleGroups}
+        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: vehicleGroups.find(g => g.id === id), isJoined: false } })}
+        onViewAll={() => navigate('/categories', { state: { categoryId: 'cars-bikes' } })}
+      />
+
+      {/* ── 15. PREMIUM MADE IN INDIA FOOTER ── */}
+      <div className="mt-12 mb-6 flex flex-col items-center justify-center gap-3 text-center">
+        <div className="text-[22px] font-black italic tracking-tight text-muted/50 select-none">
+          #Buy<span className="text-primary/70">Together</span>
+        </div>
+        <div className="flex items-center gap-4 text-[10.5px] font-bold text-muted/80">
+          <div className="flex items-center gap-1">
+            <span>🇮🇳</span>
+            <span>Made for India</span>
+          </div>
+          <span className="w-1.5 h-1.5 bg-line rounded-full"></span>
+          <div className="flex items-center gap-1">
+            <span>❤️</span>
+            <span>Crafted with Love</span>
+          </div>
+        </div>
+      </div>
 
     </div>
   );

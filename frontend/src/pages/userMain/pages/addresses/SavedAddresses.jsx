@@ -75,14 +75,14 @@ const SavedAddresses = () => {
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans pb-20 relative">
-      <div className="flex items-center justify-between px-5 pt-6 pb-4 bg-white sticky top-0 z-30 shadow-sm shadow-slate-100">
+      <div className="flex items-center justify-between px-5 pt-6 pb-4 bg-surface sticky top-0 z-30 shadow-sm shadow-slate-100">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 bg-slate-50 rounded-full active:scale-95 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <button onClick={() => navigate(-1)} className="p-1.5 bg-surface-alt rounded-full active:scale-95 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-xl font-extrabold text-[#1E293B]">Saved Addresses</h1>
+          <h1 className="text-xl font-extrabold text-ink">Saved Addresses</h1>
         </div>
       </div>
 
@@ -99,35 +99,35 @@ const SavedAddresses = () => {
           </button>
 
           {addresses.map((addr) => (
-            <div key={addr.id} className={`bg-white rounded-2xl border ${addr.isDefault ? 'border-teal-500' : 'border-slate-200'} p-4 shadow-sm relative`}>
+            <div key={addr.id} className={`bg-surface rounded-2xl border ${addr.isDefault ? 'border-teal-500' : 'border-slate-200'} p-4 shadow-sm relative`}>
               {addr.isDefault && (
                 <div className="absolute top-0 right-0 bg-teal-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl rounded-tr-2xl">
                   DEFAULT
                 </div>
               )}
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                <div className="w-8 h-8 rounded-full bg-surface-alt flex items-center justify-center text-faint">
                   {addr.type === 'Home' ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                   )}
                 </div>
-                <h3 className="font-bold text-slate-800">{addr.type}</h3>
+                <h3 className="font-bold text-ink">{addr.type}</h3>
               </div>
               
-              <div className="text-sm text-slate-600 mb-3 space-y-1">
-                <p className="font-semibold text-slate-800">{addr.name}</p>
+              <div className="text-sm text-faint mb-3 space-y-1">
+                <p className="font-semibold text-ink">{addr.name}</p>
                 <p>{addr.address}</p>
                 <p>{addr.area}, {addr.city}</p>
                 <p>{addr.state} - {addr.pincode}</p>
                 <p className="pt-1 font-medium">{addr.phone}</p>
               </div>
 
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-3 pt-3 border-t border-line">
                 <button 
                   onClick={() => handleEdit(addr)}
-                  className="flex-1 text-center text-sm font-semibold text-slate-600 py-1"
+                  className="flex-1 text-center text-sm font-semibold text-faint py-1"
                 >
                   Edit
                 </button>
@@ -154,45 +154,45 @@ const SavedAddresses = () => {
           ))}
         </div>
       ) : (
-        <div className="px-5 py-4 h-full flex flex-col absolute inset-0 bg-white z-40">
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+        <div className="px-5 py-4 h-full flex flex-col absolute inset-0 bg-surface z-40">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-line">
             <div className="flex items-center gap-3">
-              <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="p-1.5 bg-slate-50 rounded-full active:scale-95 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="p-1.5 bg-surface-alt rounded-full active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h1 className="text-xl font-extrabold text-[#1E293B]">{editingId ? 'Edit Address' : 'Add New Address'}</h1>
+              <h1 className="text-xl font-extrabold text-ink">{editingId ? 'Edit Address' : 'Add New Address'}</h1>
             </div>
           </div>
 
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto pb-6 space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-500 mb-1 block">Save Address As</label>
+              <label className="text-xs font-bold text-faint mb-1 block">Save Address As</label>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setFormData({...formData, type: 'Home'})} className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all ${formData.type === 'Home' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 text-slate-600 bg-white'}`}>Home</button>
-                <button type="button" onClick={() => setFormData({...formData, type: 'Office'})} className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all ${formData.type === 'Office' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 text-slate-600 bg-white'}`}>Office</button>
-                <button type="button" onClick={() => setFormData({...formData, type: 'Other'})} className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all ${formData.type === 'Other' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 text-slate-600 bg-white'}`}>Other</button>
+                <button type="button" onClick={() => setFormData({...formData, type: 'Home'})} className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all ${formData.type === 'Home' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 text-faint bg-surface'}`}>Home</button>
+                <button type="button" onClick={() => setFormData({...formData, type: 'Office'})} className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all ${formData.type === 'Office' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 text-faint bg-surface'}`}>Office</button>
+                <button type="button" onClick={() => setFormData({...formData, type: 'Other'})} className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all ${formData.type === 'Other' ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 text-faint bg-surface'}`}>Other</button>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <input required type="text" placeholder="Full Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
+                <input required type="text" placeholder="Full Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
               </div>
               <div>
-                <input required type="tel" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
+                <input required type="tel" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input required type="text" placeholder="Pincode" value={formData.pincode} onChange={(e) => setFormData({...formData, pincode: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
-                <input required type="text" placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
+                <input required type="text" placeholder="Pincode" value={formData.pincode} onChange={(e) => setFormData({...formData, pincode: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
+                <input required type="text" placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input required type="text" placeholder="State" value={formData.state} onChange={(e) => setFormData({...formData, state: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
-                <input required type="text" placeholder="Area / Locality" value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
+                <input required type="text" placeholder="State" value={formData.state} onChange={(e) => setFormData({...formData, state: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
+                <input required type="text" placeholder="Area / Locality" value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500" />
               </div>
               <div>
-                <textarea required placeholder="Flat, House no., Building, Company, Apartment" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500 h-24 resize-none"></textarea>
+                <textarea required placeholder="Flat, House no., Building, Company, Apartment" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full bg-surface-alt border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-teal-500 h-24 resize-none"></textarea>
               </div>
               
               <label className="flex items-center gap-3 py-2 cursor-pointer">
@@ -200,7 +200,7 @@ const SavedAddresses = () => {
                   {formData.isDefault && <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
                 </div>
                 <input type="checkbox" className="hidden" checked={formData.isDefault} onChange={(e) => setFormData({...formData, isDefault: e.target.checked})} />
-                <span className="text-sm font-bold text-slate-700">Make this my default address</span>
+                <span className="text-sm font-bold text-ink">Make this my default address</span>
               </label>
             </div>
             

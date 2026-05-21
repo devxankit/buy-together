@@ -59,7 +59,7 @@ const PromoBanner = ({ onExplore }) => {
               className={`absolute inset-0 p-3.5 pt-4 flex flex-col items-start justify-between transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
             >
               {/* Badge capsule */}
-              <div className="bg-white px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-line/10 active:scale-95 transition-all cursor-pointer">
+              <div className="bg-surface px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-line/10 active:scale-95 transition-all cursor-pointer">
                 <svg className="w-2.5 h-2.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
@@ -99,23 +99,23 @@ const PromoBanner = ({ onExplore }) => {
                   <img
                     src={slide.image}
                     alt="Mockup mockup"
-                    className="absolute right-2 top-5 w-14 h-14 object-contain rounded-xl shadow-lg border border-white/40"
+                    className="absolute right-2 top-5 w-14 h-14 object-contain rounded-xl shadow-lg border border-surface/40"
                   />
                   
                   {/* Avatars */}
                   <img
                     src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&q=80"
                     alt="User 1"
-                    className="absolute left-7 top-10 w-5 h-5 rounded-full border border-white object-cover shadow-sm"
+                    className="absolute left-7 top-10 w-5 h-5 rounded-full border border-surface object-cover shadow-sm"
                   />
                   <img
                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=60&q=80"
                     alt="User 2"
-                    className="absolute right-9 top-2 w-5 h-5 rounded-full border border-white object-cover shadow-sm"
+                    className="absolute right-9 top-2 w-5 h-5 rounded-full border border-surface object-cover shadow-sm"
                   />
 
                   {/* Stat Card */}
-                  <div className="absolute bottom-2.5 right-4 bg-white rounded-lg p-1 px-1.5 shadow-md border border-line/10 flex flex-col items-center">
+                  <div className="absolute bottom-2.5 right-4 bg-surface rounded-lg p-1 px-1.5 shadow-md border border-line/10 flex flex-col items-center">
                     <span className="text-[9px] font-black text-primary leading-none">{slide.activeBuyers}</span>
                     <span className="text-[6px] font-black text-muted leading-none mt-0.5 uppercase tracking-wide">Active Buyers</span>
                   </div>

@@ -22,6 +22,11 @@ const Categories = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [locationName, setLocationName] = useState('Indore');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Custom Co-Buying Filters
+  const [discountFilter, setDiscountFilter] = useState('all'); // 'all', '10', '25', '50'
+  const [sizeFilter, setSizeFilter] = useState('all'); // 'all', 'small', 'medium', 'large'
+  const [distanceFilter, setDistanceFilter] = useState(15); // in km
 
   // Sync category state when location.state changes (from Home page navigation)
   useEffect(() => {
@@ -151,7 +156,7 @@ const Categories = () => {
         status: 'active',
         brand: 'Samsung',
         location: 'Indore, MP',
-        slogan: "Let's buy Samsung Washer in bulk and save up to ₹5,000.",
+        slogan: "Let's buy Samsung Washer in bulk and save up to ₹5,500.",
         image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=260&q=80',
         spotsJoined: 158,
         spotsTotal: 300,
@@ -161,6 +166,42 @@ const Categories = () => {
         badgeType: 'rising',
         badgeLabel: 'RISING',
         daysLeft: '142 more needed'
+      }
+    ],
+    properties: [
+      {
+        id: 'prop-g1',
+        title: 'Fractional Beach Villa Goa',
+        status: 'active',
+        brand: 'CoBuy Properties',
+        location: 'Goa, IN',
+        slogan: 'Fractional ownership of luxurious 4BHK beach villa in Goa.',
+        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=260&q=80',
+        spotsJoined: 4,
+        spotsTotal: 10,
+        creatorName: 'Aarav Mehta',
+        creatorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
+        hashtags: ['#GoaVilla', '#Fractional', '#CoOwn'],
+        badgeType: 'hot',
+        badgeLabel: 'HOT',
+        daysLeft: '6 more slots'
+      },
+      {
+        id: 'prop-g2',
+        title: 'Premium IT Park Office Space',
+        status: 'active',
+        brand: 'Indore PropTech',
+        location: 'Indore, MP',
+        slogan: 'Commercial co-ownership investment in Indore IT Park.',
+        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=260&q=80',
+        spotsJoined: 7,
+        spotsTotal: 15,
+        creatorName: 'Vikram Joshi',
+        creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
+        hashtags: ['#Commercial', '#OfficeSpace', '#Indore'],
+        badgeType: 'rising',
+        badgeLabel: 'RISING',
+        daysLeft: '8 more slots'
       }
     ]
   };
@@ -186,6 +227,25 @@ const Categories = () => {
       );
     }
 
+    // Apply Group Size Filter
+    if (sizeFilter !== 'all') {
+      list = list.filter(p => {
+        if (sizeFilter === 'small') return p.spotsTotal < 15;
+        if (sizeFilter === 'medium') return p.spotsTotal >= 15 && p.spotsTotal < 100;
+        if (sizeFilter === 'large') return p.spotsTotal >= 100;
+        return true;
+      });
+    }
+
+    // Apply Discount Target Level Filter (Ratio of spots filled)
+    if (discountFilter !== 'all') {
+      const minPercentage = parseInt(discountFilter);
+      list = list.filter(p => {
+        const ratio = (p.spotsJoined / p.spotsTotal) * 100;
+        return ratio >= minPercentage;
+      });
+    }
+
     // Sort tabs filter
     if (activeSort === 'trending') {
       // Sort by members count descending
@@ -197,15 +257,15 @@ const Categories = () => {
       // Filter by 'new' or 'rising' badge
       return list.filter(p => p.badgeType === 'new' || p.badgeType === 'rising');
     } else if (activeSort === 'my-groups') {
-      // Mock user groups (e.g. CreatorName "Rohit Sharma" or "Neha Joshi" representing items user is part of)
+      // Mock user groups
       return list.filter(p => p.spotsJoined > 300);
     }
 
     return list;
-  }, [selectedCategory, activeSort, searchQuery, allProductsList]);
+  }, [selectedCategory, activeSort, searchQuery, allProductsList, discountFilter, sizeFilter, distanceFilter]);
 
   return (
-    <div className="flex flex-col gap-4 select-none min-h-screen bg-white relative overflow-hidden">
+    <div className="flex flex-col gap-4 select-none min-h-screen bg-surface relative overflow-hidden">
       {/* 1. Header with custom dynamic title & search */}
       <CategoryHeader
         title="Groups"
@@ -235,7 +295,7 @@ const Categories = () => {
         {filteredProducts.length > 0 ? (
           <CategoryProductsList products={filteredProducts} />
         ) : (
-          <div className="bg-[#F8FAFC] border border-slate-100 rounded-[22px] p-10 text-center text-slate-400 text-xs font-semibold shadow-sm my-2">
+          <div className="bg-surface-alt border border-line rounded-[22px] p-10 text-center text-muted text-xs font-semibold shadow-sm my-2">
             No active group deals found under this filter. Create one below!
           </div>
         )}
@@ -253,44 +313,110 @@ const Categories = () => {
             onClick={() => setIsFilterOpen(false)}
           />
           {/* Slider Panel */}
-          <div className="relative bg-white w-full rounded-t-[30px] p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+          <div className="relative bg-surface w-full rounded-t-[30px] p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6" />
             
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-ink">Filters</h2>
-              <button onClick={() => setIsFilterOpen(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 text-slate-500">
+              <button onClick={() => setIsFilterOpen(false)} className="w-8 h-8 rounded-full bg-surface-alt flex items-center justify-center active:scale-95 text-faint">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-6">
+              {/* Group Size Target */}
               <div>
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Price Range</h3>
-                <div className="flex items-center gap-3">
-                  <input type="text" placeholder="Min" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:border-teal-500 focus:outline-none" />
-                  <span className="text-slate-400 font-bold">-</span>
-                  <input type="text" placeholder="Max" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:border-teal-500 focus:outline-none" />
+                <h3 className="text-[13px] font-black text-ink tracking-tight mb-3">Group Size Target</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'all', label: 'All Sizes' },
+                    { id: 'small', label: 'Micro (<15)' },
+                    { id: 'medium', label: 'Medium (<100)' },
+                    { id: 'large', label: 'Wholesale (100+)' }
+                  ].map((sz) => {
+                    const isSel = sizeFilter === sz.id;
+                    return (
+                      <button
+                        key={sz.id}
+                        onClick={() => setSizeFilter(sz.id)}
+                        className={`py-2.5 px-3.5 rounded-xl text-[11px] font-bold text-center border transition-all active:scale-[0.97] ${
+                          isSel
+                            ? 'bg-primary-soft text-primary border-primary/30 shadow-sm font-black'
+                            : 'bg-surface-alt text-faint border-slate-200/70 hover:bg-surface-alt'
+                        }`}
+                      >
+                        {sz.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
+              {/* Discount Target Level */}
               <div>
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Distance</h3>
-                <input type="range" min="1" max="50" defaultValue="15" className="w-full accent-teal-500 h-1 bg-slate-200 rounded-lg appearance-none" />
-                <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-2">
+                <h3 className="text-[13px] font-black text-ink tracking-tight mb-3">Discount Level Target</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'all', label: 'All Levels' },
+                    { id: '10', label: 'Basic (10%+ OFF)' },
+                    { id: '25', label: 'Super (25%+ OFF)' },
+                    { id: '50', label: 'Mega (50%+ OFF)' }
+                  ].map((d) => {
+                    const isSel = discountFilter === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        onClick={() => setDiscountFilter(d.id)}
+                        className={`py-2.5 px-3.5 rounded-xl text-[11px] font-bold text-center border transition-all active:scale-[0.97] ${
+                          isSel
+                            ? 'bg-primary-soft text-primary border-primary/30 shadow-sm font-black'
+                            : 'bg-surface-alt text-faint border-slate-200/70 hover:bg-surface-alt'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Proximity / Distance Slider */}
+              <div>
+                <h3 className="text-[13px] font-black text-ink tracking-tight mb-2.5">Proximity Distance</h3>
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="50" 
+                  value={distanceFilter} 
+                  onChange={(e) => setDistanceFilter(parseInt(e.target.value))} 
+                  className="w-full accent-primary h-1.5 bg-surface-alt rounded-lg appearance-none cursor-pointer" 
+                />
+                <div className="flex justify-between text-[10px] font-bold text-muted mt-2">
                   <span>1 km</span>
-                  <span>15 km</span>
+                  <span className="text-primary font-black">{distanceFilter} km max</span>
                   <span>50+ km</span>
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3 mt-8">
-              <button onClick={() => setIsFilterOpen(false)} className="flex-1 py-3.5 rounded-xl border-2 border-slate-200 text-slate-500 font-bold text-sm active:scale-95 transition-all">
+              <button 
+                onClick={() => {
+                  setSizeFilter('all');
+                  setDiscountFilter('all');
+                  setDistanceFilter(15);
+                  setIsFilterOpen(false);
+                }} 
+                className="flex-1 py-3.5 rounded-xl border-2 border-slate-200 text-faint font-bold text-sm active:scale-95 transition-all"
+              >
                 Reset
               </button>
-              <button onClick={() => setIsFilterOpen(false)} className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold text-sm shadow-lg shadow-teal-500/30 active:scale-95 transition-all">
+              <button 
+                onClick={() => setIsFilterOpen(false)} 
+                className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold text-sm shadow-lg shadow-primary/30 active:scale-95 transition-all"
+              >
                 Apply Filters
               </button>
             </div>

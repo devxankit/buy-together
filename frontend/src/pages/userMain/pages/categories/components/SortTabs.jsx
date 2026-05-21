@@ -60,11 +60,11 @@ const SortTabs = ({ activeTab, onChange }) => {
               onClick={() => onChange(tab.id)}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] text-[10px] font-black whitespace-nowrap transition-all duration-300 ${
                 isActive 
-                  ? 'bg-gradient-to-tr from-[rgba(11,122,112,0.06)] to-[rgba(13,148,136,0.06)] text-[#0D9488] border border-[#0D9488]/15 shadow-sm' 
-                  : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]/70 hover:border-slate-300'
+                  ? 'bg-gradient-to-tr from-[rgba(11,122,112,0.06)] to-[rgba(13,148,136,0.06)] text-primary border border-primary/15 shadow-sm' 
+                  : 'bg-surface-alt text-[#64748B] border border-line/70 hover:border-slate-300'
               }`}
             >
-              <span className={isActive ? 'text-[#0D9488]' : 'text-[#64748B]'}>{tab.icon}</span>
+              <span className={isActive ? 'text-primary' : 'text-[#64748B]'}>{tab.icon}</span>
               <span>{tab.label}</span>
             </button>
           );

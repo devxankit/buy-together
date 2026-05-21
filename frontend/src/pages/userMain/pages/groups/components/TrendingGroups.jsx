@@ -8,12 +8,12 @@ const TrendingGroups = ({ groups }) => {
     <div className="flex flex-col gap-3 select-none">
       {/* Header section with See All */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-extrabold text-[#1E293B]">
+        <h2 className="text-[15px] font-extrabold text-ink">
           Trending Right Now
         </h2>
         <button
           onClick={() => navigate('/')}
-          className="text-xs font-bold text-[#0D9488] hover:text-[#0B7A70] flex items-center gap-0.5 active:scale-95 transition-all"
+          className="text-xs font-bold text-primary hover:text-[#0B7A70] flex items-center gap-0.5 active:scale-95 transition-all"
         >
           <span>See All</span>
           <svg
@@ -39,13 +39,13 @@ const TrendingGroups = ({ groups }) => {
             <div
               key={group.id}
               onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
-              className="w-[140px] bg-white border border-[#E2E8F0]/70 hover:border-[#0D9488]/20 rounded-2xl p-2.5 flex flex-col gap-2 relative shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.98] cursor-pointer flex-shrink-0"
+              className="w-[140px] bg-surface border border-line/70 hover:border-primary/20 rounded-2xl p-2.5 flex flex-col gap-2 relative shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.98] cursor-pointer flex-shrink-0"
             >
               {/* Floating Buyers Badge */}
-              <div className="absolute top-2 right-2 bg-[#E6F4F2]/90 border border-[#0D9488]/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 text-[9px] font-bold text-[#0D9488] z-10">
+              <div className="absolute top-2 right-2 bg-primary-soft/90 border border-primary/10 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 text-[9px] font-bold text-primary z-10">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-2.5 h-2.5 text-[#0D9488]"
+                  className="w-2.5 h-2.5 text-primary"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -55,18 +55,18 @@ const TrendingGroups = ({ groups }) => {
               </div>
 
               {/* Product Image Container */}
-              <div className="w-full h-[95px] rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center p-1">
+              <div className="w-full h-[95px] rounded-xl overflow-hidden bg-surface-alt flex items-center justify-center p-1">
                 <img
                   src={group.image}
                   alt={group.title}
-                  className="w-full h-full object-contain mix-blend-multiply"
+                  className="w-full h-full object-contain "
                   loading="lazy"
                 />
               </div>
 
               {/* Title, Discount, Progress stack */}
               <div className="flex flex-col gap-1 flex-1">
-                <h3 className="text-[11px] font-extrabold text-[#1E293B] truncate leading-tight">
+                <h3 className="text-[11px] font-extrabold text-ink truncate leading-tight">
                   {group.title}
                 </h3>
                 
@@ -82,10 +82,10 @@ const TrendingGroups = ({ groups }) => {
                   </span>
 
                   {/* Days left */}
-                  <div className="flex items-center gap-1 text-[8.5px] font-semibold text-[#94A3B8]">
+                  <div className="flex items-center gap-1 text-[8.5px] font-semibold text-muted">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="w-2.5 h-2.5 text-[#94A3B8]"
+                      className="w-2.5 h-2.5 text-muted"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

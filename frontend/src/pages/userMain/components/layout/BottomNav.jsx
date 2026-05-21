@@ -36,8 +36,8 @@ const BottomNav = () => {
       icon: (isActive) => (
         <div className={`w-[44px] h-[44px] -translate-y-2 rounded-full flex items-center justify-center transition-all ${
           isActive 
-            ? 'bg-gradient-to-tr from-[#0B7A70] to-[#0D9488] text-white shadow-lg shadow-[#0D9488]/40 scale-105' 
-            : 'bg-primary text-white shadow-md shadow-primary/30'
+            ? 'bg-gradient-to-tr from-[var(--primary-deep)] to-[var(--primary)] text-white shadow-lg shadow-primary/20 scale-105' 
+            : 'bg-primary text-white shadow-md shadow-primary/15'
         }`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -86,12 +86,12 @@ const BottomNav = () => {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(min(100vw,430px)-32px)] z-50">
       {/* Curved floating bar container with modern glow and outline */}
-      <nav className="relative h-[64px] bg-white/94 backdrop-blur-xl border border-[#0D9488]/15 rounded-[22px] shadow-[0_10px_35px_rgba(11,122,112,0.18)] grid grid-cols-5 items-center px-3 select-none">
+      <nav className="relative h-[64px] bg-[var(--nav-bg)] backdrop-blur-xl border border-line rounded-[22px] shadow-[0_10px_35px_rgba(0,0,0,0.06)] grid grid-cols-5 items-center px-3 select-none">
         
         {/* Sliding Active Background Pill */}
         {activeIndex !== -1 && (
           <div
-            className="absolute h-[46px] bg-gradient-to-r from-[rgba(11,122,112,0.08)] to-[rgba(13,148,136,0.08)] border border-[rgba(13,148,136,0.12)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+            className="absolute h-[46px] bg-primary-soft border border-primary/10 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
             style={{
               left: `calc(12px + ${activeIndex} * (100% - 24px) / 5 + 3px)`,
               top: '50%',

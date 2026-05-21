@@ -39,7 +39,7 @@ const Input = React.forwardRef(({
           className={`
             w-full 
             h-12 
-            bg-white 
+            bg-surface 
             border 
             ${error ? 'border-danger focus:ring-danger/20' : 'border-line focus:border-primary focus:ring-primary/20'} 
             rounded-2xl 

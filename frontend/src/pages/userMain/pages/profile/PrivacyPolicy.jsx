@@ -16,23 +16,23 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans">
-      <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-white border-b border-slate-100 sticky top-0 z-20">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center active:scale-90 transition-all">
-          <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-surface border-b border-line sticky top-0 z-20">
+        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all">
+          <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <h1 className="text-[15px] font-black text-slate-800">Privacy Policy</h1>
+        <h1 className="text-[15px] font-black text-ink">Privacy Policy</h1>
       </div>
 
       <div className="flex-1 px-5 py-5 flex flex-col gap-4 pb-10">
-        <div className="bg-[#F0FDF9] border border-teal-100 rounded-2xl p-4 flex gap-3">
+        <div className="bg-primary-soft border border-teal-100 rounded-2xl p-4 flex gap-3">
           <span className="text-xl">🔒</span>
           <p className="text-[11px] text-teal-700 leading-snug">Your privacy is our priority. We are committed to protecting your personal information in compliance with Indian IT Act, 2000 and DPDP Act, 2023.</p>
         </div>
-        <p className="text-[11px] text-slate-400 font-medium">Last updated: May 2026</p>
+        <p className="text-[11px] text-muted font-medium">Last updated: May 2026</p>
         {sections.map((sec, idx) => (
-          <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4">
-            <h3 className="text-[13px] font-black text-slate-700 mb-2">{sec.title}</h3>
-            <p className="text-[12px] text-slate-500 leading-relaxed">{sec.content}</p>
+          <div key={idx} className="bg-surface border border-line rounded-2xl p-4">
+            <h3 className="text-[13px] font-black text-ink mb-2">{sec.title}</h3>
+            <p className="text-[12px] text-faint leading-relaxed">{sec.content}</p>
           </div>
         ))}
       </div>

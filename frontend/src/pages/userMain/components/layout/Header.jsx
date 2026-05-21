@@ -29,7 +29,7 @@ const Header = ({
 
   return (
     <header
-      className="sticky top-0 w-full h-[60px] bg-white/80 backdrop-blur-md border-b border-line/40 flex items-center justify-between px-5 z-40 select-none"
+      className="sticky top-0 w-full h-[60px] bg-surface/80 backdrop-blur-md border-b border-line/40 flex items-center justify-between px-5 z-40 select-none"
       {...props}
     >
       <div className="flex items-center gap-3">

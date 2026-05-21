@@ -92,11 +92,16 @@ const ActiveGroupsList = () => {
     }
   ];
 
+  const visibleGroups = groups;
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-between items-center px-1">
         <h3 className="text-[15.5px] font-extrabold tracking-tight text-ink">Active Groups You Might Like</h3>
-        <button className="text-xs font-extrabold text-primary flex items-center gap-0.5 active:scale-95 transition-all">
+        <button 
+          onClick={() => navigate('/groups')}
+          className="text-xs font-extrabold text-primary flex items-center gap-0.5 active:scale-95 transition-all"
+        >
           See All
           <svg className="w-3 h-3 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -105,8 +110,8 @@ const ActiveGroupsList = () => {
       </div>
 
       <div className="flex flex-col gap-2.5">
-        {groups.map((group) => (
-          <div key={group.id} className="flex items-center p-3 gap-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+        {visibleGroups.map((group) => (
+          <div key={group.id} className="flex items-center p-3 gap-3 bg-surface border border-line rounded-2xl shadow-sm">
             {/* Logo/Image */}
             <div className={`w-[50px] h-[50px] rounded-full flex-shrink-0 overflow-hidden ${group.bgColor}`}>
               <img src={group.image} alt={group.title} className="w-full h-full object-cover opacity-90" />
@@ -115,16 +120,16 @@ const ActiveGroupsList = () => {
             {/* Content */}
             <div className="flex-1 flex flex-col justify-center overflow-hidden">
               <h3 className="text-xs font-bold text-ink truncate">{group.title}</h3>
-              <p className="text-[9.5px] text-slate-500 truncate mt-0.5">{group.subtitle}</p>
+              <p className="text-[9.5px] text-faint truncate mt-0.5">{group.subtitle}</p>
               
               {/* Faces & Stats */}
               <div className="flex items-center mt-1.5">
                 <div className="flex -space-x-1.5 mr-1.5">
-                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=32&q=80" className="w-3.5 h-3.5 rounded-full border border-white" alt="" />
-                  <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=32&q=80" className="w-3.5 h-3.5 rounded-full border border-white" alt="" />
-                  <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=32&q=80" className="w-3.5 h-3.5 rounded-full border border-white" alt="" />
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=32&q=80" className="w-3.5 h-3.5 rounded-full border border-surface" alt="" />
+                  <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=32&q=80" className="w-3.5 h-3.5 rounded-full border border-surface" alt="" />
+                  <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=32&q=80" className="w-3.5 h-3.5 rounded-full border border-surface" alt="" />
                 </div>
-                <span className="text-[8px] font-medium text-slate-500 whitespace-nowrap">
+                <span className="text-[8px] font-medium text-faint whitespace-nowrap">
                   <span className="text-ink font-semibold">{group.joined}</span> joined • {group.needed} more needed
                 </span>
               </div>
@@ -145,7 +150,7 @@ const ActiveGroupsList = () => {
               </button>
               <button 
                 onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
-                className="flex-shrink-0 px-4 py-1.5 border border-primary text-primary text-[10px] font-bold rounded-lg active:scale-95 transition-all bg-white hover:bg-primary/5"
+                className="flex-shrink-0 px-4 py-1.5 border border-primary text-primary text-[10px] font-bold rounded-lg active:scale-95 transition-all bg-surface hover:bg-primary/5"
               >
                 Join
               </button>
@@ -153,6 +158,22 @@ const ActiveGroupsList = () => {
           </div>
         ))}
       </div>
+
+      {/* View More Redirect Button */}
+      <button
+        onClick={() => navigate('/groups')}
+        className="w-full py-2.5 bg-surface border border-slate-200/80 hover:bg-surface-alt hover:border-slate-300 text-primary text-[11px] font-extrabold rounded-xl flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-sm mt-1"
+      >
+        <span>View More</span>
+        <svg 
+          className="w-3.5 h-3.5 stroke-[2.5]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
   );
 };
