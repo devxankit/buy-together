@@ -14,7 +14,7 @@ const Login = () => {
     <div className="min-h-screen w-full max-w-[430px] mx-auto flex flex-col bg-[var(--surface-deep)] font-sans overflow-hidden">
 
       {/* === TOP HERO SECTION === */}
-      <div className="flex-shrink-0 bg-gradient-to-br from-[var(--home-gradient-from)] to-[var(--home-gradient-via)] overflow-hidden px-6 pt-6 pb-2 relative border-b border-line">
+      <div className="flex-shrink-0 bg-gradient-to-br from-[var(--home-gradient-from)] to-[var(--home-gradient-via)] overflow-hidden px-6 pt-6 pb-2 relative">
         {/* Decorative circles */}
         <div className="absolute top-4 right-12 w-20 h-20 rounded-full bg-primary-glow/10 pointer-events-none" />
         <div className="absolute top-10 right-0 w-12 h-12 rounded-full bg-primary-glow/5 pointer-events-none" />
@@ -64,7 +64,7 @@ const Login = () => {
       </div>
 
       {/* === FORM CARD === */}
-      <div className="flex-1 bg-surface rounded-t-[28px] -mt-3 px-5 pt-6 pb-6 shadow-[0_-4px_30px_rgba(0,0,0,0.06)] border-t border-line flex flex-col gap-0 overflow-y-auto">
+      <div className="flex-1 bg-surface rounded-t-[28px] -mt-3 px-5 pt-6 pb-6 shadow-[0_-4px_30px_rgba(0,0,0,0.06)] flex flex-col justify-center gap-0 overflow-y-auto">
 
         <h2 className="text-[17px] font-black text-ink">Login to your account</h2>
         <p className="text-[12px] text-muted font-medium mt-0.5 mb-4">Enter your details to continue</p>

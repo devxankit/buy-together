@@ -93,7 +93,7 @@ const CreateGroup = () => {
               value={groupName}
               onChange={e => setGroupName(e.target.value.slice(0, 60))}
               placeholder="e.g. Indore MacBook Buyers, Pune EV Group"
-              className="w-full text-xs font-bold text-ink placeholder:text-slate-300 bg-surface-alt/50 border border-slate-200/80 rounded-xl px-3 py-2.5 outline-none focus:border-primary focus:bg-surface transition-all"
+              className="w-full text-xs font-bold text-ink placeholder:text-muted bg-surface-alt border border-line rounded-xl px-3 py-2.5 outline-none focus:border-primary focus:bg-surface transition-all"
               required
             />
             <p className="text-[9px] text-muted font-medium mt-1 text-right">{groupName.length}/60</p>
@@ -322,7 +322,7 @@ const CreateGroup = () => {
               value={productName}
               onChange={e => setProductName(e.target.value.slice(0, 80))}
               placeholder="e.g. Apple iPad Air M2 128GB Space Gray"
-              className="w-full text-xs font-bold text-ink placeholder:text-slate-300 bg-surface-alt/50 border border-slate-200/80 rounded-xl px-3 py-2.5 outline-none focus:border-primary focus:bg-surface transition-all"
+              className="w-full text-xs font-bold text-ink placeholder:text-muted bg-surface-alt border border-line rounded-xl px-3 py-2.5 outline-none focus:border-primary focus:bg-surface transition-all"
               required
             />
             <p className="text-[9px] text-muted font-medium mt-1 text-right">{productName.length}/80</p>
@@ -334,7 +334,7 @@ const CreateGroup = () => {
               value={productDesc}
               onChange={e => setProductDesc(e.target.value.slice(0, 300))}
               placeholder="Describe color variants, storage configurations, or details about the supplier quote..."
-              className="w-full text-xs font-semibold text-ink placeholder:text-slate-300 bg-surface-alt/50 border border-slate-200/80 rounded-xl px-3 py-2 outline-none focus:border-primary focus:bg-surface transition-all resize-none"
+              className="w-full text-xs font-semibold text-ink placeholder:text-muted bg-surface-alt border border-line rounded-xl px-3 py-2 outline-none focus:border-primary focus:bg-surface transition-all resize-none"
               rows={2}
             />
             <p className="text-[9px] text-muted font-medium mt-0.5 text-right">{productDesc.length}/300</p>

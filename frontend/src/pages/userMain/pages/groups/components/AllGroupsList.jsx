@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
+import WishlistButton from '../../../../../components/ui/WishlistButton';
 
 const AllGroupsList = ({ groups, onSortChange }) => {
   const navigate = useNavigate();
@@ -124,17 +125,11 @@ const AllGroupsList = ({ groups, onSortChange }) => {
               {/* Right Section: wishlist, spots indicator & time */}
               <div className="flex flex-col items-end justify-between flex-shrink-0 pl-1">
                 {/* Wishlist Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    dispatch(toggleWishlist(group));
-                  }}
-                  className={`p-1.5 rounded-full transition-colors active:scale-95 ${isWishlisted ? 'text-red-500 bg-red-50' : 'text-muted hover:bg-surface-alt hover:text-red-500'}`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
+                <WishlistButton
+                  isWishlisted={isWishlisted}
+                  onClick={() => dispatch(toggleWishlist(group))}
+                  className="mr-1"
+                />
 
                 {/* Spots Progress Stack Box */}
                 <div className="bg-surface-alt border border-line/50 px-2 py-1.5 rounded-xl text-center min-w-[60px]">

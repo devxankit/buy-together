@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
+import WishlistButton from '../../../../../components/ui/WishlistButton';
 
 const ActiveGroupsList = () => {
   const navigate = useNavigate();
@@ -137,17 +138,11 @@ const ActiveGroupsList = () => {
 
             {/* Action */}
             <div className="flex items-center gap-2">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  dispatch(toggleWishlist(group));
-                }}
-                className="p-1.5 active:scale-95 transition-all text-slate-300 hover:text-red-500"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill={wishlistItems.some(item => item.id === group.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
+              <WishlistButton
+                isWishlisted={wishlistItems.some(item => item.id === group.id)}
+                onClick={() => dispatch(toggleWishlist(group))}
+                className="scale-[1.1] mr-1"
+              />
               <button 
                 onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
                 className="flex-shrink-0 px-4 py-1.5 border border-primary text-primary text-[10px] font-bold rounded-lg active:scale-95 transition-all bg-surface hover:bg-primary/5"
