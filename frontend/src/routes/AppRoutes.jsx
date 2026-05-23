@@ -40,8 +40,20 @@ import VendorSignup from '../pages/vendor/VendorSignup';
 import VendorDashboard from '../pages/vendor/dashboard/VendorDashboard';
 import CreateOffer from '../pages/vendor/offers/CreateOffer';
 
-// Admin Pages
-import AdminDashboard from '../pages/admin/dashboard/AdminDashboard';
+// Admin Console (full-screen desktop dashboard — own layout, separate from the 430px app shell)
+import {
+  AdminLayout,
+  AdminLogin,
+  Dashboard as AdminDashboard,
+  Users as AdminUsers,
+  Groups as AdminGroups,
+  Vendors as AdminVendors,
+  Deals as AdminDeals,
+  Analytics as AdminAnalytics,
+  Fraud as AdminFraud,
+  Revenue as AdminRevenue,
+  Settings as AdminSettings,
+} from '../pages/admin';
 
 const AppRoutes = () => {
   return (
@@ -52,6 +64,7 @@ const AppRoutes = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/otp" element={<OTP />} />
       <Route path="/vendor/signup" element={<VendorSignup />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
@@ -82,11 +95,6 @@ const AppRoutes = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/community-guidelines" element={<CommunityGuidelines />} />
           <Route path="/about" element={<AboutUs />} />
-
-          {/* Admin */}
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Route>
         </Route>
 
         {/* Vendor routes — separate VendorLayout (vendor header + vendor bottom nav) */}
@@ -98,6 +106,23 @@ const AppRoutes = () => {
           <Route path="/vendor/create-offer" element={<CreateOffer />} />
         </Route>
 
+      </Route>
+
+      {/* Admin Console — top-level, self-guarded (own redirect to /admin/login).
+          Kept outside the user ProtectedRoute so unauthenticated admins land on
+          the admin sign-in, not the mobile /login. Full-screen desktop layout. */}
+      <Route element={<ProtectedRoute allowedRoles={['admin']} redirectTo="/admin/login" unauthorizedTo="/admin/login" />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/groups" element={<AdminGroups />} />
+          <Route path="/admin/vendors" element={<AdminVendors />} />
+          <Route path="/admin/deals" element={<AdminDeals />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/fraud" element={<AdminFraud />} />
+          <Route path="/admin/revenue" element={<AdminRevenue />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+        </Route>
       </Route>
 
       {/* Fallback */}
