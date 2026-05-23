@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUserMainContext } from '../../context';
 import newAssetImg from '../../../../assets/7f4a33ac63a8121e371d2b2d1473ae55.jpg';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
@@ -33,25 +34,8 @@ const Home = () => {
     return () => clearInterval(timer);
   }, [placeholders.length]);
 
-  // Location Dropdown State
-  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('Mumbai, Maharashtra');
-  const [locationSearch, setLocationSearch] = useState('');
-  const popularLocations = [
-    'Mumbai, Maharashtra',
-    'Delhi, NCR',
-    'Bengaluru, Karnataka',
-    'Hyderabad, Telangana',
-    'Chennai, Tamil Nadu',
-    'Pune, Maharashtra',
-    'Indore, Madhya Pradesh',
-    'Ahmedabad, Gujarat',
-    'Kolkata, West Bengal',
-    'Jaipur, Rajasthan',
-  ];
-  const filteredLocations = popularLocations.filter(l =>
-    l.toLowerCase().includes(locationSearch.toLowerCase())
-  );
+  // Shared Location Selection Context
+  const { selectedCity, setIsLocationPickerOpen } = useUserMainContext();
 
   // Popular category configurations (exactly 7 categories for single-row layout)
   const categories = [
@@ -317,79 +301,20 @@ const Home = () => {
         
         {/* ── 1. LOCATION & PROFILE HEADER ── */}
         <div className="flex items-center justify-between px-0.5">
-          {/* Location dropdown trigger */}
+          {/* Location trigger */}
           <div className="relative">
             <button
-              onClick={() => { setLocationDropdownOpen(o => !o); setLocationSearch(''); }}
+              onClick={() => setIsLocationPickerOpen(true)}
               className="flex items-center gap-0.5 text-white active:scale-95 transition-all flex-shrink-0"
             >
               <svg className="w-2.5 h-2.5 text-primary-soft flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
               </svg>
-              <span className="text-[10px] font-bold tracking-tight text-white/90 whitespace-nowrap truncate max-w-[130px]">{selectedLocation.split(',')[0]}</span>
-              <svg className={`w-2.5 h-2.5 text-white/80 flex-shrink-0 ml-0.5 transition-transform duration-200 ${locationDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+              <span className="text-[10px] font-bold tracking-tight text-white/90 whitespace-nowrap truncate max-w-[130px]">{selectedCity.split(',')[0]}</span>
+              <svg className="w-2.5 h-2.5 text-white/80 flex-shrink-0 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                 <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-
-            {/* Dropdown panel */}
-            {locationDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-[230px] bg-surface rounded-2xl shadow-2xl shadow-black/20 border border-line z-[200] overflow-hidden animate-fadeIn">
-                {/* Search input */}
-                <div className="px-3 pt-3 pb-2">
-                  <div className="flex items-center gap-2 bg-surface-alt border border-line rounded-xl px-3 h-[36px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
-                    <svg className="w-3.5 h-3.5 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      autoFocus
-                      type="text"
-                      value={locationSearch}
-                      onChange={e => setLocationSearch(e.target.value)}
-                      placeholder="Search city..."
-                      className="flex-1 text-[12px] font-medium text-ink placeholder:text-muted bg-transparent outline-none border-none"
-                    />
-                    {locationSearch && (
-                      <button onClick={() => setLocationSearch('')} className="text-muted active:scale-90 transition-all">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Location list */}
-                <div className="max-h-[200px] overflow-y-auto pb-2">
-                  {filteredLocations.length === 0 ? (
-                    <p className="text-[11px] text-muted text-center py-4 font-medium">No city found</p>
-                  ) : filteredLocations.map(loc => (
-                    <button
-                      key={loc}
-                      onClick={() => { setSelectedLocation(loc); setLocationDropdownOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-all active:scale-98 hover:bg-surface-alt ${
-                        selectedLocation === loc ? 'bg-primary-soft' : ''
-                      }`}
-                    >
-                      <svg className={`w-3.5 h-3.5 flex-shrink-0 ${selectedLocation === loc ? 'text-primary' : 'text-muted/40'}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                      </svg>
-                      <div>
-                        <p className={`text-[12px] font-bold leading-none ${selectedLocation === loc ? 'text-primary' : 'text-ink'}`}>
-                          {loc.split(',')[0]}
-                        </p>
-                        <p className="text-[10px] text-muted mt-0.5">{loc.split(',')[1]?.trim()}</p>
-                      </div>
-                      {selectedLocation === loc && (
-                        <svg className="w-3.5 h-3.5 text-primary ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -484,6 +409,36 @@ const Home = () => {
         }}
         onViewAll={() => navigate('/categories')}
       />
+
+      {/* ── 5b. JOIN / CREATE GROUP ACTION BOX ── */}
+      <div className="bg-gradient-to-r from-[#0D4F4A] to-[#0a3d39] rounded-2xl px-4 py-3 flex items-center gap-3 shadow-lg shadow-teal-900/20 -mt-1">
+        <div className="flex-1 flex flex-col gap-0.5">
+          <p className="text-[11px] font-black text-white leading-tight">Start Saving Together</p>
+          <p className="text-[9px] text-white/60 font-medium leading-tight">Join or create a buying group</p>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          {/* Join Group */}
+          <button
+            onClick={() => navigate('/categories')}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white/10 border border-white/15 rounded-xl active:scale-95 transition-all"
+          >
+            <svg className="w-3.5 h-3.5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-[10.5px] font-black text-white whitespace-nowrap">Join</span>
+          </button>
+          {/* Create Group */}
+          <button
+            onClick={() => navigate('/groups/create')}
+            className="flex items-center gap-1.5 px-3 py-2 bg-primary rounded-xl active:scale-95 transition-all shadow-md shadow-primary/30"
+          >
+            <svg className="w-3.5 h-3.5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="text-[10.5px] font-black text-white whitespace-nowrap">Create</span>
+          </button>
+        </div>
+      </div>
 
       {/* ── 6. HOT BUYING GROUPS CAROUSEL ── */}
       <HotGroupsCarousel

@@ -13,8 +13,15 @@ const WishlistButton = ({ isWishlisted, onClick, className = '' }) => {
     onClick(e);
   };
 
+  const hasAbsolute = className.includes('absolute');
+  const basePosition = hasAbsolute ? '' : 'relative';
+
   return (
-    <div className={`relative flex items-center justify-center ${className}`}>
+    <motion.button
+      whileTap={{ scale: 0.8 }}
+      onClick={handleClick}
+      className={`${basePosition} p-1.5 bg-surface/80 backdrop-blur-sm rounded-full transition-colors active:scale-95 text-muted hover:text-red-500 shadow-sm flex items-center justify-center border border-line/10 ${className}`}
+    >
       <AnimatePresence>
         {showTooltip && (
           <motion.div
@@ -28,26 +35,20 @@ const WishlistButton = ({ isWishlisted, onClick, className = '' }) => {
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.button
-        whileTap={{ scale: 0.8 }}
-        onClick={handleClick}
-        className="p-1.5 bg-surface/80 backdrop-blur-sm rounded-full transition-colors active:scale-95 text-muted hover:text-red-500 shadow-sm flex items-center justify-center border border-line/10"
+      <motion.svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="w-3.5 h-3.5" 
+        fill={isWishlisted ? "#EF4444" : "none"} 
+        viewBox="0 0 24 24" 
+        stroke={isWishlisted ? "#EF4444" : "currentColor"} 
+        strokeWidth={2}
+        initial={false}
+        animate={isWishlisted ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+        transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 15 }}
       >
-        <motion.svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="w-3.5 h-3.5" 
-          fill={isWishlisted ? "#EF4444" : "none"} 
-          viewBox="0 0 24 24" 
-          stroke={isWishlisted ? "#EF4444" : "currentColor"} 
-          strokeWidth={2}
-          initial={false}
-          animate={isWishlisted ? { scale: [1, 1.4, 1] } : { scale: 1 }}
-          transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 15 }}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </motion.svg>
-      </motion.button>
-    </div>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </motion.svg>
+    </motion.button>
   );
 };
 

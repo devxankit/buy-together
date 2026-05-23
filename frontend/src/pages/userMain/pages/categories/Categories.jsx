@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useUserMainContext } from '../../context';
 
 // Import newly updated modular sub-components
 import CategoryHeader from './components/CategoryHeader';
@@ -20,13 +21,15 @@ const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeSort, setActiveSort] = useState('trending');
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationName, setLocationName] = useState('Indore');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Shared Location Selection Context
+  const { selectedCity, setIsLocationPickerOpen } = useUserMainContext();
   
   // Custom Co-Buying Filters
   const [discountFilter, setDiscountFilter] = useState('all'); // 'all', '10', '25', '50'
   const [sizeFilter, setSizeFilter] = useState('all'); // 'all', 'small', 'medium', 'large'
-  const [distanceFilter, setDistanceFilter] = useState(15); // in km
+  const [locationFilter, setLocationFilter] = useState('all'); // 'all', 'indore', 'delhi', 'mumbai', 'goa'
 
   // Sync category state when location.state changes (from Home page navigation)
   useEffect(() => {
@@ -246,13 +249,18 @@ const Categories = () => {
       });
     }
 
+    // Apply Location Filter
+    if (locationFilter !== 'all') {
+      list = list.filter(p => p.location.toLowerCase().includes(locationFilter));
+    }
+
     // Sort tabs filter
     if (activeSort === 'trending') {
       // Sort by members count descending
       return [...list].sort((a, b) => b.spotsJoined - a.spotsJoined);
     } else if (activeSort === 'nearby') {
-      // Show only Indore, MP deals
-      return list.filter(p => p.location.includes('Indore'));
+      // Show only dynamic selected city deals
+      return list.filter(p => p.location.toLowerCase().includes(selectedCity.split(',')[0].toLowerCase()));
     } else if (activeSort === 'new') {
       // Filter by 'new' or 'rising' badge
       return list.filter(p => p.badgeType === 'new' || p.badgeType === 'rising');
@@ -262,14 +270,15 @@ const Categories = () => {
     }
 
     return list;
-  }, [selectedCategory, activeSort, searchQuery, allProductsList, discountFilter, sizeFilter, distanceFilter]);
+  }, [selectedCategory, activeSort, searchQuery, allProductsList, discountFilter, sizeFilter, locationFilter, selectedCity]);
 
   return (
     <div className="flex flex-col gap-4 select-none min-h-screen bg-surface relative overflow-hidden">
       {/* 1. Header with custom dynamic title & search */}
       <CategoryHeader
         title="Groups"
-        currentLocation={locationName}
+        currentLocation={selectedCity}
+        onLocationClick={() => setIsLocationPickerOpen(true)}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         onFilterClick={() => setIsFilterOpen(true)}
@@ -309,11 +318,11 @@ const Categories = () => {
         <div className="fixed inset-0 z-[100] flex flex-col justify-end">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-ink/40 backdrop-blur-sm transition-opacity"
+            className="absolute inset-0 bg-ink/40 backdrop-blur-sm animate-fadeIn"
             onClick={() => setIsFilterOpen(false)}
           />
           {/* Slider Panel */}
-          <div className="relative bg-surface w-full rounded-t-[30px] p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+          <div className="relative bg-surface w-full rounded-t-[30px] p-6 shadow-2xl animate-slideUp">
             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6" />
             
             <div className="flex justify-between items-center mb-6">
@@ -381,22 +390,32 @@ const Categories = () => {
                   })}
                 </div>
               </div>
-
-              {/* Proximity / Distance Slider */}
+              {/* Location Filter */}
               <div>
-                <h3 className="text-[13px] font-black text-ink tracking-tight mb-2.5">Proximity Distance</h3>
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="50" 
-                  value={distanceFilter} 
-                  onChange={(e) => setDistanceFilter(parseInt(e.target.value))} 
-                  className="w-full accent-primary h-1.5 bg-surface-alt rounded-lg appearance-none cursor-pointer" 
-                />
-                <div className="flex justify-between text-[10px] font-bold text-muted mt-2">
-                  <span>1 km</span>
-                  <span className="text-primary font-black">{distanceFilter} km max</span>
-                  <span>50+ km</span>
+                <h3 className="text-[13px] font-black text-ink tracking-tight mb-3">Location</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'all', label: 'All Cities' },
+                    { id: 'indore', label: '📍 Indore' },
+                    { id: 'delhi', label: '📍 Delhi' },
+                    { id: 'mumbai', label: '📍 Mumbai' },
+                    { id: 'goa', label: '📍 Goa' }
+                  ].map((loc) => {
+                    const isSel = locationFilter === loc.id;
+                    return (
+                      <button
+                        key={loc.id}
+                        onClick={() => setLocationFilter(loc.id)}
+                        className={`py-2.5 px-3.5 rounded-xl text-[11px] font-bold text-center border transition-all active:scale-[0.97] ${
+                          isSel
+                            ? 'bg-primary-soft text-primary border-primary/30 shadow-sm font-black'
+                            : 'bg-surface-alt text-faint border-slate-200/70 hover:bg-surface-alt'
+                        }`}
+                      >
+                        {loc.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -406,7 +425,7 @@ const Categories = () => {
                 onClick={() => {
                   setSizeFilter('all');
                   setDiscountFilter('all');
-                  setDistanceFilter(15);
+                  setLocationFilter('all');
                   setIsFilterOpen(false);
                 }} 
                 className="flex-1 py-3.5 rounded-xl border-2 border-slate-200 text-faint font-bold text-sm active:scale-95 transition-all"

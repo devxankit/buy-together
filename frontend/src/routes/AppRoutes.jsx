@@ -22,7 +22,7 @@ import {
   GroupChat,
   DealConfirm,
   Wishlist,
-  SavedAddresses,
+  // SavedAddresses,
   PersonalInfo,
   ChangePassword,
   NotificationPreferences,
@@ -84,7 +84,7 @@ const AppRoutes = () => {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/addresses" element={<SavedAddresses />} />
+          {/* <Route path="/addresses" element={<SavedAddresses />} /> */}
           <Route path="/personal-info" element={<PersonalInfo />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/notification-preferences" element={<NotificationPreferences />} />

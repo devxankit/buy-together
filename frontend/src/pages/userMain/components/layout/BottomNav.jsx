@@ -34,17 +34,19 @@ const BottomNav = () => {
       path: '/groups/create',
       label: 'Create',
       icon: (isActive) => (
-        <div className={`w-[44px] h-[44px] -translate-y-2 rounded-full flex items-center justify-center transition-all ${
+        <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center transition-all ${
           isActive 
             ? 'bg-gradient-to-tr from-[var(--primary-deep)] to-[var(--primary)] text-white shadow-lg shadow-primary/20 scale-105' 
             : 'bg-primary text-white shadow-md shadow-primary/15'
         }`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-5 h-5 stroke-[2.5]"
+            className="w-4.5 h-4.5 stroke-[2.5]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            width="18"
+            height="18"
           >
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -109,21 +111,23 @@ const BottomNav = () => {
             <NavLink
               key={idx}
               to={item.path}
-              className="flex flex-col items-center justify-center h-[46px] w-full rounded-xl active:scale-95 transition-all text-center z-10"
+              className="flex flex-col items-center justify-center h-[54px] w-full rounded-xl active:scale-95 transition-all text-center z-10"
               style={{
                 color: isActive ? 'var(--primary)' : 'rgba(107, 107, 114, 0.65)',
                 fontWeight: isActive ? '800' : '500',
               }}
             >
-              <span className={`transition-all duration-300 ${isActive ? 'scale-110 text-primary' : 'text-muted/70'}`}>
+              <span className={`transition-all duration-300 flex items-center justify-center ${
+                isActive && item.label !== 'Create' ? 'scale-110 text-primary' : item.label !== 'Create' ? 'text-muted/70' : ''
+              }`}>
                 {item.icon(isActive)}
               </span>
               
-              {isActive && item.label !== 'Create' && (
-                <span className="text-[10px] font-bold tracking-tight leading-none animate-fadeIn mt-1">
-                  {item.label}
-                </span>
-              )}
+              <span className={`text-[9.5px] tracking-tight leading-none mt-1 transition-all duration-200 ${
+                isActive ? 'font-black opacity-100' : 'font-semibold opacity-60'
+              }`}>
+                {item.label}
+              </span>
             </NavLink>
           );
         })}

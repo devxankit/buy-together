@@ -16,6 +16,10 @@ export const UserMainProvider = ({ children }) => {
   const [notificationCount, setNotificationCount] = useState(2);
   const [headerTitle, setHeaderTitle] = useState('');
 
+  // Global Location Selection States
+  const [selectedCity, setSelectedCity] = useState('Mumbai, Maharashtra');
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+
   const updateLocation = (coords, addr) => {
     setCurrentLocation({
       latitude: coords.latitude,
@@ -37,7 +41,11 @@ export const UserMainProvider = ({ children }) => {
         updateLocation,
         clearNotifications,
         setHeaderTitle,
-        setNotificationCount
+        setNotificationCount,
+        selectedCity,
+        setSelectedCity,
+        isLocationPickerOpen,
+        setIsLocationPickerOpen
       }}
     >
       {children}
