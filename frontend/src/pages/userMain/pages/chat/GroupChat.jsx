@@ -469,7 +469,7 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike }) => {
   );
 };
 
-const MembersFeed = () => {
+const MembersFeed = ({ groupId }) => {
   const [filter, setFilter] = useState('all'); // 'all' or 'confirmed'
 
   const members = [
@@ -478,7 +478,7 @@ const MembersFeed = () => {
     { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
     { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80", buyStatus: "Interested" },
     { id: 5, name: "Rahul Das", role: "Member", number: "+91 54321 09876", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80", buyStatus: "Exploring" },
-    { id: 6, name: "You", role: "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", buyStatus: localStorage.getItem('buytogether_buy_status') || "Exploring" }
+    { id: 6, name: "You", role: "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", buyStatus: localStorage.getItem(`buytogether_buy_status_${groupId}`) || "Exploring" }
   ];
 
   const confirmedMembers = [
@@ -807,7 +807,7 @@ const GroupChat = () => {
   // Interest confirmation state
   const [showInterestModal, setShowInterestModal] = useState(false);
   const [showBuyStatusPicker, setShowBuyStatusPicker] = useState(false);
-  const [myBuyStatus, setMyBuyStatus] = useState(() => localStorage.getItem('buytogether_buy_status') || '');
+  const [myBuyStatus, setMyBuyStatus] = useState(() => localStorage.getItem(`buytogether_buy_status_${resolvedGroupId}`) || '');
   const [myInterestUnits, setMyInterestUnits] = useState(parseInt(group.myInterest) || 1);
   const [isInterestConfirmed, setIsInterestConfirmed] = useState(() => {
     return localStorage.getItem(`buytogether_confirmed_interest_${resolvedGroupId}`) === 'true' || location.state?.interestConfirmed === true;
@@ -1169,7 +1169,7 @@ const GroupChat = () => {
             {/* Dynamic Content Based on Tab */}
             {activeTab === 'Chat' && <ChatFeed messages={messages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} />}
             {activeTab === 'Polls' && <PollsFeed messages={messages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} />}
-            {activeTab === 'Members' && <MembersFeed />}
+            {activeTab === 'Members' && <MembersFeed groupId={resolvedGroupId} />}
             {activeTab === 'Media' && <MediaFeed messages={messages} />}
           </>
         )}
@@ -1443,7 +1443,7 @@ const GroupChat = () => {
                   disabled={!myBuyStatus}
                   onClick={() => {
                     localStorage.setItem(`buytogether_confirmed_interest_${resolvedGroupId}`, 'true');
-                    localStorage.setItem('buytogether_buy_status', myBuyStatus);
+                    localStorage.setItem(`buytogether_buy_status_${resolvedGroupId}`, myBuyStatus);
                     setIsInterestConfirmed(true);
                     setShowBuyStatusPicker(false);
                     navigate(`/groups/${resolvedGroupId}/confirm`, { state: { group: { ...group, id: resolvedGroupId } } });
