@@ -9,6 +9,46 @@ const Profile = () => {
   const dispatch = useDispatch();
   const { theme, toggleTheme } = useTheme();
 
+  const [profileName, setProfileName] = React.useState(() => localStorage.getItem('buytogether_profile_name') || 'Rohan Verma');
+  const [profileEmail, setProfileEmail] = React.useState(() => localStorage.getItem('buytogether_profile_email') || 'rohan.verma@gmail.com');
+  const [profileImage, setProfileImage] = React.useState(() => localStorage.getItem('buytogether_profile_image') || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80');
+
+  const fileInputRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const refreshProfile = () => {
+      setProfileName(localStorage.getItem('buytogether_profile_name') || 'Rohan Verma');
+      setProfileEmail(localStorage.getItem('buytogether_profile_email') || 'rohan.verma@gmail.com');
+      setProfileImage(localStorage.getItem('buytogether_profile_image') || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80');
+    };
+    window.addEventListener('focus', refreshProfile);
+    refreshProfile();
+    return () => window.removeEventListener('focus', refreshProfile);
+  }, []);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      setProfileImage(dataUrl);
+      localStorage.setItem('buytogether_profile_image', dataUrl);
+
+      // Premium feedback toast
+      const toast = document.createElement('div');
+      toast.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-surface text-xs font-black px-4 py-2.5 rounded-xl shadow-2xl z-[100] flex items-center gap-2 animate-fadeIn";
+      toast.innerHTML = "<span>📸</span> Profile photo updated!";
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('animate-fadeOut');
+        setTimeout(() => toast.remove(), 400);
+      }, 2000);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
@@ -23,6 +63,8 @@ const Profile = () => {
 
   const shortcuts = [
     { label: 'Wishlist', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /> },
+    { label: 'My Deals', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /> },
+    { label: 'My Groups', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /> },
     { label: 'Help & Support', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 12V8.928a6.5 6.5 0 00-12.728 0V12m12.728 0A2.5 2.5 0 0121 14.5V17a2.5 2.5 0 01-2.5 2.5h-1.5v-7h1.364zm-12.728 0A2.5 2.5 0 003 14.5V17a2.5 2.5 0 002.5 2.5h1.5v-7H5.636z" /> },
   ];
 
@@ -68,18 +110,19 @@ const Profile = () => {
         <div className="mb-6"></div>
 
         <div className="flex items-center gap-4 relative">
-          <div className="relative flex-shrink-0">
-            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" alt="Rohan Verma" className="w-[75px] h-[75px] rounded-full object-cover border-2 border-[var(--surface)] shadow-md" />
+          <div className="relative flex-shrink-0 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            <img src={profileImage} alt={profileName} className="w-[75px] h-[75px] rounded-full object-cover border-2 border-[var(--surface)] shadow-md" />
             <button className="absolute bottom-0 right-0 w-6 h-6 bg-surface border border-line rounded-full flex items-center justify-center shadow-sm text-primary active:scale-95 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
+            <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" />
           </div>
           <div className="flex-1 flex flex-col items-start min-w-0 justify-center">
             <div className="flex items-center gap-1.5 mb-1">
-              <h2 className="text-[17px] font-extrabold text-ink truncate leading-none">Rohan Verma</h2>
+              <h2 className="text-[17px] font-extrabold text-ink truncate leading-none">{profileName}</h2>
               <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -89,7 +132,7 @@ const Profile = () => {
             <div className="bg-primary-soft text-primary px-1.5 py-0.5 rounded text-[8.5px] font-bold tracking-tight mb-1.5 w-fit">
               Verified Member
             </div>
-            <p className="text-[10.5px] font-semibold text-muted mb-1 w-full truncate">rohan.verma@gmail.com</p>
+            <p className="text-[10.5px] font-semibold text-muted mb-1 w-full truncate">{profileEmail}</p>
             <p className="text-[9.5px] font-bold text-muted flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -98,7 +141,7 @@ const Profile = () => {
               Mumbai, Maharashtra
             </p>
           </div>
-          <button className="flex-shrink-0 bg-surface border border-line rounded-full px-2.5 py-1.5 shadow-sm text-[9.5px] font-bold text-primary flex items-center gap-1 active:scale-95 transition-all self-center mt-2">
+          <button onClick={() => navigate('/personal-info')} className="flex-shrink-0 bg-surface border border-line rounded-full px-2.5 py-1.5 shadow-sm text-[9.5px] font-bold text-primary flex items-center gap-1 active:scale-95 transition-all self-center mt-2">
             Edit Profile
             <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -156,12 +199,14 @@ const Profile = () => {
         {/* My Shortcuts */}
         <div>
           <h3 className="text-[13px] font-extrabold text-ink mb-3">My Shortcuts</h3>
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-4 gap-2">
             {shortcuts.map((item, idx) => (
               <div 
                 key={idx} 
                 onClick={() => {
                   if (item.label === 'Wishlist') handleRoute('/wishlist');
+                  else if (item.label === 'My Deals') handleRoute('/deals');
+                  else if (item.label === 'My Groups') handleRoute('/groups');
                   else handleRoute('/help-center');
                 }}
                 className="bg-surface border border-line rounded-[18px] p-3 flex flex-col items-center justify-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-95 transition-all cursor-pointer hover:border-primary/30"

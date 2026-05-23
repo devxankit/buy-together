@@ -29,6 +29,7 @@ const Categories = () => {
   // Custom Co-Buying Filters
   const [discountFilter, setDiscountFilter] = useState('all'); // 'all', '10', '25', '50'
   const [sizeFilter, setSizeFilter] = useState('all'); // 'all', 'small', 'medium', 'large'
+  const [locationFilter, setLocationFilter] = useState('all'); // 'all', 'indore', 'delhi', 'mumbai', 'goa'
 
   // Sync category state when location.state changes (from Home page navigation)
   useEffect(() => {
@@ -248,6 +249,11 @@ const Categories = () => {
       });
     }
 
+    // Apply Location Filter
+    if (locationFilter !== 'all') {
+      list = list.filter(p => p.location.toLowerCase().includes(locationFilter));
+    }
+
     // Sort tabs filter
     if (activeSort === 'trending') {
       // Sort by members count descending
@@ -264,7 +270,7 @@ const Categories = () => {
     }
 
     return list;
-  }, [selectedCategory, activeSort, searchQuery, allProductsList, discountFilter, sizeFilter, selectedCity]);
+  }, [selectedCategory, activeSort, searchQuery, allProductsList, discountFilter, sizeFilter, locationFilter, selectedCity]);
 
   return (
     <div className="flex flex-col gap-4 select-none min-h-screen bg-surface relative overflow-hidden">
@@ -384,6 +390,34 @@ const Categories = () => {
                   })}
                 </div>
               </div>
+              {/* Location Filter */}
+              <div>
+                <h3 className="text-[13px] font-black text-ink tracking-tight mb-3">Location</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'all', label: 'All Cities' },
+                    { id: 'indore', label: '📍 Indore' },
+                    { id: 'delhi', label: '📍 Delhi' },
+                    { id: 'mumbai', label: '📍 Mumbai' },
+                    { id: 'goa', label: '📍 Goa' }
+                  ].map((loc) => {
+                    const isSel = locationFilter === loc.id;
+                    return (
+                      <button
+                        key={loc.id}
+                        onClick={() => setLocationFilter(loc.id)}
+                        className={`py-2.5 px-3.5 rounded-xl text-[11px] font-bold text-center border transition-all active:scale-[0.97] ${
+                          isSel
+                            ? 'bg-primary-soft text-primary border-primary/30 shadow-sm font-black'
+                            : 'bg-surface-alt text-faint border-slate-200/70 hover:bg-surface-alt'
+                        }`}
+                      >
+                        {loc.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-8">
@@ -391,6 +425,7 @@ const Categories = () => {
                 onClick={() => {
                   setSizeFilter('all');
                   setDiscountFilter('all');
+                  setLocationFilter('all');
                   setIsFilterOpen(false);
                 }} 
                 className="flex-1 py-3.5 rounded-xl border-2 border-slate-200 text-faint font-bold text-sm active:scale-95 transition-all"

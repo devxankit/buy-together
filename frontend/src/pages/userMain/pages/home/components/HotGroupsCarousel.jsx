@@ -32,13 +32,16 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
         {groups.map((group) => {
           const progressPercent = (group.spotsJoined / group.spotsTotal) * 100;
           const isWishlisted = wishlistItems.some(item => item.id === group.id);
+          // Mock interest counts (derive from spotsJoined if not explicitly provided)
+          const seriousCount = group.seriousCount ?? Math.floor(group.spotsJoined * 0.35);
+          const readyCount = group.readyCount ?? Math.floor(group.spotsJoined * 0.18);
           
           return (
             <Card
               key={group.id}
               onClick={() => onGroupClick(group.id)}
               padding="p-0"
-              className="w-[145px] flex-shrink-0 flex flex-col shadow-card overflow-hidden"
+              className="w-[152px] flex-shrink-0 flex flex-col shadow-card overflow-hidden"
             >
               {/* Product Image Panel with Floating Status tag */}
               <div className="w-full h-[95px] bg-[#F6F6F8] relative overflow-hidden flex-shrink-0">
@@ -89,6 +92,20 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
                       ⏱ {group.daysLeft.split(' ')[0]}
                     </span>
                   </div>
+
+                  {/* Serious & Ready to Buy stats row */}
+                  <div className="flex items-center gap-1.5 pt-1 border-t border-line/50 mt-0.5">
+                    <div className="flex items-center gap-0.5 flex-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                      <span className="text-[8.5px] font-black text-ink leading-none">{seriousCount}</span>
+                      <span className="text-[7.5px] font-semibold text-muted leading-none">serious</span>
+                    </div>
+                    <div className="flex items-center gap-0.5 flex-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span className="text-[8.5px] font-black text-ink leading-none">{readyCount}</span>
+                      <span className="text-[7.5px] font-semibold text-muted leading-none">ready</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -100,3 +117,4 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
 };
 
 export default HotGroupsCarousel;
+

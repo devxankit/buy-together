@@ -37,10 +37,9 @@ const DealConfirm = () => {
   const [toastMessage, setToastMessage] = useState('');
 
   React.useEffect(() => {
-    if (group.id) {
-      localStorage.setItem(`buytogether_confirmed_interest_${group.id}`, 'true');
-    }
-  }, [group.id]);
+    const finalId = group.id || groupId || '1';
+    localStorage.setItem(`buytogether_confirmed_interest_${finalId}`, 'true');
+  }, [group.id, groupId]);
 
   const showToast = (msg) => {
     setToastMessage(msg);

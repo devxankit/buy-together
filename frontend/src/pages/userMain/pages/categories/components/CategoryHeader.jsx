@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 /**
  * Premium CategoryHeader matching the mockup's integrated top search and actions.
- * Renders in a clean white style matching the layout with location toggle and notification bell.
- * Subtitle description has been removed as requested.
+ * Renders in a clean white style matching the layout with Create Group button and notification bell.
+ * Location selection moved to the filter panel.
  */
 const CategoryHeader = ({ 
   title = "Groups", 
@@ -26,23 +26,16 @@ const CategoryHeader = ({
           </h1>
         </div>
 
-        {/* Location chip ONLY */}
-        <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
-          {/* Location button inside white rounded border with map pin */}
-          <button 
-            onClick={onLocationClick}
-            className="flex items-center gap-1.5 bg-surface border border-line px-2.5 py-1.5 rounded-full hover:bg-surface-alt transition-all active:scale-95 shadow-sm"
-          >
-            <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="text-[10px] font-black text-ink">{currentLocation ? currentLocation.split(',')[0] : 'Mumbai'}</span>
-            <svg className="w-2.5 h-2.5 text-[#64748B] ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+        {/* Create Group Button — matches My Groups header style */}
+        <button
+          onClick={() => navigate('/groups/create')}
+          className="flex items-center gap-1.5 bg-primary px-3 py-2 rounded-xl shadow-md shadow-primary/25 active:scale-95 transition-all flex-shrink-0"
+        >
+          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="text-[11px] font-black text-white whitespace-nowrap">Create Group</span>
+        </button>
       </div>
 
       {/* Row 2: Search input & filter icon */}
@@ -70,3 +63,4 @@ const CategoryHeader = ({
 };
 
 export default CategoryHeader;
+

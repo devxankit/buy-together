@@ -18,7 +18,10 @@ const initialMessages = [
     name: "Neha Singh",
     time: "10:32 AM",
     content: "Can anyone suggest a reliable vendor?",
-    replyTo: true
+    replyData: {
+      name: "Rohan Sharma",
+      content: "Hey everyone! Our target is to get the price under ₹72,000."
+    }
   },
   {
     id: 3,
@@ -222,12 +225,21 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
   );
 };
 
-const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress }) => {
+const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike }) => {
   let pressTimer = null;
+  let lastTap = 0;
 
   const handleStart = () => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      if (onLike) onLike(id);
+      if (pressTimer) clearTimeout(pressTimer);
+      return;
+    }
+    lastTap = now;
+
     pressTimer = setTimeout(() => {
-      onLongPress({ id, content, name });
+      if (onLongPress) onLongPress({ id, content, name });
     }, 600);
   };
 
@@ -257,7 +269,14 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
         </div>
         
         <div className="bg-surface rounded-[14px] rounded-tl-sm p-3 shadow-sm border border-line relative max-w-full">
-          {replyTo && (
+          {replyData && (
+            <div className="mb-2 bg-surface-alt border-l-[3px] border-primary px-2.5 py-1.5 rounded-r-xl text-left text-[11px] leading-tight select-none">
+              <span className="block font-black text-primary mb-0.5">{replyData.name}</span>
+              <span className="text-muted line-clamp-1">{replyData.content}</span>
+            </div>
+          )}
+
+          {replyTo && !replyData && (
             <div className="mb-2 text-[11px] font-bold text-primary active:scale-95 transition-all w-fit cursor-pointer">
               Reply
             </div>
@@ -404,7 +423,7 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
   );
 };
 
-const ChatFeed = ({ messages, onVote, onLongPress }) => {
+const ChatFeed = ({ messages, onVote, onLongPress, onLike }) => {
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -414,14 +433,14 @@ const ChatFeed = ({ messages, onVote, onLongPress }) => {
   return (
     <div className="bg-[#F6F6F8] pt-5 w-full max-w-[430px] mx-auto pb-4">
       {messages.map(msg => (
-        <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} />
+        <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} />
       ))}
       <div ref={endRef} />
     </div>
   );
 };
 
-const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress }) => {
+const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike }) => {
   const pollMessages = messages.filter(m => m.quoteData?.isPoll);
 
   return (
@@ -440,7 +459,7 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress }) => {
       </div>
       
       {pollMessages.length > 0 ? (
-        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} />)
+        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} />)
       ) : (
         <div className="text-center mt-10">
           <p className="text-sm text-faint font-medium">No polls available.</p>
@@ -454,12 +473,12 @@ const MembersFeed = () => {
   const [filter, setFilter] = useState('all'); // 'all' or 'confirmed'
 
   const members = [
-    { id: 1, name: "Rohan Sharma", role: "Admin", number: "+91 98765 43210", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80" },
-    { id: 2, name: "Neha Singh", role: "Member", number: "+91 87654 32109", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80" },
-    { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80" },
-    { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80" },
-    { id: 5, name: "Rahul Das", role: "Member", number: "+91 54321 09876", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80" },
-    { id: 6, name: "You", role: "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" }
+    { id: 1, name: "Rohan Sharma", role: "Admin", number: "+91 98765 43210", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80", buyStatus: "Ready to Buy" },
+    { id: 2, name: "Neha Singh", role: "Member", number: "+91 87654 32109", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
+    { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
+    { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80", buyStatus: "Interested" },
+    { id: 5, name: "Rahul Das", role: "Member", number: "+91 54321 09876", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80", buyStatus: "Exploring" },
+    { id: 6, name: "You", role: "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", buyStatus: localStorage.getItem('buytogether_buy_status') || "Exploring" }
   ];
 
   const confirmedMembers = [
@@ -517,23 +536,40 @@ const MembersFeed = () => {
             </div>
           ))
         ) : (
-          members.map(member => (
-            <div key={member.id} className="flex items-center justify-between px-4 py-3 border-b border-line hover:bg-surface-alt/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover bg-slate-200" />
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-ink">{member.name}</span>
-                    {member.role === 'Admin' && <span className="text-[9px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">Admin</span>}
+          members.map(member => {
+            // Status color mapping
+            const statusColors = {
+              'Exploring': 'text-slate-500 bg-slate-100',
+              'Interested': 'text-blue-600 bg-blue-50',
+              'Serious': 'text-amber-600 bg-amber-50',
+              'Ready to Buy': 'text-emerald-600 bg-emerald-50'
+            };
+            const statusColor = statusColors[member.buyStatus] || statusColors['Exploring'];
+            return (
+              <div key={member.id} className="flex items-center justify-between px-4 py-3 border-b border-line hover:bg-surface-alt/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover bg-slate-200" />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-ink">{member.name}</span>
+                      {member.role === 'Admin' && <span className="text-[9px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">Admin</span>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs font-medium text-faint">{member.number}</span>
+                      {member.buyStatus && (
+                        <span className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide ${statusColor}`}>
+                          {member.buyStatus}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs font-medium text-faint mt-0.5">{member.number}</span>
                 </div>
+                <button className="p-2 text-muted hover:text-primary transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                </button>
               </div>
-              <button className="p-2 text-muted hover:text-primary transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-              </button>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -764,13 +800,20 @@ const GroupChat = () => {
     }
   ];
   
+  const resolvedGroupId = group.id || groupId || 'g-fallback';
+
   // New Interactive states
   const [showPinnedModal, setShowPinnedModal] = useState(false);
+  // Interest confirmation state
   const [showInterestModal, setShowInterestModal] = useState(false);
+  const [showBuyStatusPicker, setShowBuyStatusPicker] = useState(false);
+  const [myBuyStatus, setMyBuyStatus] = useState(() => localStorage.getItem('buytogether_buy_status') || '');
   const [myInterestUnits, setMyInterestUnits] = useState(parseInt(group.myInterest) || 1);
   const [isInterestConfirmed, setIsInterestConfirmed] = useState(() => {
-    return localStorage.getItem(`buytogether_confirmed_interest_${group.id}`) === 'true' || location.state?.interestConfirmed === true;
+    return localStorage.getItem(`buytogether_confirmed_interest_${resolvedGroupId}`) === 'true' || location.state?.interestConfirmed === true;
   });
+  const [selectedMessageForMenu, setSelectedMessageForMenu] = useState(null);
+  const [replyingToMessage, setReplyingToMessage] = useState(null);
 
   // File Upload states and refs
   const fileInputRef = useRef(null);
@@ -880,6 +923,13 @@ const GroupChat = () => {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       content: messageInput
     };
+    if (replyingToMessage) {
+      newMsg.replyData = {
+        name: replyingToMessage.name,
+        content: replyingToMessage.content
+      };
+      setReplyingToMessage(null);
+    }
     setMessages(prev => [...prev, newMsg]);
     setMessageInput('');
     if (activeTab !== 'Chat') setActiveTab('Chat');
@@ -954,6 +1004,87 @@ const GroupChat = () => {
     }));
   };
 
+  const handleMessageReaction = (messageId, emoji) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const existingReactions = msg.reactions || [];
+        const index = existingReactions.findIndex(r => r.emoji === emoji);
+        let newReactions = [...existingReactions];
+        if (index > -1) {
+          newReactions[index] = {
+            ...newReactions[index],
+            count: newReactions[index].count + 1
+          };
+        } else {
+          newReactions.push({ emoji, count: 1 });
+        }
+        return {
+          ...msg,
+          reactions: newReactions
+        };
+      }
+      return msg;
+    }));
+    setSelectedMessageForMenu(null);
+  };
+
+  const handleDeleteMessage = (messageId) => {
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    setSelectedMessageForMenu(null);
+  };
+
+  const handleCopyMessage = (content) => {
+    if (content) {
+      navigator.clipboard.writeText(content);
+      // Premium visual toast instead of browser default alert
+      const notification = document.createElement('div');
+      notification.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-surface text-xs font-black px-4 py-2.5 rounded-xl shadow-2xl z-[100] flex items-center gap-2 animate-fadeIn";
+      notification.innerHTML = "<span>📋</span> Message copied to clipboard!";
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.classList.add('animate-fadeOut');
+        setTimeout(() => notification.remove(), 400);
+      }, 2000);
+    }
+    setSelectedMessageForMenu(null);
+  };
+
+  const handleLikeMessage = (messageId) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const existingReactions = msg.reactions || [];
+        const index = existingReactions.findIndex(r => r.emoji === '❤️');
+        let newReactions = [...existingReactions];
+        if (index > -1) {
+          newReactions[index] = {
+            ...newReactions[index],
+            count: newReactions[index].count + 1
+          };
+        } else {
+          newReactions.push({ emoji: '❤️', count: 1 });
+        }
+        
+        // Premium heart burst pop overlay feedback
+        const burst = document.createElement('div');
+        burst.className = "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500 text-7xl font-bold select-none pointer-events-none z-[100] animate-heartPop";
+        burst.innerHTML = "❤️";
+        document.body.appendChild(burst);
+        setTimeout(() => burst.remove(), 800);
+
+        return {
+          ...msg,
+          reactions: newReactions
+        };
+      }
+      return msg;
+    }));
+  };
+
+  const handleReplyMessage = (msg) => {
+    setReplyingToMessage(msg);
+    setSelectedMessageForMenu(null);
+  };
+
   return (
     <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] relative overflow-hidden">
       <TopBar 
@@ -1008,7 +1139,7 @@ const GroupChat = () => {
       )}
 
       {/* Main Scrollable Area */}
-      <div className="flex-1 overflow-y-auto pb-40 no-scrollbar relative">
+      <div className={`flex-1 overflow-y-auto ${isInterestConfirmed ? 'pb-24' : 'pb-44'} no-scrollbar relative`}>
         <JoinedInfo group={group} />
         <StatsCard group={group} />
         
@@ -1036,8 +1167,8 @@ const GroupChat = () => {
             <TabsAndPinned activeTab={activeTab} setActiveTab={setActiveTab} group={group} onPinClick={() => setShowPinnedModal(true)} />
             
             {/* Dynamic Content Based on Tab */}
-            {activeTab === 'Chat' && <ChatFeed messages={messages} onVote={handleVote} />}
-            {activeTab === 'Polls' && <PollsFeed messages={messages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} />}
+            {activeTab === 'Chat' && <ChatFeed messages={messages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} />}
+            {activeTab === 'Polls' && <PollsFeed messages={messages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} />}
             {activeTab === 'Members' && <MembersFeed />}
             {activeTab === 'Media' && <MediaFeed messages={messages} />}
           </>
@@ -1176,6 +1307,26 @@ const GroupChat = () => {
             </div>
           )}
 
+          {/* Replying Preview Bar */}
+          {replyingToMessage && (
+            <div className="mx-4 mb-1.5 p-3 bg-surface border border-line rounded-2xl flex items-center justify-between shadow-sm animate-slideUp">
+              <div className="flex items-center gap-2 border-l-[3px] border-primary pl-2 min-w-0">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-black text-primary">Replying to {replyingToMessage.name}</span>
+                  <span className="text-[11px] font-semibold text-muted truncate">{replyingToMessage.content}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setReplyingToMessage(null)}
+                className="p-1 text-faint hover:text-ink hover:bg-surface-alt rounded-full transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           {/* Chat Input */}
           <div className="px-4 py-2 bg-transparent">
             <div className="flex items-center gap-2">
@@ -1229,39 +1380,81 @@ const GroupChat = () => {
             </div>
           </div>
 
-          {/* Action Panel */}
-          <div className="bg-surface rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.03)] p-4 flex items-center gap-4 pb-8">
-            <div className="flex flex-col flex-shrink-0 min-w-[70px]">
-              <span className="text-[10px] font-bold text-faint mb-0.5">My Interest</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[14px] font-extrabold text-ink">{myInterestUnits} {myInterestUnits > 1 ? 'Units' : 'Unit'}</span>
-                {!isInterestConfirmed && (
+          {/* Action Panel - shows buy status picker then confirm */}
+          {!isInterestConfirmed && (
+            <div className="bg-surface rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.03)] p-4 flex items-center gap-4 pb-8">
+              <div className="flex flex-col flex-shrink-0 min-w-[70px]">
+                <span className="text-[10px] font-bold text-faint mb-0.5">My Interest</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[14px] font-extrabold text-ink">{myInterestUnits} {myInterestUnits > 1 ? 'Units' : 'Unit'}</span>
                   <button onClick={() => setShowInterestModal(true)} className="text-[10px] font-bold text-primary active:scale-95 transition-all">Edit</button>
-                )}
+                </div>
               </div>
-            </div>
-            
-            {isInterestConfirmed ? (
-              <div className="flex-1 flex items-center justify-center gap-2 bg-[#E6F4F2] border border-[#0D9488]/20 text-primary rounded-[16px] py-4 px-4 font-black text-[13.5px] shadow-sm animate-fadeIn">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary flex-shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Interest Committed! ✓</span>
-              </div>
-            ) : (
+              
               <button 
-                onClick={() => {
-                  localStorage.setItem(`buytogether_confirmed_interest_${group.id}`, 'true');
-                  setIsInterestConfirmed(true);
-                  navigate(`/groups/${group.id || groupId || 'g-h1'}/confirm`, { state: { group } });
-                }}
+                onClick={() => setShowBuyStatusPicker(true)}
                 className="flex-1 bg-primary text-white rounded-[16px] py-3.5 flex flex-col items-center justify-center active:scale-95 transition-all shadow-md shadow-primary/20"
               >
                 <span className="text-[14px] font-bold leading-none mb-1">Confirm Interest</span>
                 <span className="text-[9.5px] font-medium opacity-90 leading-none">You will be counted in total quantity</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Buy Status Picker Modal */}
+          {showBuyStatusPicker && (
+            <div className="fixed inset-0 z-[200] flex flex-col justify-end">
+              <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setShowBuyStatusPicker(false)} />
+              <div className="relative bg-surface rounded-t-[28px] px-5 pt-5 pb-8 shadow-2xl animate-slideUp">
+                <div className="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-5" />
+                <h2 className="text-[17px] font-black text-ink mb-1">What's your buying intent?</h2>
+                <p className="text-[11px] text-muted font-medium mb-5">Let others know where you stand — this shows on your member profile.</p>
+                <div className="flex flex-col gap-2.5 mb-6">
+                  {[
+                    { id: 'Exploring', label: 'Exploring', desc: 'Just looking around, not committed yet', color: 'border-slate-300 bg-slate-50', activeColor: 'border-slate-500 bg-slate-100', dot: 'bg-slate-400', textColor: 'text-slate-600' },
+                    { id: 'Interested', label: 'Interested', desc: 'I like this deal and want to know more', color: 'border-blue-200 bg-blue-50/50', activeColor: 'border-blue-500 bg-blue-50', dot: 'bg-blue-500', textColor: 'text-blue-600' },
+                    { id: 'Serious', label: 'Serious', desc: 'I plan to buy if the deal goes through', color: 'border-amber-200 bg-amber-50/50', activeColor: 'border-amber-500 bg-amber-50', dot: 'bg-amber-400', textColor: 'text-amber-600' },
+                    { id: 'Ready to Buy', label: 'Ready to Buy', desc: 'I am fully committed, ready to purchase!', color: 'border-emerald-200 bg-emerald-50/50', activeColor: 'border-emerald-500 bg-emerald-50', dot: 'bg-emerald-500', textColor: 'text-emerald-600' }
+                  ].map(opt => {
+                    const isSelected = myBuyStatus === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setMyBuyStatus(opt.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition-all active:scale-[0.98] text-left ${
+                          isSelected ? opt.activeColor : opt.color
+                        }`}
+                      >
+                        <span className={`w-3 h-3 rounded-full flex-shrink-0 ${opt.dot} ${isSelected ? 'ring-2 ring-offset-1 ring-current' : 'opacity-60'}`} />
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className={`text-[13px] font-black ${isSelected ? opt.textColor : 'text-ink'}`}>{opt.label}</span>
+                          <span className="text-[10px] text-muted font-medium leading-tight">{opt.desc}</span>
+                        </div>
+                        {isSelected && (
+                          <svg className={`w-4 h-4 flex-shrink-0 ${opt.textColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  disabled={!myBuyStatus}
+                  onClick={() => {
+                    localStorage.setItem(`buytogether_confirmed_interest_${resolvedGroupId}`, 'true');
+                    localStorage.setItem('buytogether_buy_status', myBuyStatus);
+                    setIsInterestConfirmed(true);
+                    setShowBuyStatusPicker(false);
+                    navigate(`/groups/${resolvedGroupId}/confirm`, { state: { group: { ...group, id: resolvedGroupId } } });
+                  }}
+                  className="w-full bg-primary text-white rounded-2xl py-3.5 font-black text-[14px] shadow-md shadow-primary/20 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Confirm & Proceed
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="absolute bottom-0 w-full bg-surface border-t border-line p-4 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] z-30">
@@ -1294,6 +1487,76 @@ const GroupChat = () => {
         className="hidden" 
         accept={fileTypeToUpload === 'image' ? 'image/*' : '.pdf,.doc,.docx,.txt'} 
       />
+
+      {/* Premium Glassmorphic Message Options Drawer */}
+      {selectedMessageForMenu && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedMessageForMenu(null)}>
+          <div 
+            className="w-full max-w-[430px] bg-surface/90 backdrop-blur-md border-t border-line rounded-t-3xl shadow-2xl p-5 animate-slideUp flex flex-col gap-4 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle Bar */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1"></div>
+            
+            {/* Quick Reactions Bar */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black text-faint uppercase tracking-wider px-1">Quick React</span>
+              <div className="flex justify-between items-center bg-surface-alt/80 rounded-2xl p-2.5 border border-line">
+                {['👍', '❤️', '😂', '🔥', '💯', '🥺'].map(emoji => (
+                  <button 
+                    key={emoji}
+                    onClick={() => handleMessageReaction(selectedMessageForMenu.id, emoji)}
+                    className="text-2xl hover:scale-125 active:scale-90 transition-transform duration-200"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions List */}
+            <div className="flex flex-col bg-surface-alt/60 rounded-2xl border border-line overflow-hidden">
+              <button
+                onClick={() => handleReplyMessage(selectedMessageForMenu)}
+                className="w-full px-4 py-3.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-3 transition-colors border-b border-line"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                <span>Reply to Message</span>
+              </button>
+
+              <button
+                onClick={() => handleCopyMessage(selectedMessageForMenu.content)}
+                className="w-full px-4 py-3.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-3 transition-colors border-b border-line"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                <span>Copy Message Text</span>
+              </button>
+              
+              <button
+                onClick={() => handleDeleteMessage(selectedMessageForMenu.id)}
+                className="w-full px-4 py-3.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Delete Message</span>
+              </button>
+            </div>
+
+            {/* Cancel Button */}
+            <button 
+              onClick={() => setSelectedMessageForMenu(null)}
+              className="w-full py-3.5 bg-surface border border-line rounded-2xl font-black text-xs text-ink active:scale-95 transition-all text-center shadow-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -19,11 +19,11 @@ const UserMainLayoutInner = ({
   const { isLocationPickerOpen, setIsLocationPickerOpen, selectedCity, setSelectedCity } = useUserMainContext();
 
   // Root/Tab views don't show the outer layout header since they have their own local headers/titles.
-  const isRootView = ['/', '/groups', '/deals', '/profile', '/categories'].includes(location.pathname);
+  const isRootView = ['/', '/groups', '/deals', '/profile', '/categories', '/personal-info', '/wishlist', '/about'].includes(location.pathname);
   const shouldShowHeader = showHeader && !isRootView;
 
   // Pages that already define their own internal padding in their components
-  const hasInternalPadding = ['/', '/groups', '/deals', '/profile', '/categories'].includes(location.pathname);
+  const hasInternalPadding = ['/', '/groups', '/deals', '/profile', '/categories', '/personal-info', '/wishlist', '/about'].includes(location.pathname);
   const mainPaddingClass = hasInternalPadding ? 'px-0 py-0' : 'px-4 py-4';
 
   return (
