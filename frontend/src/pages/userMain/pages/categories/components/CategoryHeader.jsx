@@ -30,14 +30,14 @@ const CategoryHeader = ({
         <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
           {/* Location button inside white rounded border with map pin */}
           <button 
-            onClick={() => navigate('/location')}
+            onClick={onLocationClick}
             className="flex items-center gap-1.5 bg-surface border border-line px-2.5 py-1.5 rounded-full hover:bg-surface-alt transition-all active:scale-95 shadow-sm"
           >
             <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span className="text-[10px] font-black text-ink">{currentLocation}</span>
+            <span className="text-[10px] font-black text-ink">{currentLocation ? currentLocation.split(',')[0] : 'Mumbai'}</span>
             <svg className="w-2.5 h-2.5 text-[#64748B] ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>

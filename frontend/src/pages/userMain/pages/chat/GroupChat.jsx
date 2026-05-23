@@ -65,7 +65,7 @@ const initialMessages = [
 
 // --- Subcomponents ---
 
-const TopBar = ({ navigate, group, onMenuToggle, onCallToggle }) => (
+const TopBar = ({ navigate, group, onMenuToggle }) => (
   <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-line sticky top-0 z-30 w-full gap-2">
     <div className="flex items-center gap-2.5 min-w-0 flex-1">
       <button onClick={() => navigate(-1)} className="p-1 active:scale-95 transition-all flex-shrink-0 text-ink hover:bg-surface-alt rounded-lg">
@@ -94,11 +94,6 @@ const TopBar = ({ navigate, group, onMenuToggle, onCallToggle }) => (
     </div>
 
     <div className="flex items-center gap-1 flex-shrink-0">
-      <button onClick={onCallToggle} className="p-2 active:scale-95 transition-all text-primary hover:bg-primary-soft rounded-xl" title="Voice Call">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-        </svg>
-      </button>
       <button className="p-2 active:scale-95 transition-all text-faint hover:bg-surface-alt rounded-xl">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -227,102 +222,189 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
   );
 };
 
-const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote }) => (
-  <div className="flex gap-2.5 mb-5 px-4 w-full">
-    <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1" />
-    <div className="flex-1 flex flex-col min-w-0">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-[12px] font-bold text-ink">{name}</span>
-        {role && <span className="text-[8.5px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">{role}</span>}
-      </div>
-      
-      <div className="bg-surface rounded-[14px] rounded-tl-sm p-3 shadow-sm border border-line relative max-w-full">
-        {replyTo && (
-          <div className="mb-2 text-[11px] font-bold text-primary active:scale-95 transition-all w-fit cursor-pointer">
-            Reply
-          </div>
-        )}
+const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress }) => {
+  let pressTimer = null;
+
+  const handleStart = () => {
+    pressTimer = setTimeout(() => {
+      onLongPress({ id, content, name });
+    }, 600);
+  };
+
+  const handleEnd = () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  };
+
+  const handleMove = () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  };
+
+  return (
+    <div 
+      className="flex gap-2.5 mb-5 px-4 w-full select-none cursor-pointer active:opacity-95 transition-opacity"
+      onTouchStart={handleStart}
+      onTouchEnd={handleEnd}
+      onTouchMove={handleMove}
+      onMouseDown={handleStart}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+    >
+      <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1" />
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[12px] font-bold text-ink">{name}</span>
+          {role && <span className="text-[8.5px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">{role}</span>}
+        </div>
         
-        {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap">{content}</p>}
+        <div className="bg-surface rounded-[14px] rounded-tl-sm p-3 shadow-sm border border-line relative max-w-full">
+          {replyTo && (
+            <div className="mb-2 text-[11px] font-bold text-primary active:scale-95 transition-all w-fit cursor-pointer">
+              Reply
+            </div>
+          )}
+          
+          {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap">{content}</p>}
 
-        {image && (
-          <div className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all">
-            <img src={image} alt="Attachment" className="w-full h-auto object-cover max-h-[200px]" />
-          </div>
-        )}
+          {image && (
+            <div className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all">
+              <img src={image} alt="Attachment" className="w-full h-auto object-cover max-h-[200px]" />
+            </div>
+          )}
 
-        {quoteData && !quoteData.isPoll && (
-          <div className="mt-2 border border-line rounded-xl p-2.5 bg-[#FDFDFD] flex flex-col gap-2 relative">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-green-900 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0">A</div>
+          {documentData && (
+            <div className="mt-2 border border-line rounded-xl p-3 bg-surface-alt flex items-center gap-3 relative max-w-full">
+              <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center text-red-600 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-[11px] font-bold text-ink truncate">{quoteData.vendor}</span>
-                <span className="text-[9px] font-bold text-green-600 flex items-center gap-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  Verified
-                </span>
+                <span className="text-xs font-bold text-ink truncate leading-tight">{documentData.name}</span>
+                <span className="text-[9.5px] font-semibold text-faint mt-0.5">{documentData.size} • Document</span>
               </div>
-              <div className="flex flex-col items-end flex-shrink-0">
-                <span className="text-[12px] font-black text-ink">{quoteData.price}</span>
-                <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1 rounded">{quoteData.discount}</span>
-              </div>
+              <button className="p-1.5 text-muted hover:text-primary active:scale-95 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </button>
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[9px] font-semibold text-faint">
-              <span className="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> Min. Qty: {quoteData.qty}</span>
-              <span className="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Delivery: {quoteData.delivery}</span>
-              <span className="flex items-center gap-1 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> Warranty: {quoteData.warranty}</span>
-            </div>
-          </div>
-        )}
+          )}
 
-        {quoteData?.isPoll && (
-          <div className="mt-2 border border-line rounded-xl p-3 bg-[#FDFDFD]">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-[11px] font-bold text-ink pr-2">{quoteData.question}</span>
-              <span className="text-[10px] font-bold text-primary whitespace-nowrap cursor-pointer active:scale-95">View Poll</span>
+          {locationData && (
+            <div className="mt-2 border border-line rounded-xl p-3 bg-[#EEF2F6] flex items-center gap-3 relative max-w-full">
+              <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5.5 h-5.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="text-xs font-bold text-ink truncate leading-tight">Shared Location</span>
+                <span className="text-[9.5px] font-semibold text-faint mt-0.5">{locationData.city} ({locationData.lat}, {locationData.lng})</span>
+              </div>
+              <a 
+                href={locationData.mapUrl} 
+                target="_blank" 
+                rel="noreferrer"
+                className="px-3 py-1.5 bg-primary text-white text-[10px] font-extrabold rounded-lg active:scale-95 transition-all"
+              >
+                Open Map
+              </a>
             </div>
-            
-            <div className="flex flex-col gap-2">
-              {quoteData.options.map((opt, idx) => (
-                <div key={idx} onClick={() => onVote && onVote(id, idx)} className="flex flex-col gap-1 cursor-pointer group">
-                  <div className={`flex items-center gap-2 text-[10.5px] ${opt.selected ? 'font-bold text-ink' : 'font-semibold text-faint'}`}>
-                    {opt.selected ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <div className="w-4 h-4 rounded-full border-[1.5px] border-slate-300 group-hover:border-primary transition-colors"></div>
-                    )}
-                    <span className="flex-1">{opt.label}</span>
-                    <span>{opt.percentage}%</span>
+          )}
+
+          {voiceData && (
+            <div className="mt-2 border border-line rounded-xl p-3 bg-surface flex items-center gap-3 relative max-w-full">
+              <button className="w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-current translate-x-[0.5px]" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
+              </button>
+              <div className="flex-1 flex items-center gap-0.5 h-6">
+                {[4, 8, 2, 9, 6, 12, 4, 7, 3, 10, 5, 8, 3, 6, 9, 2, 7, 4, 11, 3].map((h, i) => (
+                  <div 
+                    key={i} 
+                    className="flex-1 bg-primary/20 rounded-full" 
+                    style={{ height: `${h * 1.5}px` }}
+                  ></div>
+                ))}
+              </div>
+              <span className="text-[10px] font-bold text-muted flex-shrink-0">{voiceData.duration}</span>
+            </div>
+          )}
+
+          {quoteData && !quoteData.isPoll && (
+            <div className="mt-2 border border-line rounded-xl p-2.5 bg-[#FDFDFD] flex flex-col gap-2 relative">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-green-900 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0">A</div>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="text-[11px] font-bold text-ink truncate">{quoteData.vendor}</span>
+                  <span className="text-[9px] font-bold text-green-600 flex items-center gap-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    Verified
+                  </span>
+                </div>
+                <div className="flex flex-col items-end flex-shrink-0">
+                  <span className="text-[12px] font-black text-ink">{quoteData.price}</span>
+                  <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1 rounded">{quoteData.discount}</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[9px] font-semibold text-faint">
+                <span className="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> Min. Qty: {quoteData.qty}</span>
+                <span className="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Delivery: {quoteData.delivery}</span>
+                <span className="flex items-center gap-1 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> Warranty: {quoteData.warranty}</span>
+              </div>
+            </div>
+          )}
+
+          {quoteData?.isPoll && (
+            <div className="mt-2 border border-line rounded-xl p-3 bg-[#FDFDFD]">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[11px] font-bold text-ink pr-2">{quoteData.question}</span>
+                <span className="text-[10px] font-bold text-primary whitespace-nowrap cursor-pointer active:scale-95">View Poll</span>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {quoteData.options.map((opt, idx) => (
+                  <div key={idx} onClick={() => onVote && onVote(id, idx)} className="flex flex-col gap-1 cursor-pointer group">
+                    <div className={`flex items-center gap-2 text-[10.5px] ${opt.selected ? 'font-bold text-ink' : 'font-semibold text-faint'}`}>
+                      {opt.selected ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border-[1.5px] border-slate-300 group-hover:border-primary transition-colors"></div>
+                      )}
+                      <span className="flex-1">{opt.label}</span>
+                      <span>{opt.percentage}%</span>
+                    </div>
+                    <div className="w-full h-[3px] bg-surface-alt rounded-full ml-6 w-[calc(100%-24px)] overflow-hidden">
+                      <div className={`h-full ${opt.color} transition-all duration-500`} style={{ width: `${opt.percentage}%` }}></div>
+                    </div>
                   </div>
-                  <div className="w-full h-[3px] bg-surface-alt rounded-full ml-6 w-[calc(100%-24px)] overflow-hidden">
-                    <div className={`h-full ${opt.color} transition-all duration-500`} style={{ width: `${opt.percentage}%` }}></div>
-                  </div>
+                ))}
+              </div>
+              <div className="text-[9px] font-bold text-primary mt-3">{quoteData.totalVotes} votes</div>
+            </div>
+          )}
+
+          {reactions && (
+            <div className="flex items-center gap-2 mt-2">
+              {reactions.map((r, i) => (
+                <div key={i} className="flex items-center gap-1 bg-surface-alt border border-line px-1.5 py-0.5 rounded-full text-[10px] font-bold text-faint">
+                  <span>{r.emoji}</span> {r.count}
                 </div>
               ))}
             </div>
-            <div className="text-[9px] font-bold text-primary mt-3">{quoteData.totalVotes} votes</div>
-          </div>
-        )}
+          )}
 
-        {reactions && (
-          <div className="flex items-center gap-2 mt-2">
-            {reactions.map((r, i) => (
-              <div key={i} className="flex items-center gap-1 bg-surface-alt border border-line px-1.5 py-0.5 rounded-full text-[10px] font-bold text-faint">
-                <span>{r.emoji}</span> {r.count}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <span className="absolute bottom-2.5 right-3 text-[8.5px] font-bold text-faint">{time}</span>
+          <span className="absolute bottom-2.5 right-3 text-[8.5px] font-bold text-faint">{time}</span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const ChatFeed = ({ messages, onVote }) => {
+const ChatFeed = ({ messages, onVote, onLongPress }) => {
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -332,14 +414,14 @@ const ChatFeed = ({ messages, onVote }) => {
   return (
     <div className="bg-[#F6F6F8] pt-5 w-full max-w-[430px] mx-auto pb-4">
       {messages.map(msg => (
-        <ChatMessage key={msg.id} {...msg} onVote={onVote} />
+        <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} />
       ))}
       <div ref={endRef} />
     </div>
   );
 };
 
-const PollsFeed = ({ messages, onCreatePoll, onVote }) => {
+const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress }) => {
   const pollMessages = messages.filter(m => m.quoteData?.isPoll);
 
   return (
@@ -358,7 +440,7 @@ const PollsFeed = ({ messages, onCreatePoll, onVote }) => {
       </div>
       
       {pollMessages.length > 0 ? (
-        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} />)
+        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} />)
       ) : (
         <div className="text-center mt-10">
           <p className="text-sm text-faint font-medium">No polls available.</p>
@@ -646,14 +728,148 @@ const GroupChat = () => {
   
   // Premium Upgraded states
   const [showAttachmentDrawer, setShowAttachmentDrawer] = useState(false);
-  const [isCalling, setIsCalling] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [activeEmojiCat, setActiveEmojiCat] = useState(0);
+
+  const emojiCategories = [
+    { 
+      name: 'Smileys', 
+      icon: '😊', 
+      list: ['😊', '😂', '🤣', '🥰', '😍', '🤩', '😘', '😜', '🤪', '😎', '😏', '🤔', '🤫', '🙄', '😬', '😴', '😇', '🥳', '🥺', '😭', '😡', '🤯', '😤', '🥱', '👽', '💀', '💩', '🤡'] 
+    },
+    { 
+      name: 'Gestures', 
+      icon: '👍', 
+      list: ['👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '🤝', '👏', '🙌', '🙋‍♂️', '🙋‍♀️', '🤦‍♂️', '🤦‍♀️', '🙏', '💪', '👈', '👉', '👆', '👇', '👋', '✍️', '💅'] 
+    },
+    { 
+      name: 'Love & Magic', 
+      icon: '❤️', 
+      list: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '🔥', '💯', '✨', '🌟', '⭐', '⚡', '💥', '🎉', '🎈', '🔮'] 
+    },
+    { 
+      name: 'Animals', 
+      icon: '🐱', 
+      list: ['🐶', '🐱', '🦁', '🐯', '🐼', '🐨', '🦊', '🐵', '🐸', '🦄', '🦅', '🦉', '🐝', '🦋', '🌸', '🌹', '🌻', '🍀', '🍂', '🍄', '🌲', '🌴', '🌈', '☀️', '🌙', '❄️'] 
+    },
+    { 
+      name: 'Food', 
+      icon: '🍕', 
+      list: ['🍎', '🍌', '🍉', '🍇', '🍓', '🍑', '🍍', '🥥', '🥝', '🍅', '🥑', '🥦', '🍕', '🍔', '🍟', '🌭', '🍿', '🍩', '🍪', '🍰', '🍫', '🍦', '🍧', '☕', '🍵', '🥤', '🍺'] 
+    },
+    { 
+      name: 'Travel & Objects', 
+      icon: '🚀', 
+      list: ['🚗', '🚲', '🛵', '🚀', '✈️', '🏢', '🏠', '🏝️', '⛰️', '⌚', '💻', '📱', '📷', '🔋', '💡', '💵', '💳', '📦', '✉️', '✏️', '🔒', '🔑', '🏆', '🎁', '🛍️', '🛒'] 
+    }
+  ];
   
   // New Interactive states
   const [showPinnedModal, setShowPinnedModal] = useState(false);
   const [showInterestModal, setShowInterestModal] = useState(false);
   const [myInterestUnits, setMyInterestUnits] = useState(parseInt(group.myInterest) || 1);
+  const [isInterestConfirmed, setIsInterestConfirmed] = useState(() => {
+    return localStorage.getItem(`buytogether_confirmed_interest_${group.id}`) === 'true' || location.state?.interestConfirmed === true;
+  });
+
+  // File Upload states and refs
+  const fileInputRef = useRef(null);
+  const [fileTypeToUpload, setFileTypeToUpload] = useState('image'); // 'image' or 'document'
+
+  const triggerFileUpload = (type) => {
+    setFileTypeToUpload(type);
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 100);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const newMsg = {
+        id: Date.now(),
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
+        name: "You",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: fileTypeToUpload === 'image' ? `Shared an image: ${file.name}` : `Shared a document: ${file.name}`
+      };
+
+      if (fileTypeToUpload === 'image') {
+        newMsg.image = event.target.result;
+      } else {
+        newMsg.documentData = {
+          name: file.name,
+          size: file.size > 1024 * 1024 
+            ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+            : `${Math.round(file.size / 1024)} KB`
+        };
+      }
+
+      setMessages(prev => [...prev, newMsg]);
+    };
+    reader.readAsDataURL(file);
+    setShowAttachmentDrawer(false);
+  };
+
+  const handleShareLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const newMsg = {
+            id: Date.now(),
+            avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
+            name: "You",
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            content: "Shared current location 📍",
+            locationData: {
+              lat: lat.toFixed(4),
+              lng: lng.toFixed(4),
+              city: group.location || "Mumbai",
+              mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+            }
+          };
+          setMessages(prev => [...prev, newMsg]);
+        },
+        () => {
+          const newMsg = {
+            id: Date.now(),
+            avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
+            name: "You",
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            content: "Shared location 📍",
+            locationData: {
+              lat: "19.0760",
+              lng: "72.8777",
+              city: `${group.location || "Mumbai"}, India`,
+              mapUrl: "https://www.google.com/maps"
+            }
+          };
+          setMessages(prev => [...prev, newMsg]);
+        }
+      );
+    }
+    setShowAttachmentDrawer(false);
+  };
+
+  const handleShareVoiceNote = () => {
+    const newMsg = {
+      id: Date.now(),
+      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
+      name: "You",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      content: "Shared a voice message 🎤",
+      voiceData: {
+        duration: "0:12"
+      }
+    };
+    setMessages(prev => [...prev, newMsg]);
+    setShowAttachmentDrawer(false);
+  };
 
   const handleSendMessage = () => {
     if (!messageInput.trim() || !isJoined) return;
@@ -744,7 +960,6 @@ const GroupChat = () => {
         navigate={navigate} 
         group={group} 
         onMenuToggle={() => setIsMenuOpen(prev => !prev)} 
-        onCallToggle={() => setIsCalling(true)} 
       />
 
       {/* Floating 3-Dot Dropdown Options Panel */}
@@ -853,7 +1068,7 @@ const GroupChat = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     ),
-                    action: () => { alert('Opening Gallery...'); setShowAttachmentDrawer(false); }
+                    action: () => triggerFileUpload('image')
                   },
                   {
                     label: 'Camera',
@@ -864,7 +1079,7 @@ const GroupChat = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     ),
-                    action: () => { alert('Opening Camera...'); setShowAttachmentDrawer(false); }
+                    action: () => triggerFileUpload('image')
                   },
                   {
                     label: 'Voice Note',
@@ -874,7 +1089,7 @@ const GroupChat = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                       </svg>
                     ),
-                    action: () => { alert('Recording audio note...'); setShowAttachmentDrawer(false); }
+                    action: () => handleShareVoiceNote()
                   },
                   {
                     label: 'Location',
@@ -885,7 +1100,7 @@ const GroupChat = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     ),
-                    action: () => { alert('Sharing location...'); setShowAttachmentDrawer(false); }
+                    action: () => handleShareLocation()
                   },
                   {
                     label: 'Document',
@@ -895,7 +1110,7 @@ const GroupChat = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     ),
-                    action: () => { alert('Selecting document...'); setShowAttachmentDrawer(false); }
+                    action: () => triggerFileUpload('document')
                   }
                 ].map((opt, i) => (
                   <button 
@@ -913,36 +1128,104 @@ const GroupChat = () => {
             </div>
           )}
 
-          {/* Chat Input */}
-          <div className="px-4 py-2 bg-transparent">
-            <div className="bg-surface rounded-full border border-slate-200 shadow-sm px-3 py-2.5 flex items-center gap-3">
-              <button 
-                onClick={() => setShowAttachmentDrawer(prev => !prev)}
-                className={`active:scale-95 transition-all pl-1 ${showAttachmentDrawer ? 'text-primary' : 'text-muted'}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </button>
-              <input 
-                type="text" 
-                placeholder="Type a message..." 
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-muted outline-none border-none"
-              />
-              <div className="flex items-center gap-2 pr-1">
-                <button onClick={handleSendMessage} className={`active:scale-95 transition-all ${messageInput.trim() ? 'text-primary' : 'text-muted'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    {messageInput.trim() ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    )}
+          {/* High-Fidelity Emoji Picker Drawer */}
+          {showEmojiPicker && (
+            <div className="mx-4 mb-2 p-3.5 bg-surface/90 backdrop-blur-md border border-slate-200/80 rounded-3xl shadow-xl animate-slideUp z-50 flex flex-col gap-2.5">
+              {/* Header */}
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[11px] font-black text-ink uppercase tracking-wider">Emojis</span>
+                <button onClick={() => setShowEmojiPicker(false)} className="text-muted hover:text-faint transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
+
+              {/* Category tabs */}
+              <div className="flex gap-1 border-b border-line pb-2 overflow-x-auto no-scrollbar">
+                {emojiCategories.map((cat, idx) => (
+                  <button
+                    key={cat.name}
+                    onClick={() => setActiveEmojiCat(idx)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95 flex-shrink-0 ${
+                      activeEmojiCat === idx 
+                        ? 'bg-primary-soft text-primary font-black scale-105' 
+                        : 'text-muted hover:bg-surface-alt'
+                    }`}
+                  >
+                    <span className="text-sm">{cat.icon}</span>
+                    <span className="text-[9.5px] tracking-tight">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Emojis Grid (7-cols) */}
+              <div className="grid grid-cols-7 gap-2 max-h-[160px] overflow-y-auto pr-1 no-scrollbar py-1">
+                {emojiCategories[activeEmojiCat].list.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => {
+                      setMessageInput(prev => prev + emoji);
+                    }}
+                    className="w-10 h-10 text-2xl flex items-center justify-center rounded-xl hover:bg-surface-alt active:scale-75 transition-all duration-200"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Chat Input */}
+          <div className="px-4 py-2 bg-transparent">
+            <div className="flex items-center gap-2">
+              {/* Main Input Box */}
+              <div className="flex-1 bg-surface rounded-full border border-slate-200/90 shadow-sm px-3.5 py-2.5 flex items-center gap-2.5">
+                {/* Smiley/Emoji Button on the Left */}
+                <button 
+                  onClick={() => { setShowEmojiPicker(prev => !prev); setShowAttachmentDrawer(false); }}
+                  className={`active:scale-95 transition-all text-muted hover:text-primary ${showEmojiPicker ? 'text-primary' : ''}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+
+                {/* Text Field */}
+                <input 
+                  type="text" 
+                  placeholder="Type a message..." 
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-muted/70 outline-none border-none"
+                />
+
+                {/* Attachment Button on the Right of input */}
+                <button 
+                  onClick={() => { setShowAttachmentDrawer(prev => !prev); setShowEmojiPicker(false); }}
+                  className={`active:scale-95 transition-all text-muted hover:text-primary ${showAttachmentDrawer ? 'text-primary' : ''}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Send Button ALWAYS visible on the right */}
+              <button 
+                onClick={handleSendMessage}
+                disabled={!messageInput.trim()}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm flex-shrink-0 ${
+                  messageInput.trim() 
+                    ? 'bg-primary text-white active:scale-90 hover:bg-primary-deep' 
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 rotate-45 -translate-x-[1px] translate-y-[1px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -952,17 +1235,32 @@ const GroupChat = () => {
               <span className="text-[10px] font-bold text-faint mb-0.5">My Interest</span>
               <div className="flex items-center gap-2">
                 <span className="text-[14px] font-extrabold text-ink">{myInterestUnits} {myInterestUnits > 1 ? 'Units' : 'Unit'}</span>
-                <button onClick={() => setShowInterestModal(true)} className="text-[10px] font-bold text-primary active:scale-95 transition-all">Edit</button>
+                {!isInterestConfirmed && (
+                  <button onClick={() => setShowInterestModal(true)} className="text-[10px] font-bold text-primary active:scale-95 transition-all">Edit</button>
+                )}
               </div>
             </div>
             
-            <button 
-              onClick={() => navigate(`/groups/${group.id || groupId || 'g-h1'}/confirm`)}
-              className="flex-1 bg-primary text-white rounded-[16px] py-3.5 flex flex-col items-center justify-center active:scale-95 transition-all shadow-md shadow-primary/20"
-            >
-              <span className="text-[14px] font-bold leading-none mb-1">Confirm Interest</span>
-              <span className="text-[9.5px] font-medium opacity-90 leading-none">You will be counted in total quantity</span>
-            </button>
+            {isInterestConfirmed ? (
+              <div className="flex-1 flex items-center justify-center gap-2 bg-[#E6F4F2] border border-[#0D9488]/20 text-primary rounded-[16px] py-4 px-4 font-black text-[13.5px] shadow-sm animate-fadeIn">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary flex-shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Interest Committed! ✓</span>
+              </div>
+            ) : (
+              <button 
+                onClick={() => {
+                  localStorage.setItem(`buytogether_confirmed_interest_${group.id}`, 'true');
+                  setIsInterestConfirmed(true);
+                  navigate(`/groups/${group.id || groupId || 'g-h1'}/confirm`, { state: { group } });
+                }}
+                className="flex-1 bg-primary text-white rounded-[16px] py-3.5 flex flex-col items-center justify-center active:scale-95 transition-all shadow-md shadow-primary/20"
+              >
+                <span className="text-[14px] font-bold leading-none mb-1">Confirm Interest</span>
+                <span className="text-[9.5px] font-medium opacity-90 leading-none">You will be counted in total quantity</span>
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -986,107 +1284,16 @@ const GroupChat = () => {
           onSave={(val) => {
             setMyInterestUnits(val);
             setShowInterestModal(false);
-          }} 
+          }}
         />
       )}
-
-      {/* Voice Hotline Calling Overlay */}
-      {isCalling && (
-        <div className="absolute inset-0 bg-[#0F172A]/95 backdrop-blur-xl z-[100] flex flex-col justify-between p-6 text-white animate-fadeIn">
-          {/* Call Header */}
-          <div className="flex flex-col items-center mt-8">
-            <span className="text-xs font-black uppercase text-primary bg-primary/10 px-3 py-1 rounded-full tracking-widest mb-2">Voice Hotline</span>
-            <h2 className="text-lg font-extrabold text-white">{group.title} Deal Call</h2>
-            <p className="text-xs text-muted font-semibold mt-1">5 Members connected</p>
-          </div>
-
-          {/* Pulsing soundwave animation with centered active speaker avatar */}
-          <div className="flex flex-col items-center justify-center my-6 relative">
-            <div className="relative flex items-center justify-center w-40 h-40">
-              {/* Soundwave rings */}
-              <div className="absolute w-36 h-36 rounded-full border border-primary/20 bg-primary/5 animate-ping opacity-75"></div>
-              <div className="absolute w-28 h-28 rounded-full border border-primary/30 bg-primary/10 animate-pulse"></div>
-              
-              {/* Main Speaker Avatar */}
-              <div className="relative w-20 h-20 rounded-full border-4 border-primary overflow-hidden bg-slate-800 shadow-xl z-10">
-                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80" alt="Active Speaker" className="w-full h-full object-cover" />
-              </div>
-              
-              {/* Mic Indicator Badge */}
-              <div className="absolute bottom-1 right-8 bg-primary text-white rounded-full p-1.5 border-2 border-[#0F172A] z-20">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs font-bold text-primary mt-4 animate-pulse">Rohan Sharma is speaking...</span>
-          </div>
-
-          {/* Participant Speaker List */}
-          <div className="bg-[#1E293B]/60 border border-slate-800 rounded-3xl p-4 mx-2">
-            <span className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-3 px-1">On Call Speakers</span>
-            <div className="flex flex-col gap-3 max-h-[160px] overflow-y-auto no-scrollbar">
-              {[
-                { name: 'You', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', status: isMuted ? 'Muted' : 'Speaking', isSpeaking: !isMuted, active: true },
-                { name: 'Rohan Sharma (Admin)', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80', status: 'Speaking', isSpeaking: true, active: false },
-                { name: 'Amit Verma', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80', status: 'Listening', isSpeaking: false, active: false },
-                { name: 'Neha Singh', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80', status: 'Muted', isSpeaking: false, active: false },
-                { name: 'Priya Mehta', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', status: 'Listening', isSpeaking: false, active: false }
-              ].map((speaker, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <img src={speaker.avatar} alt={speaker.name} className="w-8 h-8 rounded-full object-cover border border-slate-700" />
-                    <span className="text-xs font-bold text-white">{speaker.name}</span>
-                  </div>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${speaker.status === 'Speaking' ? 'bg-primary/20 text-primary' : speaker.status === 'Muted' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-700 text-slate-300'}`}>
-                    {speaker.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Control Buttons */}
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <button 
-              onClick={() => setIsMuted(prev => !prev)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all ${isMuted ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-[#1E293B] border-slate-800 text-slate-300 hover:text-white'}`}
-              title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
-            >
-              {isMuted ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-              )}
-            </button>
-
-            <button 
-              onClick={() => setIsCalling(false)}
-              className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-white shadow-lg shadow-rose-600/30 transition-all active:scale-95 animate-pulse"
-              title="End Voice Call"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 rotate-[135deg]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </button>
-
-            <button 
-              onClick={() => setIsSpeakerOn(prev => !prev)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all ${isSpeakerOn ? 'bg-primary border-primary text-white' : 'bg-[#1E293B] border-slate-800 text-slate-300 hover:text-white'}`}
-              title={isSpeakerOn ? "Turn Speaker Off" : "Turn Speaker On"}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        className="hidden" 
+        accept={fileTypeToUpload === 'image' ? 'image/*' : '.pdf,.doc,.docx,.txt'} 
+      />
     </div>
   );
 };

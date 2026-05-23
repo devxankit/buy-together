@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useUserMainContext } from '../../context';
 // My Groups sub-components
 import GroupsHeader from './components/GroupsHeader';
 import GroupTabs from './components/GroupTabs';
@@ -20,6 +21,9 @@ const GroupsList = () => {
   const [searchValue, setSearchValue] = useState('');
   const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [joinedSubTab, setJoinedSubTab] = useState('active');
+
+  // Shared Location Selection Context
+  const { selectedCity, setIsLocationPickerOpen } = useUserMainContext();
 
   // 2. MOCK DATA MODELS (Exact match to mockups)
   const trendingGroupsData = [
@@ -220,11 +224,11 @@ const GroupsList = () => {
       if (selectedFilter === 'closing-soon') return group.status === 'closing';
       if (selectedFilter === 'new') return group.spotsJoined < 20;
       if (selectedFilter === 'popular') return group.spotsJoined >= 25;
-      if (selectedFilter === 'nearby') return group.location === 'Mumbai';
+      if (selectedFilter === 'nearby') return group.location.toLowerCase() === selectedCity.split(',')[0].toLowerCase();
 
       return true;
     });
-  }, [searchValue, selectedFilter]);
+  }, [searchValue, selectedFilter, selectedCity]);
 
   // 4. SUB-TAB FILTER LOGIC (Joined Groups)
   const filteredJoinedGroups = useMemo(() => {
@@ -238,9 +242,9 @@ const GroupsList = () => {
 
   // 5. RENDER FLOW (Unified Page Layout)
   return (
-    <div className="flex flex-col gap-3.5 px-3.5 pb-24 select-none animate-fadeIn">
+    <div className="flex flex-col gap-3.5 px-3.5 pb-24 select-none animate-fadeIn relative">
       {/* Groups Title & Create Button */}
-      <GroupsHeader />
+      <GroupsHeader selectedLocation={selectedCity} onLocationClick={() => setIsLocationPickerOpen(true)} />
 
       {/* Tabs Selector (My Groups / Joined Groups) */}
       <GroupTabs activeTab={activeTab} onChange={setActiveTab} />

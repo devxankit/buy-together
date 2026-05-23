@@ -36,6 +36,12 @@ const DealConfirm = () => {
 
   const [toastMessage, setToastMessage] = useState('');
 
+  React.useEffect(() => {
+    if (group.id) {
+      localStorage.setItem(`buytogether_confirmed_interest_${group.id}`, 'true');
+    }
+  }, [group.id]);
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);

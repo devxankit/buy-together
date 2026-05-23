@@ -41,22 +41,22 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
               className="w-[145px] flex-shrink-0 flex flex-col shadow-card overflow-hidden"
             >
               {/* Product Image Panel with Floating Status tag */}
-              <div className="w-full h-[95px] bg-[#F6F6F8] flex items-center justify-center relative flex-shrink-0">
+              <div className="w-full h-[95px] bg-[#F6F6F8] relative overflow-hidden flex-shrink-0">
                 <img
                   src={group.image}
                   alt={group.title}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover block"
                 />
                 
                 {/* Wishlist Button */}
                 <WishlistButton
                   isWishlisted={isWishlisted}
                   onClick={() => dispatch(toggleWishlist(group))}
-                  className="absolute top-2 right-2"
+                  className="absolute top-2 right-2 z-10"
                 />
                 
                 {/* Floating Joined counter badge */}
-                <div className="absolute right-2 bottom-2 bg-surface/90 backdrop-blur-sm px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm border border-line/10 scale-[0.88] origin-bottom-right">
+                <div className="absolute right-2 bottom-2 bg-surface/90 backdrop-blur-sm px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm border border-line/10 scale-[0.88] origin-bottom-right z-10">
                   <span className="text-[9.5px] font-black text-primary leading-none">
                     {group.spotsJoined}
                   </span>

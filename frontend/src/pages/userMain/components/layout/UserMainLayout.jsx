@@ -2,12 +2,13 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import BottomNav from './BottomNav';
+import { UserMainProvider, useUserMainContext } from '../../context';
+import { LocationSelectorPage } from '../common';
 
 /**
- * Main Layout wrapper for userMain module.
- * Standardizes mobile dimensions (430px) and spacing defaults.
+ * Main Layout wrapper inner component that consumes UserMainContext.
  */
-const UserMainLayout = ({
+const UserMainLayoutInner = ({
   title,
   showBottomNav = true,
   showHeader = true,
@@ -15,6 +16,7 @@ const UserMainLayout = ({
   ...props
 }) => {
   const location = useLocation();
+  const { isLocationPickerOpen, setIsLocationPickerOpen, selectedCity, setSelectedCity } = useUserMainContext();
 
   // Root/Tab views don't show the outer layout header since they have their own local headers/titles.
   const isRootView = ['/', '/groups', '/deals', '/profile', '/categories'].includes(location.pathname);
@@ -38,9 +40,29 @@ const UserMainLayout = ({
       </main>
 
       {showBottomNav && <BottomNav />}
+
+      {/* Premium Dedicated Global Location Selection Page Overlay */}
+      {isLocationPickerOpen && (
+        <LocationSelectorPage 
+          selectedLocation={selectedCity} 
+          setSelectedLocation={setSelectedCity} 
+          onClose={() => setIsLocationPickerOpen(false)} 
+        />
+      )}
     </div>
   );
 };
 
-export default UserMainLayout;
+/**
+ * Main Layout wrapper for userMain module.
+ * Wraps the inner layout with UserMainProvider to expose global geographic & notification contexts.
+ */
+const UserMainLayout = (props) => {
+  return (
+    <UserMainProvider>
+      <UserMainLayoutInner {...props} />
+    </UserMainProvider>
+  );
+};
 
+export default UserMainLayout;

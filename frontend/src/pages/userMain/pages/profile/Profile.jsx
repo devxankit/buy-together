@@ -23,7 +23,6 @@ const Profile = () => {
 
   const shortcuts = [
     { label: 'Wishlist', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /> },
-    { label: 'Saved Addresses', icon: <><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></> },
     { label: 'Help & Support', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 12V8.928a6.5 6.5 0 00-12.728 0V12m12.728 0A2.5 2.5 0 0121 14.5V17a2.5 2.5 0 01-2.5 2.5h-1.5v-7h1.364zm-12.728 0A2.5 2.5 0 003 14.5V17a2.5 2.5 0 002.5 2.5h1.5v-7H5.636z" /> },
   ];
 
@@ -163,8 +162,7 @@ const Profile = () => {
                 key={idx} 
                 onClick={() => {
                   if (item.label === 'Wishlist') handleRoute('/wishlist');
-                  else if (item.label === 'Saved Addresses') handleRoute('/addresses');
-                  else handleRoute('/support');
+                  else handleRoute('/help-center');
                 }}
                 className="bg-surface border border-line rounded-[18px] p-3 flex flex-col items-center justify-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-95 transition-all cursor-pointer hover:border-primary/30"
               >
