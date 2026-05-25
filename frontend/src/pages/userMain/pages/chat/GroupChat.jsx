@@ -225,11 +225,15 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
   );
 };
 
-const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike }) => {
+const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike, onReply }) => {
   let pressTimer = null;
   let lastTap = 0;
+  let startX = 0;
 
-  const handleStart = () => {
+  const handleStart = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      startX = e.touches[0].clientX;
+    }
     const now = Date.now();
     if (now - lastTap < 300) {
       if (onLike) onLike(id);
@@ -245,10 +249,23 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
 
   const handleEnd = () => {
     if (pressTimer) clearTimeout(pressTimer);
+    startX = 0;
   };
 
-  const handleMove = () => {
+  const handleMove = (e) => {
     if (pressTimer) clearTimeout(pressTimer);
+    if (e.touches && e.touches.length > 0 && startX !== 0) {
+      const currentX = e.touches[0].clientX;
+      const deltaX = currentX - startX;
+      if (Math.abs(deltaX) > 50) {
+        if (onReply) onReply({ id, content, name });
+        startX = 0; 
+      }
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (onReply) onReply({ id, content, name });
   };
 
   return (
@@ -260,6 +277,7 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
       onMouseDown={handleStart}
       onMouseUp={handleEnd}
       onMouseLeave={handleEnd}
+      onDoubleClick={handleDoubleClick}
     >
       <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1" />
       <div className="flex-1 flex flex-col min-w-0">
@@ -423,7 +441,7 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
   );
 };
 
-const ChatFeed = ({ messages, onVote, onLongPress, onLike }) => {
+const ChatFeed = ({ messages, onVote, onLongPress, onLike, onReply }) => {
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -433,14 +451,14 @@ const ChatFeed = ({ messages, onVote, onLongPress, onLike }) => {
   return (
     <div className="bg-[#F6F6F8] pt-5 w-full max-w-[430px] mx-auto pb-4">
       {messages.map(msg => (
-        <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} />
+        <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} onReply={onReply} />
       ))}
       <div ref={endRef} />
     </div>
   );
 };
 
-const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike }) => {
+const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike, onReply }) => {
   const pollMessages = messages.filter(m => m.quoteData?.isPoll);
 
   return (
@@ -459,7 +477,7 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike }) => {
       </div>
       
       {pollMessages.length > 0 ? (
-        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} />)
+        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} onReply={onReply} />)
       ) : (
         <div className="text-center mt-10">
           <p className="text-sm text-faint font-medium">No polls available.</p>
@@ -470,6 +488,7 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike }) => {
 };
 
 const MembersFeed = ({ groupId }) => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('all'); // 'all' or 'confirmed'
 
   const members = [
@@ -564,7 +583,10 @@ const MembersFeed = ({ groupId }) => {
                     </div>
                   </div>
                 </div>
-                <button className="p-2 text-muted hover:text-primary transition-colors">
+                <button 
+                  onClick={() => navigate(`/messages/${member.id}`)}
+                  className="p-2 text-muted hover:text-primary transition-colors active:scale-95"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                 </button>
               </div>
@@ -1167,8 +1189,8 @@ const GroupChat = () => {
             <TabsAndPinned activeTab={activeTab} setActiveTab={setActiveTab} group={group} onPinClick={() => setShowPinnedModal(true)} />
             
             {/* Dynamic Content Based on Tab */}
-            {activeTab === 'Chat' && <ChatFeed messages={messages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} />}
-            {activeTab === 'Polls' && <PollsFeed messages={messages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} />}
+            {activeTab === 'Chat' && <ChatFeed messages={messages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
+            {activeTab === 'Polls' && <PollsFeed messages={messages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
             {activeTab === 'Members' && <MembersFeed groupId={resolvedGroupId} />}
             {activeTab === 'Media' && <MediaFeed messages={messages} />}
           </>

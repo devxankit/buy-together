@@ -141,7 +141,11 @@ const ActiveGroupsList = () => {
         {visibleGroups.map((group) => {
           const progressPercent = Math.min((group.joined / group.spotsTotal) * 100, 100);
           return (
-            <div key={group.id} className="flex items-center p-3 gap-3 bg-surface border border-line rounded-2xl shadow-sm">
+            <div 
+              key={group.id} 
+              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
+              className="flex items-center p-3 gap-3 bg-surface border border-line rounded-2xl shadow-sm cursor-pointer active:scale-[0.98] transition-all hover:border-primary/30"
+            >
               {/* Logo/Image */}
               <div className={`w-[50px] h-[50px] rounded-full flex-shrink-0 overflow-hidden ${group.bgColor}`}>
                 <img src={group.image} alt={group.title} className="w-full h-full object-cover opacity-90" />
