@@ -3,13 +3,13 @@ import { T } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, SearchInput, SegmentTabs, Button } from '../components';
 import { groups } from '../data/mockData';
 
-const Progress = ({ current, target, status }) => {
-  const pct = Math.min(100, Math.round((current / target) * 100));
-  const color = status === 'completed' || status === 'locked' ? T.success : status === 'near' ? T.info : status === 'flagged' ? T.danger : T.primary;
+const Progress = ({ spotsJoined, spotsTotal, status }) => {
+  const pct = Math.min(100, Math.round((spotsJoined / spotsTotal) * 100));
+  const color = status === 'completed' || status === 'locked' ? T.success : status === 'closing' ? T.info : status === 'flagged' ? T.danger : T.primary;
   return (
     <div style={{ minWidth: 150 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span className="font-mono-num" style={{ fontSize: 12, fontWeight: 700, color: T.ink }}>{current}/{target}</span>
+        <span className="font-mono-num" style={{ fontSize: 12, fontWeight: 700, color: T.ink }}>{spotsJoined}/{spotsTotal}</span>
         <span className="font-mono-num" style={{ fontSize: 11.5, fontWeight: 600, color }}>{pct}%</span>
       </div>
       <div style={{ height: 6, borderRadius: 99, background: T.lineSoft, overflow: 'hidden' }}>
@@ -26,7 +26,7 @@ const Groups = () => {
   const counts = useMemo(() => ({
     all: groups.length,
     active: groups.filter(g => g.status === 'active').length,
-    near: groups.filter(g => g.status === 'near').length,
+    closing: groups.filter(g => g.status === 'closing').length,
     locked: groups.filter(g => ['locked', 'completed'].includes(g.status)).length,
     flagged: groups.filter(g => g.status === 'flagged').length,
   }), []);
@@ -34,23 +34,29 @@ const Groups = () => {
   const filtered = useMemo(() => groups.filter(g => {
     const okTab = tab === 'all'
       || (tab === 'locked' ? ['locked', 'completed'].includes(g.status) : g.status === tab);
-    const okQ = !q || `${g.name} ${g.id} ${g.creator} ${g.category} ${g.location}`.toLowerCase().includes(q.toLowerCase());
+    const okQ = !q || `${g.title} ${g.id} ${g.creator} ${g.category} ${g.location}`.toLowerCase().includes(q.toLowerCase());
     return okTab && okQ;
   }), [tab, q]);
 
   const columns = [
-    { key: 'name', label: 'Group', strong: true, render: (g) => (
-      <div>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink }}>{g.name}</div>
+    { key: 'title', label: 'Group', strong: true, render: (g) => (
+      <div style={{ maxWidth: 280 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink }}>{g.title}</div>
         <div style={{ fontSize: 11.5, color: T.muted }}>{g.id} · by {g.creator}</div>
+        {g.slogan && (
+          <div style={{ fontSize: 11, color: T.faint, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.slogan}</div>
+        )}
       </div>
     )},
     { key: 'category', label: 'Category', render: (g) => (
       <span style={{ fontSize: 12, fontWeight: 600, color: T.inkSoft, background: T.surfaceAlt, border: `1px solid ${T.line}`, padding: '3px 9px', borderRadius: 999 }}>{g.category}</span>
     )},
     { key: 'type', label: 'Type', render: (g) => <StatusBadge status={g.type} dot={false} size="sm" /> },
-    { key: 'progress', label: 'Progress', render: (g) => <Progress current={g.current} target={g.target} status={g.status} /> },
+    { key: 'progress', label: 'Progress', render: (g) => <Progress spotsJoined={g.spotsJoined} spotsTotal={g.spotsTotal} status={g.status} /> },
     { key: 'location', label: 'Location', render: (g) => <span style={{ color: T.muted }}>{g.location}</span> },
+    { key: 'daysLeft', label: 'Closes', align: 'center', mono: true, render: (g) => (
+      <span style={{ fontSize: 12, fontWeight: 600, color: g.status === 'closing' ? T.info : T.muted }}>{g.daysLeft}</span>
+    )},
     { key: 'status', label: 'Status', render: (g) => <StatusBadge status={g.status} /> },
   ];
 
@@ -73,7 +79,7 @@ const Groups = () => {
             tabs={[
               { id: 'all', label: 'All', count: counts.all },
               { id: 'active', label: 'Active', count: counts.active },
-              { id: 'near', label: 'Near target', count: counts.near },
+              { id: 'closing', label: 'Closing soon', count: counts.closing },
               { id: 'locked', label: 'Locked', count: counts.locked },
               { id: 'flagged', label: 'Flagged', count: counts.flagged },
             ]}

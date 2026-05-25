@@ -7,8 +7,6 @@ const envVarsSchema = joi.object({
   MONGODB_URI: joi.string().required().description('MongoDB connection URI'),
   JWT_SECRET: joi.string().required().description('JWT secret key'),
   JWT_EXPIRE: joi.string().default('30d'),
-  REDIS_HOST: joi.string().default('127.0.0.1'),
-  REDIS_PORT: joi.number().default(6379),
 }).unknown().required();
 
 const { value: envVars, error } = envVarsSchema.validate(process.env);
@@ -31,9 +29,5 @@ module.exports = {
   jwt: {
     secret: envVars.JWT_SECRET,
     accessExpirationMinutes: envVars.JWT_EXPIRE,
-  },
-  redis: {
-    host: envVars.REDIS_HOST,
-    port: envVars.REDIS_PORT,
   }
 };

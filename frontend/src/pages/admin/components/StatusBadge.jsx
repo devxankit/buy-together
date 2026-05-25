@@ -6,7 +6,7 @@ const MAP = {
   verified:     { fg: T.success, bg: T.successSoft, label: 'Verified' },
   completed:    { fg: T.success, bg: T.successSoft, label: 'Completed' },
   locked:       { fg: T.violet,  bg: T.violetSoft,  label: 'Locked' },
-  near:         { fg: T.info,    bg: T.infoSoft,    label: 'Near target' },
+  closing:      { fg: T.info,    bg: T.infoSoft,    label: 'Closing soon' },
   pending:      { fg: T.warning, bg: T.warningSoft, label: 'Pending' },
   submitted:    { fg: T.warning, bg: T.warningSoft, label: 'Submitted' },
   negotiation:  { fg: T.info,    bg: T.infoSoft,    label: 'Negotiation' },

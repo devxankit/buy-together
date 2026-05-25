@@ -48,16 +48,23 @@ export const users = [
   { id: 'U-10430', name: 'Anita Desai',    email: 'anita.d@gmail.com',   phone: '+91 95555 44332', role: 'buyer',  status: 'flagged',  groups: 2,  intent: 19, location: 'Indore',    joined: '2026-05-09', avatar: '#D14343' },
 ];
 
-/* ── Groups ──────────────────────────────────────────────────── */
+/* ── Groups ──────────────────────────────────────────────────────
+ * Field names mirror the userMain group shape (title / spotsJoined /
+ * spotsTotal / status / category / location / slogan / image / daysLeft)
+ * so the same record flows between the consumer app and this console.
+ * Admin-only management fields (type, creator, created) sit alongside.
+ * Status vocabulary is aligned with the user app: active | closing |
+ * completed, plus admin-only moderation states: locked | flagged.
+ */
 export const groups = [
-  { id: 'G-3001', name: 'iPhone 16 Pro — Bulk Buy', category: 'Electronics', type: 'user',   creator: 'Rahul Sharma', target: 50, current: 47, location: 'Indore',  status: 'near',     created: '2026-05-10' },
-  { id: 'G-3002', name: 'Baleno @ ₹8L Group',       category: 'Automobile',  type: 'vendor', creator: 'BulkBazaar',   target: 10, current: 10, location: 'Mumbai',  status: 'locked',   created: '2026-05-08' },
-  { id: 'G-3003', name: 'Smart TV Bundle Deal',     category: 'Electronics', type: 'vendor', creator: 'TechWorld',    target: 30, current: 30, location: 'Pune',    status: 'completed',created: '2026-04-28' },
-  { id: 'G-3004', name: 'Wholesale Rice 25kg',      category: 'Grocery',     type: 'user',   creator: 'Fatima Khan',  target: 100,current: 34, location: 'Hyderabad',status:'active',   created: '2026-05-15' },
-  { id: 'G-3005', name: 'Split AC 1.5T Combo',      category: 'Appliances',  type: 'user',   creator: 'Sneha Iyer',   target: 40, current: 12, location: 'Pune',    status: 'active',   created: '2026-05-19' },
-  { id: 'G-3006', name: 'Designer Kurti Lot',       category: 'Fashion',     type: 'vendor', creator: 'BulkBazaar',   target: 60, current: 58, location: 'Surat',   status: 'near',     created: '2026-05-12' },
-  { id: 'G-3007', name: 'Gaming Laptop Group',      category: 'Electronics', type: 'user',   creator: 'Vivek Nair',   target: 25, current: 3,  location: 'Kochi',   status: 'active',   created: '2026-05-20' },
-  { id: 'G-3008', name: 'Refurb iPhone Lot (dup?)', category: 'Electronics', type: 'user',   creator: 'Aman Gupta',   target: 50, current: 5,  location: 'Indore',  status: 'flagged',  created: '2026-05-21' },
+  { id: 'G-3001', title: 'iPhone 16 Pro — Bulk Buy', category: 'Electronics', type: 'user',   creator: 'Rahul Sharma', spotsTotal: 50,  spotsJoined: 47, location: 'Indore',    status: 'closing',   slogan: "Let's grab the iPhone 16 Pro together at the best verified-seller price.", image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80', daysLeft: '2d left',  created: '2026-05-10' },
+  { id: 'G-3002', title: 'Baleno @ ₹8L Group',       category: 'Automobile',  type: 'vendor', creator: 'BulkBazaar',   spotsTotal: 10,  spotsJoined: 10, location: 'Mumbai',    status: 'locked',    slogan: 'Bulk booking for Maruti Baleno — target met, deal locked.',               image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=150&q=80', daysLeft: '0d left',  created: '2026-05-08' },
+  { id: 'G-3003', title: 'Smart TV Bundle Deal',     category: 'Electronics', type: 'vendor', creator: 'TechWorld',    spotsTotal: 30,  spotsJoined: 30, location: 'Pune',      status: 'completed', slogan: 'Smart TV bundle group — successfully completed and disbursed.',           image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=150&q=80', daysLeft: '0d left',  created: '2026-04-28' },
+  { id: 'G-3004', title: 'Wholesale Rice 25kg',      category: 'Grocery',     type: 'user',   creator: 'Fatima Khan',  spotsTotal: 100, spotsJoined: 34, location: 'Hyderabad', status: 'active',    slogan: 'Buy 25kg premium rice in bulk and split the wholesale rate.',             image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=150&q=80', daysLeft: '5d left',  created: '2026-05-15' },
+  { id: 'G-3005', title: 'Split AC 1.5T Combo',      category: 'Appliances',  type: 'user',   creator: 'Sneha Iyer',   spotsTotal: 40,  spotsJoined: 12, location: 'Pune',      status: 'active',    slogan: "Let's buy 1.5T split ACs in bulk before summer peak pricing.",            image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80', daysLeft: '6d left',  created: '2026-05-19' },
+  { id: 'G-3006', title: 'Designer Kurti Lot',       category: 'Fashion',     type: 'vendor', creator: 'BulkBazaar',   spotsTotal: 60,  spotsJoined: 58, location: 'Surat',     status: 'closing',   slogan: 'Designer kurti lot at factory price — almost full, closing soon.',        image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=150&q=80', daysLeft: '1d left',  created: '2026-05-12' },
+  { id: 'G-3007', title: 'Gaming Laptop Group',      category: 'Electronics', type: 'user',   creator: 'Vivek Nair',   spotsTotal: 25,  spotsJoined: 3,  location: 'Kochi',     status: 'active',    slogan: 'Group buy for gaming laptops — join to unlock the bulk discount.',        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80', daysLeft: '8d left',  created: '2026-05-20' },
+  { id: 'G-3008', title: 'Refurb iPhone Lot (dup?)', category: 'Electronics', type: 'user',   creator: 'Aman Gupta',   spotsTotal: 50,  spotsJoined: 5,  location: 'Indore',    status: 'flagged',   slogan: 'Refurbished iPhone lot — flagged as a possible duplicate of G-3001.',     image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80', daysLeft: '7d left',  created: '2026-05-21' },
 ];
 
 /* ── Vendors (approval pipeline) ─────────────────────────────── */
