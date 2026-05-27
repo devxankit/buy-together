@@ -44,6 +44,11 @@ const Login = () => {
       {/* === FORM CARD === */}
       <div className="flex-1 bg-surface px-5 pt-6 pb-6 flex flex-col justify-start gap-0 overflow-y-auto rounded-t-[32px] -mt-4 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
 
+        {/* Company Logo */}
+        <div className="flex justify-center mb-1">
+          <img src={logo} alt="Company Logo" className="h-16 w-auto object-contain rounded-xl" />
+        </div>
+
         <h2 className="text-[17.5px] font-black text-ink text-center mt-2">Login to your account</h2>
         <p className="text-[11.5px] text-muted font-semibold mt-0.5 mb-4 text-center">Enter your details to continue</p>
 

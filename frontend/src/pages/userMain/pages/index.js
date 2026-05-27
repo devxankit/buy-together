@@ -20,3 +20,5 @@ export { default as TermsConditions } from './profile/TermsConditions';
 export { default as PrivacyPolicy } from './profile/PrivacyPolicy';
 export { default as CommunityGuidelines } from './profile/CommunityGuidelines';
 export { default as AboutUs } from './profile/AboutUs';
+export { default as PersonalChatList } from './chat/PersonalChatList';
+export { default as PersonalChat } from './chat/PersonalChat';

@@ -32,7 +32,9 @@ import {
   TermsConditions,
   PrivacyPolicy,
   CommunityGuidelines,
-  AboutUs
+  AboutUs,
+  PersonalChatList,
+  PersonalChat
 } from '../pages/userMain/pages';
 
 // Vendor Pages
@@ -72,6 +74,7 @@ const AppRoutes = () => {
         {/* Fullscreen routes (no layout shell) */}
         <Route path="/groups/:groupId/chat" element={<GroupChat />} />
         <Route path="/groups/:groupId/confirm" element={<DealConfirm />} />
+        <Route path="/messages/:chatId" element={<PersonalChat />} />
 
         {/* User routes — main Layout (Navbar + BottomNav) */}
         <Route element={<Layout />}>
@@ -82,6 +85,7 @@ const AppRoutes = () => {
           <Route path="/deals" element={<Deals />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/messages" element={<PersonalChatList />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/wishlist" element={<Wishlist />} />
           {/* <Route path="/addresses" element={<SavedAddresses />} /> */}
