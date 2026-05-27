@@ -49,9 +49,9 @@ import {
   Dashboard as AdminDashboard,
   Users as AdminUsers,
   Groups as AdminGroups,
+  Categories as AdminCategories,
   Vendors as AdminVendors,
   Deals as AdminDeals,
-  Analytics as AdminAnalytics,
   Fraud as AdminFraud,
   Revenue as AdminRevenue,
   Settings as AdminSettings,
@@ -120,9 +120,9 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/groups" element={<AdminGroups />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
           <Route path="/admin/vendors" element={<AdminVendors />} />
           <Route path="/admin/deals" element={<AdminDeals />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/fraud" element={<AdminFraud />} />
           <Route path="/admin/revenue" element={<AdminRevenue />} />
           <Route path="/admin/settings" element={<AdminSettings />} />

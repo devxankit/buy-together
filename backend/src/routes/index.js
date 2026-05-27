@@ -6,6 +6,8 @@ const vendorRoute = require('./vendor.routes');
 const dealRoute = require('./deal.routes');
 const chatRoute = require('./chat.routes');
 const adminRoute = require('./admin.routes');
+const categoryRoute = require('./category.routes');
+const uploadRoute = require('./upload.routes');
 
 const router = express.Router();
 
@@ -17,6 +19,8 @@ const defaultRoutes = [
   { path: '/deals', route: dealRoute },
   { path: '/chat', route: chatRoute },
   { path: '/admin', route: adminRoute },
+  { path: '/categories', route: categoryRoute },
+  { path: '/uploads', route: uploadRoute },
 ];
 
 defaultRoutes.forEach((route) => {

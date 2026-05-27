@@ -42,6 +42,31 @@ const envVarsSchema = joi.object({
   ADMIN_PHONE: joi.string().allow('').default(''),
   ADMIN_PASSWORD: joi.string().allow('').default(''),
 
+  // Firebase Realtime Database (chat message store)
+  FIREBASE_DATABASE_URL: joi
+    .string()
+    .uri()
+    .allow('')
+    .default('')
+    .description('Firebase Realtime Database URL'),
+  // Provide ONE of the two below (JSON wins if both are set).
+  FIREBASE_SERVICE_ACCOUNT_JSON: joi
+    .string()
+    .allow('')
+    .default('')
+    .description('Service-account JSON (raw or base64)'),
+  FIREBASE_SERVICE_ACCOUNT_KEY_PATH: joi
+    .string()
+    .allow('')
+    .default('')
+    .description('Path to serviceAccountKey.json'),
+
+  // Cloudinary (admin image uploads)
+  CLOUDINARY_CLOUD_NAME: joi.string().allow('').default(''),
+  CLOUDINARY_API_KEY: joi.string().allow('').default(''),
+  CLOUDINARY_API_SECRET: joi.string().allow('').default(''),
+  CLOUDINARY_UPLOAD_FOLDER: joi.string().allow('').default('buy-together'),
+
   // Integrations (existing placeholders)
   FIREBASE_KEY: joi.string().allow('').optional(),
   MAPS_API_KEY: joi.string().allow('').optional(),
@@ -90,5 +115,16 @@ module.exports = {
     email: envVars.ADMIN_EMAIL,
     phone: envVars.ADMIN_PHONE,
     password: envVars.ADMIN_PASSWORD,
+  },
+  firebase: {
+    databaseUrl: envVars.FIREBASE_DATABASE_URL,
+    serviceAccountJson: envVars.FIREBASE_SERVICE_ACCOUNT_JSON,
+    serviceAccountKeyPath: envVars.FIREBASE_SERVICE_ACCOUNT_KEY_PATH,
+  },
+  cloudinary: {
+    cloudName: envVars.CLOUDINARY_CLOUD_NAME,
+    apiKey: envVars.CLOUDINARY_API_KEY,
+    apiSecret: envVars.CLOUDINARY_API_SECRET,
+    folder: envVars.CLOUDINARY_UPLOAD_FOLDER,
   },
 };

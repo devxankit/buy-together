@@ -11,6 +11,12 @@ const groupSchema = mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Slug of the Category this group belongs to (see Category model).
+    category: {
+      type: String,
+      trim: true,
+      index: true,
+    },
     members: [
       {
         type: mongoose.Schema.Types.ObjectId,

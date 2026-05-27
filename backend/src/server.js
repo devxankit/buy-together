@@ -1,12 +1,21 @@
+const http = require('http');
 const app = require('./app');
 const config = require('./config/env');
 const logger = require('./utils/logger');
 const connectDB = require('./config/db');
+const setupSocket = require('./sockets/socket');
 
 // Connect to Database
 connectDB();
 
-const server = app.listen(config.port, () => {
+// Wrap Express in an HTTP server so Socket.IO can share the same port.
+const server = http.createServer(app);
+
+// Realtime layer — expose `io` to controllers via req.app.get('io').
+const io = setupSocket(server);
+app.set('io', io);
+
+server.listen(config.port, () => {
   logger.info(`Server started on port ${config.port} (${config.env})`);
 });
 

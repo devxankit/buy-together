@@ -6,7 +6,6 @@ export const navSections = [
     title: 'Overview',
     items: [
       { label: 'Dashboard',   icon: 'LayoutDashboard', path: '/admin' },
-      { label: 'Analytics',   icon: 'ChartColumnBig',  path: '/admin/analytics' },
     ],
   },
   {
@@ -14,6 +13,7 @@ export const navSections = [
     items: [
       { label: 'Users',       icon: 'Users',     path: '/admin/users' },
       { label: 'Groups',      icon: 'Boxes',     path: '/admin/groups' },
+      { label: 'Categories',  icon: 'Tags',      path: '/admin/categories' },
       { label: 'Vendors',     icon: 'Store',     path: '/admin/vendors', badge: 'vendors' },
       { label: 'Deals',       icon: 'Handshake', path: '/admin/deals' },
     ],
@@ -36,9 +36,9 @@ export const navSections = [
 // Flat lookup for breadcrumbs / page titles.
 export const routeMeta = {
   '/admin':           { title: 'Dashboard',     section: 'Overview' },
-  '/admin/analytics': { title: 'Analytics',     section: 'Overview' },
   '/admin/users':     { title: 'Users',         section: 'Management' },
   '/admin/groups':    { title: 'Groups',        section: 'Management' },
+  '/admin/categories':{ title: 'Categories',    section: 'Management' },
   '/admin/vendors':   { title: 'Vendors',       section: 'Management' },
   '/admin/deals':     { title: 'Deals',         section: 'Management' },
   '/admin/fraud':     { title: 'Fraud & Risk',  section: 'Intelligence' },

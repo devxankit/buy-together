@@ -24,7 +24,12 @@
       "Bash(grep -qE 'Server started|EADDRINUSE|Error' 'C:\\\\Users\\\\AnkitAhirwar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-AnkitAhirwar-OneDrive-Desktop-Buy-Together\\\\4c8bb5b2-bbdf-407b-b9b4-39be8015b4c9\\\\tasks\\\\ba01mz7qi.output')",
       "Bash(sleep 1)",
       "Bash(echo \"=== server log ===\")",
-      "Bash(cat 'C:\\\\Users\\\\AnkitAhirwar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-AnkitAhirwar-OneDrive-Desktop-Buy-Together\\\\4c8bb5b2-bbdf-407b-b9b4-39be8015b4c9\\\\tasks\\\\ba01mz7qi.output')"
+      "Bash(cat 'C:\\\\Users\\\\AnkitAhirwar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-AnkitAhirwar-OneDrive-Desktop-Buy-Together\\\\4c8bb5b2-bbdf-407b-b9b4-39be8015b4c9\\\\tasks\\\\ba01mz7qi.output')",
+      "Bash(findstr /i \"chat message group\")",
+      "Bash(findstr /i \"chat message\")",
+      "Bash(node -e \"require\\('./src/models/Category'\\); require\\('./src/services/category.service'\\); require\\('./src/controllers/category.controller'\\); require\\('./src/validations/category.validation'\\); require\\('./src/routes/category.routes'\\); require\\('./src/routes'\\); console.log\\('OK: category modules load'\\);\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('./src/integrations/cloudinary'\\); require\\('./src/middlewares/upload.middleware'\\); require\\('./src/controllers/upload.controller'\\); require\\('./src/routes/upload.routes'\\); require\\('./src/routes'\\); console.log\\('OK: upload modules load'\\);\")"
     ]
   }
 }

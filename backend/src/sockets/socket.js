@@ -1,5 +1,6 @@
 const socketio = require('socket.io');
 const logger = require('../utils/logger');
+const chatSocket = require('./chat.socket');
 
 const setupSocket = (server) => {
   const io = socketio(server, {
@@ -7,6 +8,9 @@ const setupSocket = (server) => {
       origin: '*',
     },
   });
+
+  // Realtime chat namespace (/chat).
+  chatSocket(io);
 
   io.on('connection', (socket) => {
     logger.info(`New socket connection: ${socket.id}`);
