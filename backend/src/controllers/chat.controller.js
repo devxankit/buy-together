@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const httpStatus = require('http-status').status;
 const chatService = require('../services/chat.service');
 
 const sendMessage = async (req, res) => {

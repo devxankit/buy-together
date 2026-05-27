@@ -3,7 +3,28 @@
     "allow": [
       "Bash(npx vite *)",
       "Bash(npx eslint *)",
-      "PowerShell(git diff *)"
+      "PowerShell(git diff *)",
+      "Bash(node -e \"require\\('./src/app'\\); console.log\\('APP_OK: all routes/controllers/services load cleanly'\\);\")",
+      "Bash(node -e \"const h=require\\('http-status'\\); ['OK','CREATED','NO_CONTENT','BAD_REQUEST','UNAUTHORIZED','FORBIDDEN','NOT_FOUND','CONFLICT','TOO_MANY_REQUESTS','BAD_GATEWAY','INTERNAL_SERVER_ERROR'].forEach\\(k=>console.log\\(k, h[k]\\)\\);\")",
+      "Bash(node -e \"const h=require\\('http-status'\\); console.log\\('keys:', Object.keys\\(h\\).slice\\(0,20\\)\\); console.log\\('default?', typeof h.default\\); console.log\\('h.status?', typeof h.status\\); console.log\\('CREATED via default:', h.default && h.default.CREATED\\); console.log\\('CONFLICT via status:', h.status && h.status.CONFLICT\\);\")",
+      "Bash(node -e \"const h=require\\('http-status'\\).status; ['OK','CREATED','NO_CONTENT','BAD_REQUEST','UNAUTHORIZED','FORBIDDEN','NOT_FOUND','CONFLICT','TOO_MANY_REQUESTS','BAD_GATEWAY','INTERNAL_SERVER_ERROR'].forEach\\(k=>console.log\\(k, h[k]\\)\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const files=['src/integrations/sms.js','src/middlewares/validation.middleware.js','src/middlewares/auth.middleware.js','src/app.js','src/utils/helpers.js','src/controllers/chat.controller.js','src/controllers/admin.controller.js','src/controllers/deal.controller.js','src/controllers/auth.controller.js','src/middlewares/error.middleware.js','src/controllers/group.controller.js','src/services/admin.service.js','src/controllers/user.controller.js','src/controllers/vendor.controller.js','src/services/auth.service.js','src/services/otp.service.js'];let n=0;for\\(const f of files\\){const s=fs.readFileSync\\(f,'utf8'\\);const r=s.replace\\(\\\\\"require\\('http-status'\\);\\\\\",\\\\\"require\\('http-status'\\).status;\\\\\"\\);if\\(r!==s\\){fs.writeFileSync\\(f,r\\);n++;}}console.log\\('patched',n,'files'\\);\")",
+      "Bash(node src/server.js)",
+      "Bash(break)",
+      "Bash(node -e \"const fs=require\\('fs'\\);for\\(const f of ['src/validations/auth.validation.js','src/validations/admin.validation.js']\\){let s=fs.readFileSync\\(f,'utf8'\\);const r=s.replace\\(/\\\\.email\\\\\\(\\\\\\)/g,'.email\\({ tlds: false }\\)'\\);fs.writeFileSync\\(f,r\\);console.log\\(f, s!==r?'updated':'no-change'\\);}\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const fs=require\\('fs'\\);const f='src/redux/asyncActions/authActions.js';let s=fs.readFileSync\\(f,'utf8'\\);const n=\\(s.match\\(/dispatch\\\\\\(setLoading\\\\\\(true\\\\\\)\\\\\\);/g\\)||[]\\).length;s=s.split\\('dispatch\\(setLoading\\(true\\)\\);'\\).join\\('begin\\(dispatch\\);'\\);fs.writeFileSync\\(f,s\\);console.log\\('replaced',n,'setLoading\\(true\\) calls with begin\\(dispatch\\)'\\);\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\);\")",
+      "Bash(SMS_INDIA_ENABLED=false node src/server.js)",
+      "Bash(powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"name='node.exe'\\\\\" | Select-Object ProcessId,CreationDate | Format-Table -AutoSize | Out-String\")",
+      "Bash(powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object OwningProcess | Format-Table -AutoSize | Out-String\")",
+      "Bash(cmd //c \"taskkill /PID 28780 /F\")",
+      "Bash(cmd //c \"netstat -ano | findstr :5000 | findstr LISTENING\")",
+      "Bash(seq 1 30)",
+      "Bash(grep -qE 'Server started|EADDRINUSE|Error' 'C:\\\\Users\\\\AnkitAhirwar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-AnkitAhirwar-OneDrive-Desktop-Buy-Together\\\\4c8bb5b2-bbdf-407b-b9b4-39be8015b4c9\\\\tasks\\\\ba01mz7qi.output')",
+      "Bash(sleep 1)",
+      "Bash(echo \"=== server log ===\")",
+      "Bash(cat 'C:\\\\Users\\\\AnkitAhirwar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-AnkitAhirwar-OneDrive-Desktop-Buy-Together\\\\4c8bb5b2-bbdf-407b-b9b4-39be8015b4c9\\\\tasks\\\\ba01mz7qi.output')"
     ]
   }
 }

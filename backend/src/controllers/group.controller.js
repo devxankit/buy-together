@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const httpStatus = require('http-status').status;
 const groupService = require('../services/group.service');
 
 const createGroup = async (req, res) => {

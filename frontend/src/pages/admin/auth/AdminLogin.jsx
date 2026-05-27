@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Hexagon, Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
-import { setAuth } from '../../../redux/slices/authSlice';
+import { adminLogin } from '../../../redux/asyncActions/authActions';
 import { T, radius } from '../theme/adminTheme';
 import '../admin.css';
 
@@ -16,24 +16,23 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const signIn = (e) => {
+  const signIn = async (e) => {
     e?.preventDefault();
+    if (loading) return;
     setLoading(true);
-    // Mock auth — wire to a real admin endpoint later. Issues an admin session.
-    setTimeout(() => {
-      dispatch(setAuth({
-        user: {
-          name: (email.split('@')[0] || 'Admin').replace(/^\w/, c => c.toUpperCase()),
-          email: email || 'admin@buytogether.in',
-          role: 'admin',
-        },
-        token: 'mock-admin-jwt-' + Date.now(),
-      }));
-      navigate('/admin');
-    }, 450);
+    setErr('');
+    try {
+      await dispatch(adminLogin({ email, password })).unwrap();
+      navigate('/admin', { replace: true });
+    } catch (message) {
+      setErr(typeof message === 'string' ? message : 'Login failed. Check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -132,9 +131,11 @@ const AdminLogin = () => {
             </button>
           </form>
 
-          <div style={{ marginTop: 18, padding: '11px 14px', background: T.primaryTint, border: `1px solid ${T.primary}22`, borderRadius: radius.lg, fontSize: 12, color: T.primaryDeep, lineHeight: 1.5 }}>
-            <strong style={{ fontWeight: 700 }}>Demo:</strong> any email/password signs you in as admin (mock auth — wire to a real endpoint later).
-          </div>
+          {err && (
+            <div style={{ marginTop: 16, padding: '11px 14px', background: `${T.danger}14`, border: `1px solid ${T.danger}33`, borderRadius: radius.lg, fontSize: 12.5, color: T.danger, fontWeight: 600, lineHeight: 1.5 }}>
+              {err}
+            </div>
+          )}
         </div>
       </div>
     </div>

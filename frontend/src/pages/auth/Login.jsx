@@ -1,13 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { sendOtp } from '../../redux/asyncActions/authActions';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/otp', { state: { email } });
+    if (phone.length !== 10) return;
+    try {
+      const res = await dispatch(sendOtp({ phone })).unwrap();
+      navigate('/otp', { state: { phone, isNewUser: res.isNewUser, devOtp: res.devOtp } });
+    } catch {
+      // error is surfaced via redux state below
+    }
   };
 
   return (
@@ -39,30 +49,38 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
 
-          {/* Email Field */}
+          {/* Mobile Field */}
           <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
-            <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            <span className="text-[13px] font-bold text-ink flex-shrink-0">+91</span>
+            <div className="w-px h-5 bg-line flex-shrink-0" />
             <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email or Phone Number"
+              type="tel"
+              inputMode="numeric"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="Mobile Number"
               className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-muted/60 outline-none border-none"
               required
             />
           </div>
 
+          {/* Error */}
+          {error && (
+            <p className="text-[11.5px] font-semibold text-red-500 -mt-1.5 px-1">{error}</p>
+          )}
+
           {/* Login Button */}
           <button
             type="submit"
-            className="w-full h-[52px] bg-primary rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all mt-1"
+            disabled={loading || phone.length !== 10}
+            className="w-full h-[52px] bg-primary rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all mt-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
           >
-            Send OTP
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+            {loading ? 'Sending OTP…' : 'Send OTP'}
+            {!loading && (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            )}
           </button>
 
           {/* Sign Up Banner */}

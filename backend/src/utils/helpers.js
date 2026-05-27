@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const httpStatus = require('http-status').status;
 
 const pick = (object, keys) => {
   return keys.reduce((obj, key) => {

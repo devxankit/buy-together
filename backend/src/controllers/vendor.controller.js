@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const httpStatus = require('http-status').status;
 const vendorService = require('../services/vendor.service');
 
 const createVendor = async (req, res) => {
