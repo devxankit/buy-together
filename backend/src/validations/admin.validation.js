@@ -1,5 +1,5 @@
 const joi = require('joi');
-const { ROLES, USER_STATUS, GENDERS } = require('../utils/constants');
+const { ROLES, USER_STATUS } = require('../utils/constants');
 
 const phone = joi
   .string()
@@ -29,7 +29,6 @@ const createUser = {
     role: joi.string().valid(...Object.values(ROLES)),
     status: joi.string().valid(...Object.values(USER_STATUS)),
     location: joi.string().allow('', null),
-    gender: joi.string().valid(...Object.values(GENDERS)),
     dob: joi.date(),
     avatar: joi.string().uri().allow('', null),
     isPhoneVerified: joi.boolean(),
@@ -51,7 +50,6 @@ const updateUser = {
       role: joi.string().valid(...Object.values(ROLES)),
       status: joi.string().valid(...Object.values(USER_STATUS)),
       location: joi.string().allow('', null),
-      gender: joi.string().valid(...Object.values(GENDERS)),
       dob: joi.date(),
       avatar: joi.string().uri().allow('', null),
       isPhoneVerified: joi.boolean(),

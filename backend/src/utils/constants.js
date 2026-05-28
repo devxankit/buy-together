@@ -12,12 +12,6 @@ const USER_STATUS = {
   SUSPENDED: 'suspended',
 };
 
-const GENDERS = {
-  MALE: 'Male',
-  FEMALE: 'Female',
-  OTHER: 'Other',
-};
-
 // Why an OTP was issued — lets us tailor copy / future rate limits per flow.
 const OTP_PURPOSE = {
   LOGIN: 'login',
@@ -33,7 +27,6 @@ const DEAL_STATUS = {
 module.exports = {
   ROLES,
   USER_STATUS,
-  GENDERS,
   OTP_PURPOSE,
   DEAL_STATUS,
 };

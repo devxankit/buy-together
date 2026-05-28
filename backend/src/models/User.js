@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { ROLES, USER_STATUS, GENDERS } = require('../utils/constants');
+const { ROLES, USER_STATUS } = require('../utils/constants');
 
 /**
  * User
@@ -46,7 +46,6 @@ const userSchema = mongoose.Schema(
     },
     // Profile fields (mobile profile screen + admin table)
     avatar: { type: String, trim: true },
-    gender: { type: String, enum: [...Object.values(GENDERS), null], default: null },
     dob: { type: Date },
     location: { type: String, trim: true },
     lastLoginAt: { type: Date },

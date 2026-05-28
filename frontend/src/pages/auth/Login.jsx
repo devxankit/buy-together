@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendOtp } from '../../redux/asyncActions/authActions';
+import logo from '../../assets/logo1.jpeg';
 
 const Login = () => {
   const [phone, setPhone] = useState('');

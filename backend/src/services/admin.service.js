@@ -24,10 +24,18 @@ const queryUsers = async (filter = {}) => {
   const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
 
+  // Counts mirror the active role filter so a buyer-only view reports
+  // buyer-only totals (and ignores any non-user docs in the collection).
+  const countsMatch = {};
+  if (role && role !== 'all') countsMatch.role = role;
+
   const [results, totalResults, counts] = await Promise.all([
     User.find(query).sort(sortBy).skip(skip).limit(limitNum),
     User.countDocuments(query),
-    User.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    User.aggregate([
+      ...(Object.keys(countsMatch).length ? [{ $match: countsMatch }] : []),
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
   ]);
 
   const statusCounts = Object.values(USER_STATUS).reduce((acc, s) => ({ ...acc, [s]: 0 }), {});
@@ -75,7 +83,6 @@ const createUser = async (body) => {
     role: body.role || ROLES.USER,
     status: body.status || USER_STATUS.ACTIVE,
     location: body.location,
-    gender: body.gender,
     dob: body.dob,
     avatar: body.avatar,
     isPhoneVerified: body.isPhoneVerified ?? true,
