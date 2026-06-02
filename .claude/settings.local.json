@@ -29,7 +29,15 @@
       "Bash(findstr /i \"chat message\")",
       "Bash(node -e \"require\\('./src/models/Category'\\); require\\('./src/services/category.service'\\); require\\('./src/controllers/category.controller'\\); require\\('./src/validations/category.validation'\\); require\\('./src/routes/category.routes'\\); require\\('./src/routes'\\); console.log\\('OK: category modules load'\\);\")",
       "Bash(npm install *)",
-      "Bash(node -e \"require\\('./src/integrations/cloudinary'\\); require\\('./src/middlewares/upload.middleware'\\); require\\('./src/controllers/upload.controller'\\); require\\('./src/routes/upload.routes'\\); require\\('./src/routes'\\); console.log\\('OK: upload modules load'\\);\")"
+      "Bash(node -e \"require\\('./src/integrations/cloudinary'\\); require\\('./src/middlewares/upload.middleware'\\); require\\('./src/controllers/upload.controller'\\); require\\('./src/routes/upload.routes'\\); require\\('./src/routes'\\); console.log\\('OK: upload modules load'\\);\")",
+      "Bash(where pdftoppm *)",
+      "Bash(where pdfinfo *)",
+      "Bash(where magick *)",
+      "Bash(where gswin64c *)",
+      "Bash(where gs *)",
+      "Bash(pip install *)",
+      "Bash(python -c \"import fitz; d=fitz.open\\('tools/Supremo-UX-UI-Review.pdf'\\); print\\('pages:', d.page_count\\)\")",
+      "Bash(python -c ' *)"
     ]
   }
 }

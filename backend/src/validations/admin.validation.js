@@ -1,5 +1,5 @@
 const joi = require('joi');
-const { ROLES, USER_STATUS } = require('../utils/constants');
+const { ROLES, USER_STATUS, VENDOR_STATUS, KYC_STATUS, BUSINESS_TYPES } = require('../utils/constants');
 
 const phone = joi
   .string()
@@ -57,9 +57,93 @@ const updateUser = {
     .min(1),
 };
 
+// ── Vendors ─────────────────────────────────────────────────────────
+const pincode = joi.string().pattern(/^\d{6}$/).messages({
+  'string.pattern.base': 'Pincode must be 6 digits',
+});
+
+// Standard GSTIN (15 chars): 2-digit state, 10-char PAN, entity digit, 'Z', checksum.
+const gstNumber = joi
+  .string()
+  .pattern(/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/)
+  .messages({ 'string.pattern.base': 'Enter a valid 15-character GSTIN' });
+
+const listVendors = {
+  query: joi.object().keys({
+    search: joi.string().allow('', null),
+    status: joi.string().valid('all', ...Object.values(VENDOR_STATUS)),
+    kyc: joi.string().valid('all', ...Object.values(KYC_STATUS)),
+    category: joi.string().allow('', null),
+    page: joi.number().integer().min(1),
+    limit: joi.number().integer().min(1).max(100),
+    sortBy: joi.string(),
+  }),
+};
+
+const createVendor = {
+  body: joi.object().keys({
+    businessName: joi.string().trim().min(2).max(120).required(),
+    ownerName: joi.string().trim().min(2).max(80).allow('', null),
+    phone: phone.required(),
+    email: joi.string().email({ tlds: false }).lowercase().allow('', null),
+    category: joi.string().trim().min(2).max(60).required(),
+    businessType: joi.string().valid(...Object.values(BUSINESS_TYPES)),
+    gstNumber: gstNumber.allow('', null),
+    description: joi.string().max(500).allow('', null),
+    city: joi.string().trim().min(2).max(60).required(),
+    address: joi.string().max(240).allow('', null),
+    pincode: pincode.allow('', null),
+    website: joi.string().uri({ scheme: ['http', 'https'] }).allow('', null),
+    logo: joi.string().uri().allow('', null),
+    status: joi.string().valid(...Object.values(VENDOR_STATUS)),
+    kyc: joi.string().valid(...Object.values(KYC_STATUS)),
+  }),
+};
+
+const vendorId = {
+  params: joi.object().keys({ vendorId: objectId.required() }),
+};
+
+const updateVendor = {
+  params: joi.object().keys({ vendorId: objectId.required() }),
+  body: joi
+    .object()
+    .keys({
+      businessName: joi.string().trim().min(2).max(120),
+      ownerName: joi.string().trim().min(2).max(80).allow('', null),
+      phone,
+      email: joi.string().email({ tlds: false }).lowercase().allow('', null),
+      category: joi.string().trim().min(2).max(60),
+      businessType: joi.string().valid(...Object.values(BUSINESS_TYPES)),
+      gstNumber: gstNumber.allow('', null),
+      description: joi.string().max(500).allow('', null),
+      city: joi.string().trim().min(2).max(60),
+      address: joi.string().max(240).allow('', null),
+      pincode: pincode.allow('', null),
+      website: joi.string().uri({ scheme: ['http', 'https'] }).allow('', null),
+      logo: joi.string().uri().allow('', null),
+      status: joi.string().valid(...Object.values(VENDOR_STATUS)),
+      kyc: joi.string().valid(...Object.values(KYC_STATUS)),
+      rejectionReason: joi.string().max(300).allow('', null),
+    })
+    .min(1),
+};
+
+const rejectVendor = {
+  params: joi.object().keys({ vendorId: objectId.required() }),
+  body: joi.object().keys({
+    reason: joi.string().max(300).allow('', null),
+  }),
+};
+
 module.exports = {
   listUsers,
   createUser,
   userId,
   updateUser,
+  listVendors,
+  createVendor,
+  vendorId,
+  updateVendor,
+  rejectVendor,
 };

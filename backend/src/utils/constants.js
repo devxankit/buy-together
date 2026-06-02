@@ -24,9 +24,31 @@ const DEAL_STATUS = {
   PENDING: 'pending',
 };
 
+// Vendor onboarding pipeline states surfaced in the admin Vendors console.
+const VENDOR_STATUS = {
+  PENDING: 'pending',
+  VERIFIED: 'verified',
+  REJECTED: 'rejected',
+};
+
+const KYC_STATUS = {
+  SUBMITTED: 'submitted',
+  VERIFIED: 'verified',
+  FAILED: 'failed',
+};
+
+const BUSINESS_TYPES = {
+  INDIVIDUAL: 'Individual',
+  SHOP: 'Shop',
+  COMPANY: 'Company',
+};
+
 module.exports = {
   ROLES,
   USER_STATUS,
   OTP_PURPOSE,
   DEAL_STATUS,
+  VENDOR_STATUS,
+  KYC_STATUS,
+  BUSINESS_TYPES,
 };

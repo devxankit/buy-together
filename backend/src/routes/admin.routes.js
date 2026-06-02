@@ -23,4 +23,19 @@ router
   .patch(validate(adminValidation.updateUser), adminController.updateUser)
   .delete(validate(adminValidation.userId), adminController.deleteUser);
 
+// ── Vendors ─────────────────────────────────────────────────────────
+router
+  .route('/vendors')
+  .get(validate(adminValidation.listVendors), adminController.listVendors)
+  .post(validate(adminValidation.createVendor), adminController.createVendor);
+
+router
+  .route('/vendors/:vendorId')
+  .get(validate(adminValidation.vendorId), adminController.getVendor)
+  .patch(validate(adminValidation.updateVendor), adminController.updateVendor)
+  .delete(validate(adminValidation.vendorId), adminController.deleteVendor);
+
+router.post('/vendors/:vendorId/approve', validate(adminValidation.vendorId), adminController.approveVendor);
+router.post('/vendors/:vendorId/reject', validate(adminValidation.rejectVendor), adminController.rejectVendor);
+
 module.exports = router;

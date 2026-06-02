@@ -1,6 +1,7 @@
 const httpStatus = require('http-status').status;
 const catchAsync = require('../utils/catchAsync');
 const adminService = require('../services/admin.service');
+const vendorService = require('../services/vendor.service');
 const { pick } = require('../utils/helpers');
 
 const getStats = catchAsync(async (req, res) => {
@@ -34,6 +35,43 @@ const deleteUser = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+// ── Vendors ─────────────────────────────────────────────────────────
+const listVendors = catchAsync(async (req, res) => {
+  const filter = pick(req.query, ['search', 'status', 'kyc', 'category', 'page', 'limit', 'sortBy']);
+  const result = await vendorService.queryVendorsAdmin(filter);
+  res.send(result);
+});
+
+const getVendor = catchAsync(async (req, res) => {
+  const vendor = await vendorService.getVendorByIdAdmin(req.params.vendorId);
+  res.send(vendor);
+});
+
+const createVendor = catchAsync(async (req, res) => {
+  const vendor = await vendorService.createVendorAdmin(req.body);
+  res.status(httpStatus.CREATED).send(vendor);
+});
+
+const updateVendor = catchAsync(async (req, res) => {
+  const vendor = await vendorService.updateVendorByIdAdmin(req.params.vendorId, req.body);
+  res.send(vendor);
+});
+
+const deleteVendor = catchAsync(async (req, res) => {
+  await vendorService.deleteVendorByIdAdmin(req.params.vendorId);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const approveVendor = catchAsync(async (req, res) => {
+  const vendor = await vendorService.approveVendor(req.params.vendorId);
+  res.send(vendor);
+});
+
+const rejectVendor = catchAsync(async (req, res) => {
+  const vendor = await vendorService.rejectVendor(req.params.vendorId, req.body?.reason);
+  res.send(vendor);
+});
+
 module.exports = {
   getStats,
   listUsers,
@@ -41,4 +79,11 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  listVendors,
+  getVendor,
+  createVendor,
+  updateVendor,
+  deleteVendor,
+  approveVendor,
+  rejectVendor,
 };

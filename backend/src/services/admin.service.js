@@ -1,9 +1,10 @@
 const httpStatus = require('http-status').status;
 const User = require('../models/User');
 const Admin = require('../models/Admin');
+const Vendor = require('../models/Vendor');
 const ApiError = require('../utils/ApiError');
 const { normalizePhone } = require('./auth.service');
-const { ROLES, USER_STATUS } = require('../utils/constants');
+const { ROLES, USER_STATUS, VENDOR_STATUS } = require('../utils/constants');
 
 /**
  * List users for the admin console with search + status/role filters and
@@ -114,17 +115,31 @@ const deleteUserById = async (id) => {
   return user;
 };
 
-/** Dashboard counters for the admin console. */
+/**
+ * Dashboard counters for the admin console.
+ * `vendors` is the total in the Vendor collection (not User.role==='vendor',
+ * which has been deprecated in favour of the standalone Vendor model).
+ * `pendingVendors` drives the red badge next to "Vendors" in the sidebar.
+ */
 const getStats = async () => {
-  const [totalUsers, vendors, admins, suspended, flagged, pending] = await Promise.all([
+  const [
+    totalUsers,
+    vendors,
+    pendingVendors,
+    admins,
+    suspended,
+    flagged,
+    pending,
+  ] = await Promise.all([
     User.countDocuments({}),
-    User.countDocuments({ role: ROLES.VENDOR }),
+    Vendor.countDocuments({}),
+    Vendor.countDocuments({ status: VENDOR_STATUS.PENDING }),
     Admin.countDocuments({}),
     User.countDocuments({ status: USER_STATUS.SUSPENDED }),
     User.countDocuments({ status: USER_STATUS.FLAGGED }),
     User.countDocuments({ status: USER_STATUS.PENDING }),
   ]);
-  return { totalUsers, vendors, admins, suspended, flagged, pending };
+  return { totalUsers, vendors, pendingVendors, admins, suspended, flagged, pending };
 };
 
 module.exports = {
