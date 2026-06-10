@@ -493,26 +493,37 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike, onRepl
   );
 };
 
-const MembersFeed = ({ groupId }) => {
+const MembersFeed = ({ groupId, isAdmin }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all'); // 'all' or 'confirmed'
 
-  const members = [
+  const initialMembers = [
     { id: 1, name: "Rohan Sharma", role: "Admin", number: "+91 98765 43210", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80", buyStatus: "Ready to Buy" },
     { id: 2, name: "Neha Singh", role: "Member", number: "+91 87654 32109", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
     { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
     { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80", buyStatus: "Interested" },
     { id: 5, name: "Rahul Das", role: "Member", number: "+91 54321 09876", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80", buyStatus: "Exploring" },
-    { id: 6, name: "You", role: "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", buyStatus: localStorage.getItem(`buytogether_buy_status_${groupId}`) || "Exploring" }
+    { id: 6, name: "You", role: isAdmin ? "Admin" : "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", buyStatus: localStorage.getItem(`buytogether_buy_status_${groupId}`) || "Exploring" }
   ];
 
-  const confirmedMembers = [
+  const initialConfirmedMembers = [
     { id: 1, name: "Rohan Sharma", role: "Admin", number: "+91 98765 43210", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80", units: 2, amount: "₹1,39,998", badge: "Co-Owner" },
     { id: 2, name: "Neha Singh", role: "Member", number: "+91 87654 32109", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80", units: 1, amount: "₹69,999", badge: "Verified Buyer" },
     { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80", units: 3, amount: "₹2,09,997", badge: "Super Buyer" },
     { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80", units: 1, amount: "₹69,999", badge: "Verified Buyer" },
-    { id: 6, name: "You", role: "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", units: 2, amount: "₹1,39,998", badge: "Active Buyer" }
+    { id: 6, name: "You", role: isAdmin ? "Admin" : "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", units: 2, amount: "₹1,39,998", badge: "Active Buyer" }
   ];
+
+  const [members, setMembers] = useState(initialMembers);
+  const [confirmedMembers, setConfirmedMembers] = useState(initialConfirmedMembers);
+
+  const handleDeleteMember = (memberId) => {
+    if (filter === 'all') {
+      setMembers(prev => prev.filter(m => m.id !== memberId));
+    } else {
+      setConfirmedMembers(prev => prev.filter(m => m.id !== memberId));
+    }
+  };
 
   return (
     <div className="bg-surface pt-2 w-full max-w-[430px] mx-auto pb-4 min-h-[300px]">
@@ -555,8 +566,18 @@ const MembersFeed = ({ groupId }) => {
                   <span className="text-xs font-semibold text-faint mt-0.5">{member.units} Units • {member.amount}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-black text-primary bg-primary-soft px-2 py-1 rounded-lg">PAID DEPOSIT</span>
+              <div className="flex items-center gap-2">
+                {isAdmin && member.name !== "You" && (
+                  <button 
+                    onClick={() => handleDeleteMember(member.id)}
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors active:scale-95 ml-1"
+                    title="Remove Member"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -589,12 +610,25 @@ const MembersFeed = ({ groupId }) => {
                     </div>
                   </div>
                 </div>
-                <button 
-                  onClick={() => navigate(`/messages/${member.id}`)}
-                  className="p-2 text-muted hover:text-primary transition-colors active:scale-95"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => navigate(`/messages/${member.id}`)}
+                    className="p-2 text-muted hover:text-primary transition-colors active:scale-95"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  </button>
+                  {isAdmin && member.name !== "You" && (
+                    <button 
+                      onClick={() => handleDeleteMember(member.id)}
+                      className="p-2 text-red-400 hover:text-red-600 transition-colors active:scale-95"
+                      title="Remove Member"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })
@@ -790,6 +824,7 @@ const GroupChat = () => {
   const [messageInput, setMessageInput] = useState('');
   const [showPollModal, setShowPollModal] = useState(false);
   const [isJoined, setIsJoined] = useState(location.state?.isJoined ?? true);
+  const [isAdmin, setIsAdmin] = useState(location.state?.isAdmin ?? false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Premium Upgraded states
@@ -1219,7 +1254,7 @@ const GroupChat = () => {
             {/* Dynamic Content Based on Tab */}
             {activeTab === 'Chat' && <ChatFeed messages={displayMessages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
             {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
-            {activeTab === 'Members' && <MembersFeed groupId={resolvedGroupId} />}
+            {activeTab === 'Members' && <MembersFeed groupId={resolvedGroupId} isAdmin={isAdmin} />}
             {activeTab === 'Media' && <MediaFeed messages={displayMessages} />}
           </>
         )}

@@ -102,25 +102,58 @@ const GroupsList = () => {
     }
   ];
 
-  const allGroupsData = useMemo(() => {
-    return createdGroups.map(g => {
-      const spotsJoined = g.spotsJoined || 0;
-      const spotsTotal = g.spotsTotal || 0;
-
-      return {
-        id: g.id,
-        title: g.title,
-        status: g.status,
-        category: g.category || 'Group',
-        location: g.location || 'India',
-        slogan: g.slogan || g.description || 'Join to save big together!',
-        image: g.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-        spotsJoined,
-        spotsTotal,
-        daysLeft: g.daysLeft || '—'
-      };
-    });
-  }, [createdGroups]);
+  const allGroupsData = [
+    {
+      id: 'all-g1',
+      title: 'iPhone 15 Pro',
+      status: 'active',
+      category: 'Electronics',
+      location: 'Mumbai',
+      slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
+      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+      spotsJoined: 28,
+      spotsTotal: 50,
+      daysLeft: '2d left',
+      isAdmin: true
+    },
+    {
+      id: 'all-g2',
+      title: 'MacBook Air M3',
+      status: 'active',
+      category: 'Electronics',
+      location: 'Pune',
+      slogan: 'Planning to buy MacBook Air M3. Join to get maximum discount.',
+      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
+      spotsJoined: 16,
+      spotsTotal: 30,
+      daysLeft: '3d left'
+    },
+    {
+      id: 'all-g3',
+      title: 'LG 55" 4K TV',
+      status: 'closing',
+      category: 'Electronics',
+      location: 'Thane',
+      slogan: 'Group deal for LG 55 inch 4K TV. Hurry up! Limited time left.',
+      image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=150&q=80',
+      spotsJoined: 34,
+      spotsTotal: 60,
+      daysLeft: '12h left'
+    },
+    {
+      id: 'all-g4',
+      title: 'Samsung Washer',
+      status: 'active',
+      category: 'Home Appliances',
+      location: 'Navi Mumbai',
+      slogan: "Let's buy Samsung Washer in bulk and save more.",
+      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
+      spotsJoined: 18,
+      spotsTotal: 40,
+      daysLeft: '2d left',
+      isAdmin: true
+    }
+  ];
 
   const joinedGroupsData = useMemo(() => {
     return joinedGroups.map(g => {
@@ -154,6 +187,9 @@ const GroupsList = () => {
   // 3. SEARCH & FILTER LOGIC (My Groups)
   const filteredGroups = useMemo(() => {
     let result = allGroupsData.filter((group) => {
+      // Only show groups the user created in My Groups section
+      if (!group.isAdmin) return false;
+
       const matchesSearch =
         group.title.toLowerCase().includes(searchValue.toLowerCase()) ||
         group.category.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -268,7 +304,7 @@ const GroupsList = () => {
       {/* Premium Glassmorphic Bottom Filter Drawer */}
       {isFilterDrawerOpen && (
         <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/45 backdrop-blur-[4px] animate-fadeIn" onClick={() => setIsFilterDrawerOpen(false)}>
-          <div 
+          <div
             className="w-full max-w-[430px] bg-surface/90 backdrop-blur-md border-t border-line rounded-t-3xl shadow-2xl p-5 animate-slideUp flex flex-col gap-5 pb-32"
             onClick={(e) => e.stopPropagation()}
           >
@@ -278,7 +314,7 @@ const GroupsList = () => {
             {/* Title */}
             <div className="flex items-center justify-between">
               <h3 className="text-[15px] font-black text-ink">Filter Groups</h3>
-              <button 
+              <button
                 type="button"
                 onClick={() => {
                   setFilterCategory('all');
@@ -300,11 +336,10 @@ const GroupsList = () => {
                     key={cat}
                     type="button"
                     onClick={() => setFilterCategory(cat)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                      filterCategory === cat 
-                        ? 'bg-primary text-white shadow-sm' 
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${filterCategory === cat
+                        ? 'bg-primary text-white shadow-sm'
                         : 'bg-surface-alt text-faint border border-line hover:text-ink'
-                    }`}
+                      }`}
                   >
                     {cat === 'all' ? 'All' : cat}
                   </button>
@@ -321,11 +356,10 @@ const GroupsList = () => {
                     key={status}
                     type="button"
                     onClick={() => setFilterStatus(status)}
-                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                      filterStatus === status 
-                        ? 'bg-primary text-white shadow-sm' 
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${filterStatus === status
+                        ? 'bg-primary text-white shadow-sm'
                         : 'bg-surface-alt text-faint border border-line hover:text-ink'
-                    }`}
+                      }`}
                   >
                     {status === 'all' ? 'All' : status === 'active' ? 'Active' : 'Closing Soon'}
                   </button>
@@ -342,11 +376,10 @@ const GroupsList = () => {
                     key={sort}
                     type="button"
                     onClick={() => setFilterSort(sort)}
-                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                      filterSort === sort 
-                        ? 'bg-primary text-white shadow-sm' 
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${filterSort === sort
+                        ? 'bg-primary text-white shadow-sm'
                         : 'bg-surface-alt text-faint border border-line hover:text-ink'
-                    }`}
+                      }`}
                   >
                     {sort === 'default' ? 'Default' : sort === 'popularity' ? 'Popularity' : 'Deadline'}
                   </button>
