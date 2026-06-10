@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUserMainContext } from '../../context';
+import { getGroups } from '../../../../services/group.api';
+
 // My Groups sub-components
 import GroupsHeader from './components/GroupsHeader';
 import GroupTabs from './components/GroupTabs';
@@ -31,7 +33,36 @@ const GroupsList = () => {
   // Shared Location Selection Context
   const { selectedCity, setIsLocationPickerOpen } = useUserMainContext();
 
-  // 2. MOCK DATA MODELS (Exact match to mockups)
+  // API Data States
+  const [createdGroups, setCreatedGroups] = useState([]);
+  const [joinedGroups, setJoinedGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real data on tab change or mount
+  useEffect(() => {
+    let active = true;
+    const fetchUserGroups = async () => {
+      try {
+        setLoading(true);
+        const [createdRes, joinedRes] = await Promise.all([
+          getGroups({ created: 'true' }),
+          getGroups({ joined: 'true' })
+        ]);
+        if (active) {
+          setCreatedGroups(createdRes.data || []);
+          setJoinedGroups(joinedRes.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user groups:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchUserGroups();
+    return () => { active = false; };
+  }, []);
+
+  // 2. DYNAMIC DATA MODELS (Loaded from database)
   const trendingGroupsData = [
     {
       id: 'iphone-15',
@@ -71,150 +102,54 @@ const GroupsList = () => {
     }
   ];
 
-  const allGroupsData = [
-    {
-      id: 'all-g1',
-      title: 'iPhone 15 Pro',
-      status: 'active',
-      category: 'Electronics',
-      location: 'Mumbai',
-      slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
-      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 28,
-      spotsTotal: 50,
-      daysLeft: '2d left'
-    },
-    {
-      id: 'all-g2',
-      title: 'MacBook Air M3',
-      status: 'active',
-      category: 'Electronics',
-      location: 'Pune',
-      slogan: 'Planning to buy MacBook Air M3. Join to get maximum discount.',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 16,
-      spotsTotal: 30,
-      daysLeft: '3d left'
-    },
-    {
-      id: 'all-g3',
-      title: 'LG 55" 4K TV',
-      status: 'closing',
-      category: 'Electronics',
-      location: 'Thane',
-      slogan: 'Group deal for LG 55 inch 4K TV. Hurry up! Limited time left.',
-      image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 34,
-      spotsTotal: 60,
-      daysLeft: '12h left'
-    },
-    {
-      id: 'all-g4',
-      title: 'Samsung Washer',
-      status: 'active',
-      category: 'Home Appliances',
-      location: 'Navi Mumbai',
-      slogan: "Let's buy Samsung Washer in bulk and save more.",
-      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 18,
-      spotsTotal: 40,
-      daysLeft: '2d left'
-    }
-  ];
+  const allGroupsData = useMemo(() => {
+    return createdGroups.map(g => {
+      const spotsJoined = g.spotsJoined || 0;
+      const spotsTotal = g.spotsTotal || 0;
 
-  const joinedGroupsData = [
-    {
-      id: 'joined-g1',
-      title: 'iPhone 15 Pro',
-      status: 'active',
-      category: 'Electronics',
-      location: 'Mumbai',
-      slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
-      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 28,
-      spotsTotal: 50,
-      daysLeft: '2d left',
-      targetPrice: 'Under ₹72,000',
-      bestOffer: '₹69,999 (8% OFF)',
-      myInterest: '2 Units'
-    },
-    {
-      id: 'joined-g2',
-      title: 'MacBook Air M3',
-      status: 'active',
-      category: 'Electronics',
-      location: 'Pune',
-      slogan: 'Planning to buy MacBook Air M3. Join to get maximum discount.',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 16,
-      spotsTotal: 30,
-      daysLeft: '3d left',
-      targetPrice: 'Under ₹95,000',
-      bestOffer: '₹88,900 (7% OFF)',
-      myInterest: '1 Unit'
-    },
-    {
-      id: 'joined-g3',
-      title: 'LG 55" 4K TV',
-      status: 'closing',
-      closingLabel: 'Closing in 12h',
-      category: 'Electronics',
-      location: 'Thane',
-      slogan: 'Group deal for LG 55 inch 4K TV. Hurry up! Limited time left.',
-      image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 18, // Badge count shows 18
-      spotsTotal: 60,  // buyers pill shows 34/60
-      daysLeft: '12h left',
-      targetPrice: 'Under ₹40,000',
-      bestOffer: '₹37,500 (6% OFF)',
-      myInterest: '1 Unit'
-    },
-    {
-      id: 'joined-g4',
-      title: 'Samsung Washer',
-      status: 'active',
-      category: 'Home Appliances',
-      location: 'Navi Mumbai',
-      slogan: "Let's buy Samsung Washer in bulk and save more.",
-      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 12, // Badge count shows 12
-      spotsTotal: 40,  // buyers pill shows 18/40
-      daysLeft: '2d left',
-      targetPrice: 'Under ₹25,000',
-      bestOffer: '₹23,200 (7% OFF)',
-      myInterest: '2 Units'
-    },
-    {
-      id: 'joined-g5',
-      title: 'AirPods Pro (2nd Gen)',
-      status: 'active',
-      category: 'Accessories',
-      location: 'Mumbai',
-      slogan: 'Join the group to get AirPods Pro at the best price.',
-      image: 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 12, // Badge count shows 12
-      spotsTotal: 25,  // buyers pill shows 12/25
-      daysLeft: '1d left',
-      targetPrice: 'Under ₹20,000',
-      bestOffer: '₹18,499 (7% OFF)',
-      myInterest: '1 Unit'
-    },
-    {
-      id: 'joined-g6',
-      title: 'Sony WH-1000XM5',
-      status: 'completed',
-      category: 'Accessories',
-      location: 'Delhi',
-      slogan: 'Group successfully completed! Lock price secured.',
-      image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 50,
-      spotsTotal: 50,
-      daysLeft: '0d left',
-      targetPrice: 'Under ₹30,000',
-      bestOffer: '₹26,999 (10% OFF)',
-      myInterest: '1 Unit'
-    }
-  ];
+      return {
+        id: g.id,
+        title: g.title,
+        status: g.status,
+        category: g.category || 'Group',
+        location: g.location || 'India',
+        slogan: g.slogan || g.description || 'Join to save big together!',
+        image: g.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+        spotsJoined,
+        spotsTotal,
+        daysLeft: g.daysLeft || '—'
+      };
+    });
+  }, [createdGroups]);
+
+  const joinedGroupsData = useMemo(() => {
+    return joinedGroups.map(g => {
+      const spotsJoined = g.spotsJoined || 0;
+      const spotsTotal = g.spotsTotal || 0;
+
+      // Mocked detailed pricing details for joined groups, falling back gracefully
+      const targetPrice = `Under ₹${(spotsTotal * 1000).toLocaleString()}`;
+      const bestOffer = `₹${Math.round(spotsTotal * 900).toLocaleString()} (10% OFF)`;
+      const myInterest = '1 Unit';
+
+      return {
+        id: g.id,
+        title: g.title,
+        status: g.status,
+        category: g.category || 'Group',
+        location: g.location || 'India',
+        slogan: g.slogan || g.description || 'Join to save big together!',
+        image: g.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+        spotsJoined,
+        spotsTotal,
+        daysLeft: g.daysLeft || '—',
+        targetPrice,
+        bestOffer,
+        myInterest,
+        closingLabel: g.status === 'closing' ? 'Closing Soon' : null
+      };
+    });
+  }, [joinedGroups]);
 
   // 3. SEARCH & FILTER LOGIC (My Groups)
   const filteredGroups = useMemo(() => {
@@ -256,7 +191,7 @@ const GroupsList = () => {
     }
 
     return result;
-  }, [searchValue, selectedFilter, selectedCity, filterCategory, filterStatus, filterSort]);
+  }, [allGroupsData, searchValue, selectedFilter, selectedCity, filterCategory, filterStatus, filterSort]);
 
   // 4. SUB-TAB FILTER LOGIC (Joined Groups)
   const filteredJoinedGroups = useMemo(() => {
@@ -266,7 +201,7 @@ const GroupsList = () => {
       if (joinedSubTab === 'completed') return group.status === 'completed';
       return true;
     });
-  }, [joinedSubTab]);
+  }, [joinedGroupsData, joinedSubTab]);
 
   // 5. RENDER FLOW (Unified Page Layout)
   return (
@@ -298,19 +233,35 @@ const GroupsList = () => {
             onClose={() => setIsBannerVisible(false)}
           />
 
-          {/* All Groups List */}
-          <AllGroupsList groups={filteredGroups} />
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-2">
+              <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+              <span className="text-[10px] font-bold text-muted">Loading groups...</span>
+            </div>
+          ) : (
+            <>
+              {/* All Groups List */}
+              <AllGroupsList groups={filteredGroups} />
 
-          {/* Trending Horizontal list */}
-          <TrendingGroups groups={trendingGroupsData} />
+              {/* Trending Horizontal list */}
+              <TrendingGroups groups={trendingGroupsData} />
+            </>
+          )}
         </>
       ) : (
         <div className="flex flex-col gap-4 mt-1">
           {/* Segmented Pills count filters */}
           <JoinedTabs selectedTab={joinedSubTab} onChange={setJoinedSubTab} />
 
-          {/* Detailed joined groups list cards */}
-          <JoinedGroupsList groups={filteredJoinedGroups} />
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-2">
+              <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+              <span className="text-[10px] font-bold text-muted">Loading groups...</span>
+            </div>
+          ) : (
+            /* Detailed joined groups list cards */
+            <JoinedGroupsList groups={filteredJoinedGroups} />
+          )}
         </div>
       )}
 

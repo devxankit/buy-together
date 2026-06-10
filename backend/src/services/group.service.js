@@ -17,6 +17,9 @@ const queryGroups = async (userId, filter = {}) => {
   if (filter.joined === 'true') {
     query.members = userId;
   }
+  if (filter.created === 'true') {
+    query.admin = userId;
+  }
   if (filter.category && filter.category !== 'all') {
     query.category = filter.category;
   }
