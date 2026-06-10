@@ -7,6 +7,7 @@ const chatValidation = require('../validations/chat.validation');
 const router = express.Router();
 
 router.post('/messages', auth, validate(chatValidation.sendMessage), chatController.sendMessage);
+router.post('/messages/:groupId/:messageId/vote', auth, chatController.voteMessage);
 router.get('/messages/:groupId', auth, validate(chatValidation.getMessages), chatController.getMessages);
 
 module.exports = router;

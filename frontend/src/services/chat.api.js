@@ -8,3 +8,6 @@ export const getMessages = (groupId, limit = 100) =>
 // Send a message. Body: { groupId, content, replyTo? }
 // The backend persists to RTDB and broadcasts it over Socket.IO.
 export const sendMessage = (data) => api.post('/chat/messages', data);
+
+export const votePollMessage = (groupId, messageId, optionIndex) =>
+  api.post(`/chat/messages/${groupId}/${messageId}/vote`, { optionIndex });

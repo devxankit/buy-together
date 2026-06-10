@@ -27,7 +27,9 @@ const queryGroups = async (userId, filter = {}) => {
 };
 
 const getGroupById = async (id) => {
-  return Group.findById(id).populate('members', 'name email');
+  return Group.findById(id)
+    .populate('members', 'name phone email avatar status')
+    .populate('admin', 'name phone');
 };
 
 // ── Admin console ───────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 const httpStatus = require('http-status').status;
 const catchAsync = require('../utils/catchAsync');
 const groupService = require('../services/group.service');
+const ApiError = require('../utils/ApiError');
 
 const createGroup = catchAsync(async (req, res) => {
   const group = await groupService.createGroup({ ...req.body, admin: req.user.id });
@@ -27,10 +28,27 @@ const leaveGroup = catchAsync(async (req, res) => {
   res.send(group);
 });
 
+const removeMember = catchAsync(async (req, res) => {
+  const { groupId, userId } = req.params;
+  const group = await groupService.getGroupById(groupId);
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+
+  const adminId = group.admin?._id || group.admin?.id || group.admin;
+  if (String(adminId) !== String(req.user.id)) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only the group admin can remove members');
+  }
+
+  const updatedGroup = await groupService.removeMember(groupId, userId);
+  res.send(updatedGroup);
+});
+
 module.exports = {
   createGroup,
   getGroups,
   getGroup,
   joinGroup,
   leaveGroup,
+  removeMember,
 };

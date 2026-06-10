@@ -3,6 +3,9 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
 import { showToast } from '../../../../utils/toast';
+import { getGroup, joinGroup, leaveGroup, kickGroupMember } from '../../../../services/group.api';
+import { votePollMessage } from '../../../../services/chat.api';
+import api from '../../../../services/api';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
@@ -493,35 +496,13 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike, onRepl
   );
 };
 
-const MembersFeed = ({ groupId, isAdmin }) => {
+const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], onRemoveMember }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all'); // 'all' or 'confirmed'
 
-  const initialMembers = [
-    { id: 1, name: "Rohan Sharma", role: "Admin", number: "+91 98765 43210", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80", buyStatus: "Ready to Buy" },
-    { id: 2, name: "Neha Singh", role: "Member", number: "+91 87654 32109", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
-    { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80", buyStatus: "Serious" },
-    { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80", buyStatus: "Interested" },
-    { id: 5, name: "Rahul Das", role: "Member", number: "+91 54321 09876", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80", buyStatus: "Exploring" },
-    { id: 6, name: "You", role: isAdmin ? "Admin" : "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", buyStatus: localStorage.getItem(`buytogether_buy_status_${groupId}`) || "Exploring" }
-  ];
-
-  const initialConfirmedMembers = [
-    { id: 1, name: "Rohan Sharma", role: "Admin", number: "+91 98765 43210", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80", units: 2, amount: "₹1,39,998", badge: "Co-Owner" },
-    { id: 2, name: "Neha Singh", role: "Member", number: "+91 87654 32109", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80", units: 1, amount: "₹69,999", badge: "Verified Buyer" },
-    { id: 3, name: "Amit Verma", role: "Member", number: "+91 76543 21098", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80", units: 3, amount: "₹2,09,997", badge: "Super Buyer" },
-    { id: 4, name: "Priya Mehta", role: "Member", number: "+91 65432 10987", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80", units: 1, amount: "₹69,999", badge: "Verified Buyer" },
-    { id: 6, name: "You", role: isAdmin ? "Admin" : "Member", number: "+91 99999 99999", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80", units: 2, amount: "₹1,39,998", badge: "Active Buyer" }
-  ];
-
-  const [members, setMembers] = useState(initialMembers);
-  const [confirmedMembers, setConfirmedMembers] = useState(initialConfirmedMembers);
-
   const handleDeleteMember = (memberId) => {
-    if (filter === 'all') {
-      setMembers(prev => prev.filter(m => m.id !== memberId));
-    } else {
-      setConfirmedMembers(prev => prev.filter(m => m.id !== memberId));
+    if (onRemoveMember) {
+      onRemoveMember(memberId);
     }
   };
 
@@ -612,7 +593,7 @@ const MembersFeed = ({ groupId, isAdmin }) => {
                 </div>
                 <div className="flex items-center gap-1">
                   <button 
-                    onClick={() => navigate(`/messages/${member.id}`)}
+                    onClick={() => navigate(`/messages/${member.id}`, { state: { user: { id: member.id, name: member.name, avatar: member.avatar } } })}
                     className="p-2 text-muted hover:text-primary transition-colors active:scale-95"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
@@ -640,29 +621,25 @@ const MembersFeed = ({ groupId, isAdmin }) => {
 
 const MediaFeed = ({ messages }) => {
   const chatMedia = messages.filter(m => m.image).map(m => m.image);
-  
-  // Adding dummy media to simulate a populated gallery
-  const allMedia = [
-    ...chatMedia,
-    "https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1512054502232-10a0a035d672?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=300&q=80"
-  ];
 
   return (
     <div className="bg-surface pt-4 w-full max-w-[430px] mx-auto pb-4 min-h-[300px]">
       <div className="px-4 mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-ink mb-1">Shared Media ({allMedia.length})</h3>
+        <h3 className="text-sm font-bold text-ink mb-1">Shared Media ({chatMedia.length})</h3>
       </div>
-      <div className="grid grid-cols-3 gap-1 px-1">
-        {allMedia.map((img, idx) => (
-          <div key={idx} className="aspect-square bg-surface-alt rounded-sm overflow-hidden cursor-pointer active:scale-95 transition-all group relative">
-            <img src={img} alt={`Media ${idx}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-          </div>
-        ))}
-      </div>
+      {chatMedia.length > 0 ? (
+        <div className="grid grid-cols-3 gap-1 px-1">
+          {chatMedia.map((img, idx) => (
+            <div key={idx} className="aspect-square bg-surface-alt rounded-sm overflow-hidden cursor-pointer active:scale-95 transition-all group relative">
+              <img src={img} alt={`Media ${idx}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center mt-10">
+          <p className="text-sm text-faint font-medium">No shared media yet.</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -800,22 +777,62 @@ const GroupChat = () => {
   const { groupId } = useParams(); 
   const location = useLocation();
   
-  // Dynamic group data from navigation state, with fallback
-  const group = location.state?.group || {
-    id: groupId || 'g-fallback',
-    title: 'iPhone 15 Pro',
-    status: 'active',
-    category: 'Electronics',
-    location: 'Mumbai',
-    slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
-    image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-    spotsJoined: 28,
-    spotsTotal: 50,
-    daysLeft: '2d left',
-    targetPrice: 'Under ₹72,000',
-    bestOffer: '₹69,999 (8% OFF)',
-    myInterest: '2 Units'
-  };
+  const [groupState, setGroupState] = useState(() => location.state?.group || null);
+  const [loading, setLoading] = useState(!groupState);
+
+  useEffect(() => {
+    let active = true;
+    const fetchDetails = async () => {
+      try {
+        if (!groupId) return;
+        const res = await getGroup(groupId);
+        if (active && res?.data) {
+          setGroupState(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch group details:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchDetails();
+    return () => { active = false; };
+  }, [groupId]);
+
+  const group = useMemo(() => {
+    if (!groupState) {
+      return {
+        id: groupId || 'g-fallback',
+        title: 'Loading...',
+        status: 'active',
+        category: 'General',
+        location: 'Local',
+        slogan: 'Loading group details...',
+        image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+        spotsJoined: 0,
+        spotsTotal: 10,
+        daysLeft: '—',
+        targetPrice: 'TBD',
+        bestOffer: 'TBD',
+        myInterest: '1 Unit'
+      };
+    }
+    const spotsJoined = groupState.spotsJoined ?? (Array.isArray(groupState.members) ? groupState.members.length : 0);
+    const spotsTotal = groupState.spotsTotal ?? 10;
+    const targetPrice = groupState.targetPrice || `Under ₹${(spotsTotal * 1000).toLocaleString()}`;
+    const bestOffer = groupState.bestOffer || `₹${Math.round(spotsTotal * 900).toLocaleString()} (10% OFF)`;
+    const myInterest = groupState.myInterest || '1 Unit';
+    const daysLeft = groupState.daysLeft || '—';
+    return {
+      ...groupState,
+      spotsJoined,
+      spotsTotal,
+      targetPrice,
+      bestOffer,
+      myInterest,
+      daysLeft
+    };
+  }, [groupState, groupId]);
 
   const [activeTab, setActiveTab] = useState('Chat');
   // `messages` holds client-only items (polls, in-session file shares). Real
@@ -823,8 +840,14 @@ const GroupChat = () => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showPollModal, setShowPollModal] = useState(false);
-  const [isJoined, setIsJoined] = useState(location.state?.isJoined ?? true);
-  const [isAdmin, setIsAdmin] = useState(location.state?.isAdmin ?? false);
+  const [isJoined, setIsJoined] = useState(() => {
+    if (location.state?.isJoined !== undefined) return location.state.isJoined;
+    return true; // default
+  });
+  const [isAdmin, setIsAdmin] = useState(() => {
+    if (location.state?.isAdmin !== undefined) return location.state.isAdmin;
+    return false; // default
+  });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Premium Upgraded states
@@ -878,15 +901,50 @@ const GroupChat = () => {
   // Merge live RTDB text messages with client-only items (polls, files),
   // mapping each live message into the shape <ChatMessage /> expects.
   const displayMessages = useMemo(() => {
-    const mapped = (liveMessages || []).map((m) => ({
-      id: m.id,
-      _ts: m.createdAt,
-      name: currentUserId && String(m.senderId) === String(currentUserId) ? 'You' : m.senderName,
-      avatar: DEFAULT_AVATAR,
-      time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      content: m.content,
-      replyData: m.replyTo ? { name: m.replyTo.name, content: m.replyTo.content } : undefined,
-    }));
+    const mapped = (liveMessages || []).map((m) => {
+      const isMe = currentUserId && String(m.senderId) === String(currentUserId);
+      
+      let quoteData = m.quoteData;
+      if (m.type === 'poll' && quoteData && quoteData.isPoll) {
+        const votesMap = quoteData.votesMap || {};
+        const totalVotes = Object.keys(votesMap).length;
+        const options = (quoteData.options || []).map((opt, idx) => {
+          const votes = Object.values(votesMap).filter(v => v === idx).length;
+          const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+          const selected = currentUserId && votesMap[currentUserId] === idx;
+          const color = selected ? "bg-primary" : "bg-primary opacity-50";
+          return {
+            ...opt,
+            votes,
+            percentage,
+            selected,
+            color
+          };
+        });
+        quoteData = {
+          ...quoteData,
+          options,
+          totalVotes
+        };
+      }
+
+      return {
+        id: m.id,
+        _ts: m.createdAt,
+        name: isMe ? 'You' : m.senderName,
+        avatar: isMe ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" : DEFAULT_AVATAR,
+        time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: m.content,
+        replyData: m.replyTo ? { name: m.replyTo.name, content: m.replyTo.content } : undefined,
+        image: m.image,
+        documentData: m.documentData,
+        locationData: m.locationData,
+        voiceData: m.voiceData,
+        type: m.type,
+        quoteData,
+        reactions: m.reactions,
+      };
+    });
     const locals = (messages || []).map((m) => ({ ...m, _ts: m._ts ?? m.id }));
     return [...mapped, ...locals].sort((a, b) => (a._ts || 0) - (b._ts || 0));
   }, [liveMessages, messages, currentUserId]);
@@ -901,6 +959,155 @@ const GroupChat = () => {
   const [isInterestConfirmed, setIsInterestConfirmed] = useState(() => {
     return localStorage.getItem(`buytogether_confirmed_interest_${resolvedGroupId}`) === 'true' || location.state?.interestConfirmed === true;
   });
+
+  // Sync isJoined and isAdmin with loaded groupState
+  useEffect(() => {
+    if (groupState && currentUserId) {
+      const memberIds = (groupState.members || []).map(m => String(m._id || m.id || m));
+      const adminId = groupState.admin?._id || groupState.admin?.id || groupState.admin;
+      const userIsAdmin = adminId && String(adminId) === String(currentUserId);
+      
+      const userJoined = memberIds.includes(String(currentUserId)) || !!userIsAdmin;
+      
+      setIsJoined(userJoined);
+      setIsAdmin(!!userIsAdmin);
+    }
+  }, [groupState, currentUserId]);
+
+  const handleJoinGroup = async () => {
+    try {
+      if (!resolvedGroupId) return;
+      const res = await joinGroup(resolvedGroupId);
+      if (res?.data) {
+        setGroupState(res.data);
+        showToast('Successfully joined the group!', '🎉');
+      }
+    } catch (err) {
+      console.error('Failed to join group:', err);
+      showToast(err.response?.data?.message || 'Failed to join group', '❌');
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    try {
+      if (!resolvedGroupId) return;
+      const res = await leaveGroup(resolvedGroupId);
+      if (res?.data) {
+        setGroupState(res.data);
+        showToast('Successfully left the group.', '🚪');
+        navigate('/groups');
+      }
+    } catch (err) {
+      console.error('Failed to leave group:', err);
+      showToast(err.response?.data?.message || 'Failed to leave group', '❌');
+    }
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (currentUserId && String(memberId) === String(currentUserId)) {
+      await handleLeaveGroup();
+    } else {
+      try {
+        if (!resolvedGroupId) return;
+        await kickGroupMember(resolvedGroupId, memberId);
+        setGroupState(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            members: (prev.members || []).filter(m => String(m._id || m.id || m) !== String(memberId))
+          };
+        });
+        showToast('Member removed from group', '👋');
+      } catch (err) {
+        console.error('Failed to remove member:', err);
+        showToast(err.response?.data?.message || 'Failed to remove member', '❌');
+      }
+    }
+  };
+
+  const realMembers = useMemo(() => {
+    if (!groupState) return [];
+    
+    const adminId = groupState.admin?._id || groupState.admin?.id || groupState.admin;
+    const allUsersMap = new Map();
+    
+    if (groupState.admin && typeof groupState.admin === 'object') {
+      const id = String(groupState.admin._id || groupState.admin.id);
+      allUsersMap.set(id, {
+        ...groupState.admin,
+        isAdmin: true
+      });
+    }
+    
+    (groupState.members || []).forEach(m => {
+      if (m && typeof m === 'object') {
+        const id = String(m._id || m.id);
+        allUsersMap.set(id, {
+          ...m,
+          isAdmin: id === String(adminId)
+        });
+      }
+    });
+
+    return Array.from(allUsersMap.values()).map((user) => {
+      const isCurrentUser = currentUserId && String(user._id || user.id) === String(currentUserId);
+      const isUserAdmin = user.isAdmin;
+      
+      let buyStatus = 'Interested';
+      if (isCurrentUser) {
+        buyStatus = localStorage.getItem(`buytogether_buy_status_${resolvedGroupId}`) || 'Exploring';
+      } else if (isUserAdmin) {
+        buyStatus = 'Ready to Buy';
+      } else {
+        const hash = (user.name || '').charCodeAt(0) % 3;
+        buyStatus = hash === 0 ? 'Serious' : hash === 1 ? 'Interested' : 'Exploring';
+      }
+
+      return {
+        id: user._id || user.id,
+        name: isCurrentUser ? 'You' : user.name,
+        role: isUserAdmin ? 'Admin' : 'Member',
+        number: user.phone ? `+91 ${user.phone}` : '+91 99999 99999',
+        avatar: user.avatar || DEFAULT_AVATAR,
+        buyStatus
+      };
+    });
+  }, [groupState, currentUserId, resolvedGroupId]);
+
+  const realConfirmedMembers = useMemo(() => {
+    return realMembers
+      .filter(m => m.buyStatus !== 'Exploring')
+      .map((m) => {
+        const isCurrentUser = m.name === 'You';
+        const isAdminMember = m.role === 'Admin';
+        
+        let units = 1;
+        if (isCurrentUser) {
+          units = myInterestUnits;
+        } else {
+          units = (m.name.length % 2) + 1; 
+        }
+
+        const amount = `₹${(units * 69999).toLocaleString()}`;
+        
+        let badge = 'Verified Buyer';
+        if (isAdminMember) {
+          badge = 'Co-Owner';
+        } else if (isCurrentUser) {
+          badge = 'Active Buyer';
+        } else if (units > 1) {
+          badge = 'Super Buyer';
+        }
+
+        return {
+          ...m,
+          units,
+          amount,
+          badge
+        };
+      });
+  }, [realMembers, myInterestUnits]);
+
   const [selectedMessageForMenu, setSelectedMessageForMenu] = useState(null);
   const [replyingToMessage, setReplyingToMessage] = useState(null);
 
@@ -915,91 +1122,115 @@ const GroupChat = () => {
     }, 100);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const newMsg = {
-        id: Date.now(),
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-        name: "You",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        content: fileTypeToUpload === 'image' ? `Shared an image: ${file.name}` : `Shared a document: ${file.name}`
-      };
-
-      if (fileTypeToUpload === 'image') {
-        newMsg.image = event.target.result;
-      } else {
-        newMsg.documentData = {
-          name: file.name,
-          size: file.size > 1024 * 1024 
-            ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
-            : `${Math.round(file.size / 1024)} KB`
-        };
-      }
-
-      setMessages(prev => [...prev, newMsg]);
-    };
-    reader.readAsDataURL(file);
     setShowAttachmentDrawer(false);
+
+    if (fileTypeToUpload === 'image') {
+      try {
+        showToast('Uploading image...', '⏳');
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res = await api.post('/uploads/image?folder=misc', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (res.data?.url) {
+          await sendLiveMessage({
+            type: 'image',
+            image: res.data.url,
+            content: `Shared an image: ${file.name}`
+          });
+          showToast('Image uploaded and shared!', '📸');
+        } else {
+          showToast('Failed to upload image', '❌');
+        }
+      } catch (err) {
+        console.error('Image upload failed:', err);
+        showToast(err.response?.data?.message || 'Image upload failed', '❌');
+      }
+    } else {
+      try {
+        const sizeStr = file.size > 1024 * 1024 
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+          : `${Math.round(file.size / 1024)} KB`;
+
+        await sendLiveMessage({
+          type: 'document',
+          documentData: {
+            name: file.name,
+            size: sizeStr
+          },
+          content: `Shared a document: ${file.name}`
+        });
+        showToast('Document shared!', '📄');
+      } catch (err) {
+        console.error('Document sharing failed:', err);
+        showToast('Failed to share document', '❌');
+      }
+    }
   };
 
   const handleShareLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          const newMsg = {
-            id: Date.now(),
-            avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-            name: "You",
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            content: "Shared current location 📍",
-            locationData: {
-              lat: lat.toFixed(4),
-              lng: lng.toFixed(4),
-              city: group.location || "Mumbai",
-              mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-            }
-          };
-          setMessages(prev => [...prev, newMsg]);
+          try {
+            await sendLiveMessage({
+              type: 'location',
+              locationData: {
+                lat: lat.toFixed(4),
+                lng: lng.toFixed(4),
+                city: group.location || "Mumbai",
+                mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+              },
+              content: "Shared current location 📍"
+            });
+          } catch (err) {
+            console.error('Failed to share location:', err);
+          }
         },
-        () => {
-          const newMsg = {
-            id: Date.now(),
-            avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-            name: "You",
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            content: "Shared location 📍",
-            locationData: {
-              lat: "19.0760",
-              lng: "72.8777",
-              city: `${group.location || "Mumbai"}, India`,
-              mapUrl: "https://www.google.com/maps"
-            }
-          };
-          setMessages(prev => [...prev, newMsg]);
+        async () => {
+          try {
+            await sendLiveMessage({
+              type: 'location',
+              locationData: {
+                lat: "19.0760",
+                lng: "72.8777",
+                city: `${group.location || "Mumbai"}, India`,
+                mapUrl: "https://www.google.com/maps"
+              },
+              content: "Shared location 📍"
+            });
+          } catch (err) {
+            console.error('Failed to share location:', err);
+          }
         }
       );
     }
     setShowAttachmentDrawer(false);
   };
 
-  const handleShareVoiceNote = () => {
-    const newMsg = {
-      id: Date.now(),
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-      name: "You",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      content: "Shared a voice message 🎤",
-      voiceData: {
-        duration: "0:12"
-      }
-    };
-    setMessages(prev => [...prev, newMsg]);
+  const handleShareVoiceNote = async () => {
+    try {
+      await sendLiveMessage({
+        type: 'voice',
+        voiceData: {
+          duration: "0:12"
+        },
+        content: "Shared a voice message 🎤"
+      });
+    } catch (err) {
+      console.error('Failed to share voice note:', err);
+    }
     setShowAttachmentDrawer(false);
   };
 
@@ -1024,69 +1255,39 @@ const GroupChat = () => {
     if (e.key === 'Enter') handleSendMessage();
   };
 
-  const handleCreatePollSubmit = (question, optionsArr) => {
-    const newPollMsg = {
-      id: Date.now(),
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-      name: "You",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      content: "I've created a new poll. Please cast your vote!",
-      quoteData: {
-        isPoll: true,
-        question: question,
-        options: optionsArr.map((opt) => ({
-          label: opt,
-          votes: 0,
-          percentage: 0,
-          color: "bg-primary opacity-50",
-          selected: false
-        })),
-        totalVotes: 0
-      }
-    };
-    setMessages(prev => [...prev, newPollMsg]);
-    setShowPollModal(false);
+  const handleCreatePollSubmit = async (question, optionsArr) => {
+    try {
+      const payload = {
+        type: 'poll',
+        content: `New Poll: ${question}`,
+        quoteData: {
+          isPoll: true,
+          question: question,
+          options: optionsArr.map((opt) => ({
+            label: opt,
+            votes: 0,
+            percentage: 0,
+            color: "bg-primary opacity-50",
+            selected: false
+          })),
+          totalVotes: 0,
+          votesMap: {}
+        }
+      };
+      await sendLiveMessage(payload);
+      setShowPollModal(false);
+    } catch (err) {
+      console.error('Failed to create poll:', err);
+    }
   };
 
-  const handleVote = (messageId, optionIndex) => {
-    setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId && msg.quoteData?.isPoll) {
-        let prevSelectedIndex = msg.quoteData.options.findIndex(o => o.selected);
-        let newTotalVotes = msg.quoteData.totalVotes;
-        let newOptions = msg.quoteData.options.map(opt => ({ ...opt }));
-
-        if (prevSelectedIndex === optionIndex) {
-          newOptions[optionIndex].votes = Math.max(0, (newOptions[optionIndex].votes || 0) - 1);
-          newOptions[optionIndex].selected = false;
-          newTotalVotes = Math.max(0, newTotalVotes - 1);
-        } else {
-          if (prevSelectedIndex !== -1) {
-             newOptions[prevSelectedIndex].votes = Math.max(0, (newOptions[prevSelectedIndex].votes || 0) - 1);
-             newOptions[prevSelectedIndex].selected = false;
-          } else {
-             newTotalVotes += 1;
-          }
-          newOptions[optionIndex].votes = (newOptions[optionIndex].votes || 0) + 1;
-          newOptions[optionIndex].selected = true;
-        }
-
-        newOptions = newOptions.map(opt => ({
-          ...opt,
-          percentage: newTotalVotes > 0 ? Math.round(((opt.votes || 0) / newTotalVotes) * 100) : 0,
-          color: opt.selected ? "bg-primary" : "bg-primary opacity-50"
-        }));
-
-        return {
-          ...msg,
-          quoteData: {
-            ...msg.quoteData,
-            options: newOptions,
-            totalVotes: newTotalVotes
-          }
-        };
-      }
-      return msg;
-    }));
+  const handleVote = async (messageId, optionIndex) => {
+    try {
+      if (!resolvedGroupId || !messageId) return;
+      await votePollMessage(resolvedGroupId, messageId, optionIndex);
+    } catch (err) {
+      console.error('Failed to register vote:', err);
+    }
   };
 
   const handleMessageReaction = (messageId, emoji) => {
@@ -1170,6 +1371,31 @@ const GroupChat = () => {
     setSelectedMessageForMenu(null);
   };
 
+  if (loading && !groupState) {
+    return (
+      <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0D9488]"></div>
+        <p className="text-xs font-semibold text-faint mt-2">Loading group details...</p>
+      </div>
+    );
+  }
+
+  if (!groupState) {
+    return (
+      <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] justify-center items-center px-6">
+        <div className="text-center">
+          <p className="text-sm text-faint font-semibold mb-4">Group not found or has been deleted.</p>
+          <button 
+            onClick={() => navigate('/groups')} 
+            className="px-4 py-2 bg-[#0D9488] text-white text-xs font-black rounded-xl active:scale-95 transition-all shadow-md shadow-[#0D9488]/20"
+          >
+            Back to Groups
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] relative overflow-hidden">
       <TopBar 
@@ -1212,7 +1438,7 @@ const GroupChat = () => {
           </button>
           <div className="border-t border-line my-1"></div>
           <button 
-            onClick={() => { setIsMenuOpen(false); navigate('/groups'); }}
+            onClick={handleLeaveGroup}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1222,7 +1448,7 @@ const GroupChat = () => {
           </button>
         </div>
       )}
-
+ 
       {/* Main Scrollable Area */}
       <div className={`flex-1 overflow-y-auto ${isInterestConfirmed ? 'pb-24' : 'pb-44'} no-scrollbar relative`}>
         <JoinedInfo group={group} />
@@ -1238,7 +1464,7 @@ const GroupChat = () => {
             <h2 className="text-lg font-black text-ink mb-2 text-center">Join Group to View Chat</h2>
             <p className="text-xs font-semibold text-[#64748B] text-center mb-6 leading-relaxed">Join {group.spotsJoined ?? group.joined ?? 0} others and get access to exclusive group chat, polls, and discussions.</p>
             <button
-              onClick={() => setIsJoined(true)}
+              onClick={handleJoinGroup}
               className="w-full bg-gradient-to-r from-[#0B7A70] to-[#0D9488] hover:from-[#09635A] hover:to-[#0B7A70] text-white font-black py-3.5 rounded-xl shadow-md shadow-[#0D9488]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -1254,7 +1480,15 @@ const GroupChat = () => {
             {/* Dynamic Content Based on Tab */}
             {activeTab === 'Chat' && <ChatFeed messages={displayMessages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
             {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
-            {activeTab === 'Members' && <MembersFeed groupId={resolvedGroupId} isAdmin={isAdmin} />}
+            {activeTab === 'Members' && (
+              <MembersFeed 
+                groupId={resolvedGroupId} 
+                isAdmin={isAdmin} 
+                members={realMembers} 
+                confirmedMembers={realConfirmedMembers} 
+                onRemoveMember={handleRemoveMember} 
+              />
+            )}
             {activeTab === 'Media' && <MediaFeed messages={displayMessages} />}
           </>
         )}
@@ -1544,7 +1778,7 @@ const GroupChat = () => {
       ) : (
         <div className="absolute bottom-0 w-full bg-surface border-t border-line p-4 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] z-30">
           <button
-            onClick={() => setIsJoined(true)}
+            onClick={handleJoinGroup}
             className="w-full bg-primary hover:bg-[#0B7A70] text-white font-black py-4 rounded-2xl shadow-md shadow-[#0D9488]/20 active:scale-[0.98] transition-all text-center"
           >
             Join Group To Interact

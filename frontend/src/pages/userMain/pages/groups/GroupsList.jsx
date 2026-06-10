@@ -102,58 +102,26 @@ const GroupsList = () => {
     }
   ];
 
-  const allGroupsData = [
-    {
-      id: 'all-g1',
-      title: 'iPhone 15 Pro',
-      status: 'active',
-      category: 'Electronics',
-      location: 'Mumbai',
-      slogan: "Let's buy iPhone 15 Pro together and get the best possible deal from verified sellers.",
-      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 28,
-      spotsTotal: 50,
-      daysLeft: '2d left',
-      isAdmin: true
-    },
-    {
-      id: 'all-g2',
-      title: 'MacBook Air M3',
-      status: 'active',
-      category: 'Electronics',
-      location: 'Pune',
-      slogan: 'Planning to buy MacBook Air M3. Join to get maximum discount.',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 16,
-      spotsTotal: 30,
-      daysLeft: '3d left'
-    },
-    {
-      id: 'all-g3',
-      title: 'LG 55" 4K TV',
-      status: 'closing',
-      category: 'Electronics',
-      location: 'Thane',
-      slogan: 'Group deal for LG 55 inch 4K TV. Hurry up! Limited time left.',
-      image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 34,
-      spotsTotal: 60,
-      daysLeft: '12h left'
-    },
-    {
-      id: 'all-g4',
-      title: 'Samsung Washer',
-      status: 'active',
-      category: 'Home Appliances',
-      location: 'Navi Mumbai',
-      slogan: "Let's buy Samsung Washer in bulk and save more.",
-      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 18,
-      spotsTotal: 40,
-      daysLeft: '2d left',
-      isAdmin: true
-    }
-  ];
+  const allGroupsData = useMemo(() => {
+    return createdGroups.map(g => {
+      const spotsJoined = g.spotsJoined || 0;
+      const spotsTotal = g.spotsTotal || 0;
+
+      return {
+        id: g.id,
+        title: g.title,
+        status: g.status,
+        category: g.category || 'Group',
+        location: g.location || 'India',
+        slogan: g.slogan || g.description || 'Join to save big together!',
+        image: g.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+        spotsJoined,
+        spotsTotal,
+        daysLeft: g.daysLeft || '—',
+        isAdmin: true
+      };
+    });
+  }, [createdGroups]);
 
   const joinedGroupsData = useMemo(() => {
     return joinedGroups.map(g => {

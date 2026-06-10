@@ -75,11 +75,23 @@ export const useChat = (groupId, enabled = true) => {
   }, [groupId, enabled]);
 
   const sendMessage = useCallback(
-    async (content, replyTo = null) => {
-      const text = (content || '').trim();
-      if (!text || !groupId) return null;
+    async (contentOrPayload, replyTo = null) => {
+      if (!groupId) return null;
+
+      let payload = {};
+      if (typeof contentOrPayload === 'string') {
+        payload = { content: contentOrPayload };
+        if (replyTo) {
+          payload.replyTo = replyTo;
+        }
+      } else {
+        payload = { ...contentOrPayload };
+      }
+
+      payload.groupId = groupId;
+
       try {
-        const res = await sendMessageApi({ groupId, content: text, replyTo });
+        const res = await sendMessageApi(payload);
         // Optimistically add in case the socket echo is delayed/unavailable.
         setMessages((prev) =>
           prev.some((m) => m.id === res.data.id) ? prev : [...prev, res.data]

@@ -10,6 +10,7 @@ router.post('/', auth, validate(groupValidation.createGroup), groupController.cr
 router.get('/', auth, groupController.getGroups);
 router.post('/:groupId/join', auth, groupController.joinGroup);
 router.post('/:groupId/leave', auth, groupController.leaveGroup);
+router.delete('/:groupId/members/:userId', auth, groupController.removeMember);
 router.get('/:groupId', auth, groupController.getGroup);
 
 module.exports = router;

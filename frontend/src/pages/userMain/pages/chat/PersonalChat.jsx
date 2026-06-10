@@ -1,5 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useChat } from '../../hooks/useChat';
+
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
 
 const initialMessages = [
   {
@@ -119,35 +124,72 @@ const BottomInputArea = ({ newMessage, setNewMessage, handleSendMessage }) => (
 const PersonalChat = () => {
   const navigate = useNavigate();
   const { chatId } = useParams();
-  const [messages, setMessages] = useState(initialMessages);
+  const location = useLocation();
   const [newMessage, setNewMessage] = useState('');
   const endRef = useRef(null);
 
-  const user = {
-    name: chatId === '1' ? 'Rohan Sharma' : chatId === '2' ? 'Neha Singh' : 'Amit Verma',
-    avatar: chatId === '1' ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80' : 
-            chatId === '2' ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80' : 
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80'
-  };
+  const currentUser = useSelector((state) => state.auth.user);
+  const currentUserId = currentUser?._id || currentUser?.id;
+
+  const user = useMemo(() => {
+    if (location.state?.user) return location.state.user;
+    
+    const mockNames = {
+      '1': 'Rohan Sharma',
+      '2': 'Neha Singh',
+      '3': 'Amit Verma',
+    };
+    const mockAvatars = {
+      '1': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80',
+      '2': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80',
+      '3': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80',
+    };
+    
+    return {
+      name: mockNames[chatId] || 'Chat Partner',
+      avatar: mockAvatars[chatId] || DEFAULT_AVATAR,
+    };
+  }, [chatId, location.state]);
+
+  const dmRoomId = useMemo(() => {
+    if (!currentUserId || !chatId) return '';
+    const sorted = [String(currentUserId), String(chatId)].sort();
+    return `dm-${sorted[0]}-${sorted[1]}`;
+  }, [currentUserId, chatId]);
+
+  const { messages: liveMessages, sendMessage: sendLiveMessage } = useChat(
+    dmRoomId,
+    Boolean(dmRoomId)
+  );
+
+  const messages = useMemo(() => {
+    return (liveMessages || []).map((m) => {
+      const isMe = currentUserId && String(m.senderId) === String(currentUserId);
+      return {
+        id: m.id,
+        avatar: isMe ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" : user.avatar,
+        name: isMe ? "You" : user.name,
+        time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: m.content,
+        isMe
+      };
+    });
+  }, [liveMessages, currentUserId, user]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+  const handleSendMessage = async () => {
+    const text = newMessage.trim();
+    if (!text || !dmRoomId) return;
     
-    const newMsg = {
-      id: Date.now(),
-      name: "You",
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      content: newMessage,
-      isMe: true
-    };
-
-    setMessages([...messages, newMsg]);
-    setNewMessage('');
+    try {
+      await sendLiveMessage(text);
+      setNewMessage('');
+    } catch (err) {
+      console.error('Failed to send DM message:', err);
+    }
   };
 
   return (

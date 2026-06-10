@@ -50,7 +50,19 @@ const verifyGroupAccess = async (groupId, userId) => {
  * @param {string} params.content
  * @param {object|null} [params.replyTo] - { id, name, content } of a quoted message
  */
-const createMessage = async ({ groupId, senderId, senderName, content, replyTo = null }) => {
+const createMessage = async ({
+  groupId,
+  senderId,
+  senderName,
+  content,
+  replyTo = null,
+  image = null,
+  documentData = null,
+  locationData = null,
+  voiceData = null,
+  type = 'text',
+  quoteData = null,
+}) => {
   ensureFirebase();
   await verifyGroupAccess(groupId, senderId);
 
@@ -58,10 +70,22 @@ const createMessage = async ({ groupId, senderId, senderName, content, replyTo =
   const message = {
     senderId: String(senderId),
     senderName: senderName || 'User',
-    content,
+    content: content || '',
     replyTo: replyTo || null,
+    image: image || null,
+    documentData: documentData || null,
+    locationData: locationData || null,
+    voiceData: voiceData || null,
+    type: type || 'text',
+    quoteData: quoteData || null,
     createdAt: Date.now(),
   };
+
+  Object.keys(message).forEach((key) => {
+    if (message[key] === null) {
+      delete message[key];
+    }
+  });
 
   await ref.set(message);
   return { id: ref.key, groupId, ...message };
@@ -72,10 +96,11 @@ const createMessage = async ({ groupId, senderId, senderName, content, replyTo =
  */
 const queryMessages = async (groupId, { limit = 100 } = {}) => {
   ensureFirebase();
+  const parsedLimit = parseInt(limit, 10) || 100;
   const snapshot = await firebase
     .getGroupMessagesRef(groupId)
     .orderByChild('createdAt')
-    .limitToLast(limit)
+    .limitToLast(parsedLimit)
     .once('value');
 
   const messages = [];

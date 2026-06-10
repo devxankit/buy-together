@@ -48,7 +48,7 @@ const PersonalChatList = () => {
         {chats.map(chat => (
           <div 
             key={chat.id} 
-            onClick={() => navigate(`/messages/${chat.id}`)}
+            onClick={() => navigate(`/messages/${chat.id}`, { state: { user: { id: chat.id, name: chat.name, avatar: chat.avatar } } })}
             className={`bg-surface rounded-[20px] p-4 flex gap-3.5 shadow-sm border ${chat.unread > 0 ? 'border-primary/20' : 'border-transparent'} active:scale-[0.98] transition-transform cursor-pointer w-full`}
           >
             <img src={chat.avatar} alt={chat.name} className="w-12 h-12 rounded-full object-cover bg-surface-alt flex-shrink-0" />

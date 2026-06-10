@@ -6,6 +6,7 @@ export const getGroup = (id) => api.get(`/groups/${id}`);
 export const createGroup = (data) => api.post('/groups', data);
 export const joinGroup = (id) => api.post(`/groups/${id}/join`);
 export const leaveGroup = (id) => api.post(`/groups/${id}/leave`);
+export const kickGroupMember = (groupId, userId) => api.delete(`/groups/${groupId}/members/${userId}`);
 
 // ── Admin (requires admin JWT) ──────────────────────────────────────
 // Params: { search?, status?, category?, page?, limit?, sortBy? }
