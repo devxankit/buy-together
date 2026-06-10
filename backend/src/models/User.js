@@ -47,6 +47,7 @@ const userSchema = mongoose.Schema(
     // Profile fields (mobile profile screen + admin table)
     avatar: { type: String, trim: true },
     dob: { type: Date },
+    gender: { type: String, trim: true },
     location: { type: String, trim: true },
     lastLoginAt: { type: Date },
   },

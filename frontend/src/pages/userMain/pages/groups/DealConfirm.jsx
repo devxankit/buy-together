@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { showToast } from '../../../../utils/toast';
 
 const groupDatabase = {
   '1': { id: '1', title: 'MacBook Air M3', joined: 45, needed: 10, targetPrice: '₹72,000', bestOffer: '₹69,999 (8% OFF)', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=120&q=80', unitName: 'Units' },
@@ -34,17 +35,10 @@ const DealConfirm = () => {
     unitName: 'Units'
   };
 
-  const [toastMessage, setToastMessage] = useState('');
-
   React.useEffect(() => {
     const finalId = group.id || groupId || '1';
     localStorage.setItem(`buytogether_confirmed_interest_${finalId}`, 'true');
   }, [group.id, groupId]);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
-  };
 
   const spotsJoined = group.joined ?? group.spotsJoined ?? 45;
   const spotsNeeded = group.needed ?? 10;
@@ -68,10 +62,10 @@ const DealConfirm = () => {
     const shareText = `Hey! I just committed interest for ${group.title} on Buy Together. Join our pool and let's unlock the wholesale discount of ${group.bestOffer} together! 🤝 Link: https://buytogether.in/groups/${group.id}`;
     navigator.clipboard.writeText(shareText)
       .then(() => {
-        showToast('🚀 Invite link copied to clipboard!');
+        showToast('Invite link copied to clipboard!', '🚀');
       })
       .catch(() => {
-        showToast('❌ Failed to copy link.');
+        showToast('Failed to copy link.', '❌');
       });
   };
 
@@ -85,13 +79,6 @@ const DealConfirm = () => {
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-[430px] mx-auto bg-surface-alt/50 relative font-sans animate-fadeIn">
-      
-      {/* ── FLOAT TOAST MESSAGE ── */}
-      {toastMessage && (
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-[200] bg-slate-900 text-white font-bold text-[11.5px] px-5 py-3 rounded-2xl shadow-xl shadow-black/20 flex items-center gap-2 border border-slate-800 animate-slideUp">
-          <span>{toastMessage}</span>
-        </div>
-      )}
 
       {/* ── HEADER NAVIGATION ── */}
       <div className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line px-4 pt-5 pb-4 shadow-sm flex items-center justify-between flex-shrink-0">

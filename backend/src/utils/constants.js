@@ -43,6 +43,23 @@ const BUSINESS_TYPES = {
   COMPANY: 'Company',
 };
 
+// Demand-group lifecycle surfaced in the admin Groups console. `active` →
+// `closing` (almost full / deadline near) → `completed`/`locked` once the
+// target is met. `flagged` is an admin-only moderation state.
+const GROUP_STATUS = {
+  ACTIVE: 'active',
+  CLOSING: 'closing',
+  COMPLETED: 'completed',
+  LOCKED: 'locked',
+  FLAGGED: 'flagged',
+};
+
+// Who owns/created the group — a buyer demand pool or a vendor-led offer.
+const GROUP_TYPE = {
+  USER: 'user',
+  VENDOR: 'vendor',
+};
+
 module.exports = {
   ROLES,
   USER_STATUS,
@@ -51,4 +68,6 @@ module.exports = {
   VENDOR_STATUS,
   KYC_STATUS,
   BUSINESS_TYPES,
+  GROUP_STATUS,
+  GROUP_TYPE,
 };

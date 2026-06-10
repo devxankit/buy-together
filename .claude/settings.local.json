@@ -37,7 +37,9 @@
       "Bash(where gs *)",
       "Bash(pip install *)",
       "Bash(python -c \"import fitz; d=fitz.open\\('tools/Supremo-UX-UI-Review.pdf'\\); print\\('pages:', d.page_count\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(node -e \"require\\('./src/models/Group'\\); require\\('./src/services/group.service'\\); require\\('./src/controllers/admin.controller'\\); require\\('./src/validations/admin.validation'\\); require\\('./src/routes/admin.routes'\\); require\\('./src/services/admin.service'\\); console.log\\('OK: all admin/group modules load'\\);\")",
+      "Bash(node -e \"require\\('./src/models/Group'\\); require\\('./src/services/group.service'\\); require\\('./src/controllers/group.controller'\\); require\\('./src/controllers/admin.controller'\\); require\\('./src/validations/admin.validation'\\); require\\('./src/validations/group.validation'\\); require\\('./src/routes/group.routes'\\); require\\('./src/routes/admin.routes'\\); console.log\\('OK: backend modules load'\\);\")"
     ]
   }
 }

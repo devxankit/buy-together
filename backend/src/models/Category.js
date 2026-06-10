@@ -55,6 +55,12 @@ const categorySchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    subCategories: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
   },
   {
     timestamps: true,

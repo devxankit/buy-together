@@ -1,52 +1,61 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from '../../../../hooks/useDispatch';
-import { logout } from '../../../../redux/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout, updateUser } from '../../../../redux/slices/authSlice';
 import { useTheme } from '../../context';
+import { uploadImage } from '../../../../services/upload.api';
+import { getUserProfile, updateUserProfile } from '../../../../services/user.api';
+import { showToast } from '../../../../utils/toast';
+
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80';
 
 const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { theme, toggleTheme } = useTheme();
 
-  const [profileName, setProfileName] = React.useState(() => localStorage.getItem('buytogether_profile_name') || 'Rohan Verma');
-  const [profileEmail, setProfileEmail] = React.useState(() => localStorage.getItem('buytogether_profile_email') || 'rohan.verma@gmail.com');
-  const [profileImage, setProfileImage] = React.useState(() => localStorage.getItem('buytogether_profile_image') || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80');
+  const currentUser = useSelector((state) => state.auth.user) || {};
+  const [uploading, setUploading] = React.useState(false);
 
   const fileInputRef = React.useRef(null);
 
   React.useEffect(() => {
-    const refreshProfile = () => {
-      setProfileName(localStorage.getItem('buytogether_profile_name') || 'Rohan Verma');
-      setProfileEmail(localStorage.getItem('buytogether_profile_email') || 'rohan.verma@gmail.com');
-      setProfileImage(localStorage.getItem('buytogether_profile_image') || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80');
+    let active = true;
+    const fetchProfile = async () => {
+      try {
+        const { data } = await getUserProfile();
+        if (active) {
+          dispatch(updateUser(data));
+        }
+      } catch (err) {
+        console.error('Failed to load user profile:', err);
+      }
     };
-    window.addEventListener('focus', refreshProfile);
-    refreshProfile();
-    return () => window.removeEventListener('focus', refreshProfile);
-  }, []);
+    fetchProfile();
+    return () => { active = false; };
+  }, [dispatch]);
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-      setProfileImage(dataUrl);
-      localStorage.setItem('buytogether_profile_image', dataUrl);
+    setUploading(true);
+    try {
+      const { data } = await uploadImage(file, { folder: 'misc' });
+      const avatarUrl = data.url;
 
-      // Premium feedback toast
-      const toast = document.createElement('div');
-      toast.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-surface text-xs font-black px-4 py-2.5 rounded-xl shadow-2xl z-[100] flex items-center gap-2 animate-fadeIn";
-      toast.innerHTML = "<span>📸</span> Profile photo updated!";
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add('animate-fadeOut');
-        setTimeout(() => toast.remove(), 400);
-      }, 2000);
-    };
-    reader.readAsDataURL(file);
+      // Update database profile
+      await updateUserProfile({ avatar: avatarUrl });
+
+      // Update Redux state
+      dispatch(updateUser({ avatar: avatarUrl }));
+
+      showToast('Profile photo updated! 📸');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to upload photo.', '❌');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -110,19 +119,23 @@ const Profile = () => {
         <div className="mb-6"></div>
 
         <div className="flex items-center gap-4 relative">
-          <div className="relative flex-shrink-0 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <img src={profileImage} alt={profileName} className="w-[75px] h-[75px] rounded-full object-cover border-2 border-[var(--surface)] shadow-md" />
+          <div className="relative flex-shrink-0 cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
+            <img src={currentUser.avatar || DEFAULT_AVATAR} alt={currentUser.name} className="w-[75px] h-[75px] rounded-full object-cover border-2 border-[var(--surface)] shadow-md" style={uploading ? { opacity: 0.6 } : undefined} />
             <button className="absolute bottom-0 right-0 w-6 h-6 bg-surface border border-line rounded-full flex items-center justify-center shadow-sm text-primary active:scale-95 transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              {uploading ? (
+                <span className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
             </button>
-            <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" />
+            <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" disabled={uploading} />
           </div>
           <div className="flex-1 flex flex-col items-start min-w-0 justify-center">
             <div className="flex items-center gap-1.5 mb-1">
-              <h2 className="text-[17px] font-extrabold text-ink truncate leading-none">{profileName}</h2>
+              <h2 className="text-[17px] font-extrabold text-ink truncate leading-none">{currentUser.name || 'Unnamed User'}</h2>
               <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -132,13 +145,13 @@ const Profile = () => {
             <div className="bg-primary-soft text-primary px-1.5 py-0.5 rounded text-[8.5px] font-bold tracking-tight mb-1.5 w-fit">
               Verified Member
             </div>
-            <p className="text-[10.5px] font-semibold text-muted mb-1 w-full truncate">{profileEmail}</p>
+            <p className="text-[10.5px] font-semibold text-muted mb-1 w-full truncate">{currentUser.phone || 'No phone number'}</p>
             <p className="text-[9.5px] font-bold text-muted flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              Mumbai, Maharashtra
+              {currentUser.location || 'Location not set'}
             </p>
           </div>
           <button onClick={() => navigate('/personal-info')} className="flex-shrink-0 bg-surface border border-line rounded-full px-2.5 py-1.5 shadow-sm text-[9.5px] font-bold text-primary flex items-center gap-1 active:scale-95 transition-all self-center mt-2">

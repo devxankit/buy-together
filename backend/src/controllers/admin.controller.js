@@ -2,6 +2,7 @@ const httpStatus = require('http-status').status;
 const catchAsync = require('../utils/catchAsync');
 const adminService = require('../services/admin.service');
 const vendorService = require('../services/vendor.service');
+const groupService = require('../services/group.service');
 const { pick } = require('../utils/helpers');
 
 const getStats = catchAsync(async (req, res) => {
@@ -72,6 +73,43 @@ const rejectVendor = catchAsync(async (req, res) => {
   res.send(vendor);
 });
 
+// ── Groups ──────────────────────────────────────────────────────────
+const listGroups = catchAsync(async (req, res) => {
+  const filter = pick(req.query, ['search', 'status', 'category', 'page', 'limit', 'sortBy']);
+  const result = await groupService.queryGroupsAdmin(filter);
+  res.send(result);
+});
+
+const getGroup = catchAsync(async (req, res) => {
+  const group = await groupService.getGroupByIdAdmin(req.params.groupId);
+  res.send(group);
+});
+
+const createGroup = catchAsync(async (req, res) => {
+  const group = await groupService.createGroupAdmin(req.body);
+  res.status(httpStatus.CREATED).send(group);
+});
+
+const updateGroup = catchAsync(async (req, res) => {
+  const group = await groupService.updateGroupByIdAdmin(req.params.groupId, req.body);
+  res.send(group);
+});
+
+const deleteGroup = catchAsync(async (req, res) => {
+  await groupService.deleteGroupByIdAdmin(req.params.groupId);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const addGroupMember = catchAsync(async (req, res) => {
+  const group = await groupService.addMember(req.params.groupId, req.body.userId);
+  res.send(group);
+});
+
+const removeGroupMember = catchAsync(async (req, res) => {
+  const group = await groupService.removeMember(req.params.groupId, req.params.userId);
+  res.send(group);
+});
+
 module.exports = {
   getStats,
   listUsers,
@@ -86,4 +124,11 @@ module.exports = {
   deleteVendor,
   approveVendor,
   rejectVendor,
+  listGroups,
+  getGroup,
+  createGroup,
+  updateGroup,
+  deleteGroup,
+  addGroupMember,
+  removeGroupMember,
 };

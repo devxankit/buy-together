@@ -1,8 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
+import { getCategories } from '../../../../services/category.api';
+import { getGroups, joinGroup } from '../../../../services/group.api';
+import { showToast } from '../../../../utils/toast';
 
-// Import newly updated modular sub-components
+// Import modular sub-components
 import CategoryHeader from './components/CategoryHeader';
 import MyCategoriesCarousel from './components/MyCategoriesCarousel';
 import SortTabs from './components/SortTabs';
@@ -10,14 +14,22 @@ import CategoryProductsList from './components/CategoryProductsList';
 import BottomCTA from './components/BottomCTA';
 
 /**
- * Premium mobile-first dynamic Categories Dashboard.
- * Rebuilt from scratch to match the exact visual layout of the user's mockup image,
- * strictly adapting to our project's teal branding color scheme (#0D9488).
+ * Premium mobile-first Categories / Explore Dashboard.
+ * Integrates directly with real database groups and categories collections,
+ * mapping variables dynamically so that the UI remains identical to the mockup layout.
  */
 const Categories = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Redux Auth Selector
+  const currentUser = useSelector((state) => state.auth.user) || {};
 
   // 1. STATE MANAGEMENT
+  const [categories, setCategories] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeSort, setActiveSort] = useState('trending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,6 +43,29 @@ const Categories = () => {
   const [sizeFilter, setSizeFilter] = useState('all'); // 'all', 'small', 'medium', 'large'
   const [locationFilter, setLocationFilter] = useState('all'); // 'all', 'indore', 'delhi', 'mumbai', 'goa'
 
+  // Fetch live groups and categories
+  useEffect(() => {
+    let active = true;
+    const loadData = async () => {
+      try {
+        const [catsRes, groupsRes] = await Promise.all([
+          getCategories(),
+          getGroups()
+        ]);
+        if (active) {
+          setCategories(catsRes.data || []);
+          setGroups(groupsRes.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load categories/groups:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadData();
+    return () => { active = false; };
+  }, []);
+
   // Sync category state when location.state changes (from Home page navigation)
   useEffect(() => {
     if (location.state?.categoryId) {
@@ -38,187 +73,76 @@ const Categories = () => {
     }
   }, [location.state]);
 
-  // 2. COMPREHENSIVE DATASETS FOR POPULAR CATEGORIES (as per mockup image)
-  const productsData = {
-    'cars-bikes': [
-      {
-        id: 'car-g1',
-        title: 'Thar ROXX Deal',
-        status: 'active',
-        brand: 'Mahindra',
-        location: 'Indore, MP',
-        slogan: 'Best possible deal on Thar ROXX in Indore.',
-        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 324,
-        spotsTotal: 500,
-        creatorName: 'Rohit Sharma',
-        creatorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Thar', '#SUV', '#Indore'],
-        badgeType: 'hot',
-        badgeLabel: 'HOT',
-        daysLeft: '176 more needed'
-      }
-    ],
-    smartphones: [
-      {
-        id: 'phone-g1',
-        title: 'iPhone 16 Under ₹60K',
-        status: 'active',
-        brand: 'Apple',
-        location: 'Indore, MP',
-        slogan: "Let's get the best price on iPhone 16.",
-        image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 612,
-        spotsTotal: 1000,
-        creatorName: 'Neha Joshi',
-        creatorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#iPhone16', '#Apple', '#Deal'],
-        badgeType: 'hot',
-        badgeLabel: 'HOT',
-        daysLeft: '388 more needed'
-      }
-    ],
-    travel: [
-      {
-        id: 'travel-g1',
-        title: 'Goa Trip - June Plan',
-        status: 'active',
-        brand: 'IndoreTravel',
-        location: 'Indore, MP',
-        slogan: "Planning a trip to Goa in June. Let's go!",
-        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 281,
-        spotsTotal: 350,
-        creatorName: 'Aman Verma',
-        creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Goa', '#Travel', '#Trip'],
-        badgeType: 'rising',
-        badgeLabel: 'RISING',
-        daysLeft: '69 more needed'
-      }
-    ],
-    'home-living': [
-      {
-        id: 'gym-g1',
-        title: 'Gym Membership Indore',
-        status: 'active',
-        brand: 'GoldGym',
-        location: 'Indore, MP',
-        slogan: 'Find the best & affordable gym in Indore.',
-        image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 119,
-        spotsTotal: 200,
-        creatorName: 'Kunal Singh',
-        creatorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Gym', '#Fitness', '#Indore'],
-        badgeType: 'new',
-        badgeLabel: 'NEW',
-        daysLeft: '81 more needed'
-      }
-    ],
-    electronics: [
-      {
-        id: 'elect-g1',
-        title: 'PS5 Slim India Group',
-        status: 'active',
-        brand: 'Sony',
-        location: 'Indore, MP',
-        slogan: 'Looking for PS5 Slim at best price in India.',
-        image: 'https://images.unsplash.com/photo-1606813907291-d86edd9b94db?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 158,
-        spotsTotal: 300,
-        creatorName: 'Siddharth Yadav',
-        creatorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#PS5', '#Gaming', '#PlayStation'],
-        badgeType: 'rising',
-        badgeLabel: 'RISING',
-        daysLeft: '142 more needed'
-      },
-      {
-        id: 'elect-g2',
-        title: 'Sony WH-1000XM5 Deal',
-        status: 'active',
-        brand: 'Sony',
-        location: 'Delhi, DL',
-        slogan: 'Secure minimum pricing on trending active noise cancellation WH-1000XM5 headsets.',
-        image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 281,
-        spotsTotal: 350,
-        creatorName: 'Aman Verma',
-        creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Sony', '#ANC', '#Audio'],
-        badgeType: 'new',
-        badgeLabel: 'NEW',
-        daysLeft: '69 more needed'
-      }
-    ],
-    appliances: [
-      {
-        id: 'appliance-g1',
-        title: 'Samsung Washer Deal',
-        status: 'active',
-        brand: 'Samsung',
-        location: 'Indore, MP',
-        slogan: "Let's buy Samsung Washer in bulk and save up to ₹5,500.",
-        image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 158,
-        spotsTotal: 300,
-        creatorName: 'Siddharth Yadav',
-        creatorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Samsung', '#HomeHub', '#Indore'],
-        badgeType: 'rising',
-        badgeLabel: 'RISING',
-        daysLeft: '142 more needed'
-      }
-    ],
-    properties: [
-      {
-        id: 'prop-g1',
-        title: 'Fractional Beach Villa Goa',
-        status: 'active',
-        brand: 'CoBuy Properties',
-        location: 'Goa, IN',
-        slogan: 'Fractional ownership of luxurious 4BHK beach villa in Goa.',
-        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 4,
-        spotsTotal: 10,
-        creatorName: 'Aarav Mehta',
-        creatorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#GoaVilla', '#Fractional', '#CoOwn'],
-        badgeType: 'hot',
-        badgeLabel: 'HOT',
-        daysLeft: '6 more slots'
-      },
-      {
-        id: 'prop-g2',
-        title: 'Premium IT Park Office Space',
-        status: 'active',
-        brand: 'Indore PropTech',
-        location: 'Indore, MP',
-        slogan: 'Commercial co-ownership investment in Indore IT Park.',
-        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=260&q=80',
-        spotsJoined: 7,
-        spotsTotal: 15,
-        creatorName: 'Vikram Joshi',
-        creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-        hashtags: ['#Commercial', '#OfficeSpace', '#Indore'],
-        badgeType: 'rising',
-        badgeLabel: 'RISING',
-        daysLeft: '8 more slots'
-      }
-    ]
+  // Join group API action handler
+  const handleJoinGroup = async (e, prod) => {
+    e.stopPropagation();
+    try {
+      const { data } = await joinGroup(prod.id);
+      
+      // Update local state headcount
+      setGroups(prev => prev.map(g => g.id === prod.id ? data : g));
+      showToast('Successfully joined group!');
+      
+      // Redirect to chat room
+      navigate(`/groups/${prod.id}/chat`, { state: { group: prod, isJoined: true } });
+    } catch (err) {
+      console.error('Failed to join group:', err);
+      showToast(err.response?.data?.message || 'Failed to join group.');
+    }
   };
 
-  // Combine products for "All" filter selection
-  const allProductsList = useMemo(() => {
-    return Object.values(productsData).flat();
-  }, []);
+  // 2. DYNAMIC GROUP MAPPING ENGINE (Aligns Mongoose object properties to visual card tags)
+  const mappedGroups = useMemo(() => {
+    return groups.map(g => {
+      const spotsJoined = g.spotsJoined || 0;
+      const spotsTotal = g.spotsTotal || 0;
+      const slotsNeeded = spotsTotal - spotsJoined;
+      const neededText = slotsNeeded > 0 ? `${slotsNeeded} more needed` : 'Goal reached!';
 
-  // 3. OPTIMIZED SEARCH & TABS FILTER ENGINE
+      const ratio = spotsTotal > 0 ? spotsJoined / spotsTotal : 0;
+      let badgeType = 'new';
+      let badgeLabel = 'NEW';
+      if (ratio >= 0.5) {
+        badgeType = 'hot';
+        badgeLabel = 'HOT';
+      } else if (spotsJoined > 15) {
+        badgeType = 'rising';
+        badgeLabel = 'RISING';
+      }
+
+      // Default tags fallback
+      const hashtags = ['#' + (g.category || 'Group'), '#' + (g.subCategory || 'Deal'), '#CoBuy'];
+
+      return {
+        id: g.id,
+        title: g.title,
+        status: g.status,
+        brand: g.productName || g.title,
+        location: g.location || 'India',
+        slogan: g.slogan || g.description || 'Join to save big together!',
+        image: g.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=150&q=80',
+        spotsJoined,
+        spotsTotal,
+        creatorName: (g.creator && g.creator !== '—') ? g.creator : (g.admin && g.admin.name) || 'Platform Creator',
+        creatorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
+        hashtags,
+        badgeType,
+        badgeLabel,
+        daysLeft: neededText,
+        category: g.category || 'all',
+        members: g.members || []
+      };
+    });
+  }, [groups]);
+
+  // 3. SEARCH & TABS FILTER ENGINE
   const filteredProducts = useMemo(() => {
-    let list = selectedCategory === 'all' || selectedCategory === 'more'
-      ? allProductsList 
-      : productsData[selectedCategory] || [];
+    let list = mappedGroups;
+
+    // Filter by Selected Category slug
+    if (selectedCategory !== 'all' && selectedCategory !== 'more') {
+      list = list.filter(p => String(p.category).toLowerCase() === String(selectedCategory).toLowerCase());
+    }
 
     // Search query filter
     if (searchQuery.trim()) {
@@ -240,9 +164,9 @@ const Categories = () => {
       });
     }
 
-    // Apply Discount Target Level Filter (Ratio of spots filled)
+    // Apply Discount Target Level Filter
     if (discountFilter !== 'all') {
-      const minPercentage = parseInt(discountFilter);
+      const minPercentage = parseInt(discountFilter, 10);
       list = list.filter(p => {
         const ratio = (p.spotsJoined / p.spotsTotal) * 100;
         return ratio >= minPercentage;
@@ -256,21 +180,18 @@ const Categories = () => {
 
     // Sort tabs filter
     if (activeSort === 'trending') {
-      // Sort by members count descending
       return [...list].sort((a, b) => b.spotsJoined - a.spotsJoined);
     } else if (activeSort === 'nearby') {
-      // Show only dynamic selected city deals
       return list.filter(p => p.location.toLowerCase().includes(selectedCity.split(',')[0].toLowerCase()));
     } else if (activeSort === 'new') {
-      // Filter by 'new' or 'rising' badge
       return list.filter(p => p.badgeType === 'new' || p.badgeType === 'rising');
     } else if (activeSort === 'my-groups') {
-      // Mock user groups
-      return list.filter(p => p.spotsJoined > 300);
+      const userId = currentUser.id || currentUser._id;
+      return list.filter(p => p.members.some(m => String(m._id || m) === String(userId)));
     }
 
     return list;
-  }, [selectedCategory, activeSort, searchQuery, allProductsList, discountFilter, sizeFilter, locationFilter, selectedCity]);
+  }, [selectedCategory, activeSort, searchQuery, mappedGroups, discountFilter, sizeFilter, locationFilter, selectedCity, currentUser]);
 
   return (
     <div className="flex flex-col gap-4 select-none min-h-screen bg-surface relative overflow-hidden">
@@ -289,6 +210,7 @@ const Categories = () => {
         
         {/* 2. Horizontal categories list */}
         <MyCategoriesCarousel
+          categories={categories}
           selectedCategory={selectedCategory}
           onChange={setSelectedCategory}
           onViewAll={() => setSelectedCategory('all')}
@@ -301,8 +223,13 @@ const Categories = () => {
         />
 
         {/* 4. Active category grid view */}
-        {filteredProducts.length > 0 ? (
-          <CategoryProductsList products={filteredProducts} />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <span className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs font-bold text-muted">Loading group pools...</p>
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          <CategoryProductsList products={filteredProducts} onJoin={handleJoinGroup} />
         ) : (
           <div className="bg-surface-alt border border-line rounded-[22px] p-10 text-center text-muted text-xs font-semibold shadow-sm my-2">
             No active group deals found under this filter. Create one below!

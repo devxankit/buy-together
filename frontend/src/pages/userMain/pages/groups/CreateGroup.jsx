@@ -1,28 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const subCategoryMap = {
-  'Smartphones': ['All Smartphones', 'iPhone', 'Samsung', 'OnePlus', 'Xiaomi', 'Google Pixel', 'Motorola', 'Realme'],
-  'Laptops': ['All Laptops', 'MacBook', 'Dell', 'HP', 'Lenovo', 'ASUS', 'Acer', 'MSI'],
-  'Appliances': ['All Appliances', 'Refrigerator', 'Washing Machine', 'AC', 'Microwave', 'Dishwasher'],
-  'Electronics': ['All Electronics', 'Headphones', 'Speakers', 'Cameras', 'Smart Watch', 'Tablet', 'Gaming'],
-  'Fashion': ['All Fashion', 'Men', 'Women', 'Kids', 'Footwear', 'Accessories', 'Sports'],
-  'Groceries': ['All Groceries', 'Fruits & Veggies', 'Dairy', 'Snacks', 'Beverages', 'Staples'],
-  'Furniture': ['All Furniture', 'Sofa', 'Bed', 'Table', 'Chair', 'Storage', 'Décor'],
-};
-
-const mainCategories = [
-  { id: 'Smartphones', name: 'Smartphones' },
-  { id: 'Laptops', name: 'Laptops' },
-  { id: 'Appliances', name: 'Appliances' },
-  { id: 'Electronics', name: 'Electronics' },
-  { id: 'Fashion', name: 'Fashion' },
-  { id: 'Groceries', name: 'Groceries' },
-  { id: 'Furniture', name: 'Furniture' },
-];
+import { getCategories } from '../../../../services/category.api';
+import { createGroup } from '../../../../services/group.api';
+import { uploadImage } from '../../../../services/upload.api';
+import { useUserMainContext } from '../../context';
+import { showToast } from '../../../../utils/toast';
 
 const CreateGroup = () => {
   const navigate = useNavigate();
+  const { selectedCity } = useUserMainContext();
 
   // Form Fields
   const [groupName, setGroupName] = useState('');
@@ -33,18 +19,99 @@ const CreateGroup = () => {
   const [productName, setProductName] = useState('');
   const [productDesc, setProductDesc] = useState('');
 
+  // Image Upload Fields
+  const [image, setImage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadErr, setUploadErr] = useState('');
+  const fileInputRef = useRef(null);
+
+  // Live Location Field
+  const [liveLocation, setLiveLocation] = useState('');
+
+  // Dynamic Categories Fields
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Submission state
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
   // Dropdown States
   const [isMainOpen, setIsMainOpen] = useState(false);
   const [isSubOpen, setIsSubOpen] = useState(false);
   const [isDeadlineOpen, setIsDeadlineOpen] = useState(false);
 
-  // Dynamic Case-Insensitive Sub-Category Resolver
-  const getSubCategories = (mainCat) => {
-    if (!mainCat) return [];
-    const key = Object.keys(subCategoryMap).find(
-      k => k.toLowerCase() === mainCat.toLowerCase()
-    );
-    return key ? subCategoryMap[key] : [];
+  // Geolocation lookup on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await response.json();
+            if (data && data.address) {
+              const city = data.address.city || data.address.town || data.address.village || data.address.suburb || '';
+              const state = data.address.state || '';
+              const loc = city && state ? `${city}, ${state}` : city || state || '';
+              if (loc) {
+                setLiveLocation(loc);
+              }
+            }
+          } catch (err) {
+            console.error('Failed to reverse-geocode coordinates:', err);
+          }
+        },
+        (error) => {
+          console.warn('Geolocation permission denied or error:', error);
+        }
+      );
+    }
+  }, []);
+
+  // Fetch active categories on mount
+  useEffect(() => {
+    let active = true;
+    const fetchCats = async () => {
+      try {
+        const { data } = await getCategories();
+        if (active) {
+          setCategories(data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      } finally {
+        if (active) setLoadingCategories(false);
+      }
+    };
+    fetchCats();
+    return () => { active = false; };
+  }, []);
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    setUploadErr('');
+    if (!file.type.startsWith('image/')) {
+      setUploadErr('Please select an image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadErr('Image must be 5MB or smaller.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadPct(0);
+    try {
+      const { data } = await uploadImage(file, { folder: 'groups', onProgress: setUploadPct });
+      setImage(data.url);
+    } catch (err) {
+      setUploadErr(err.response?.data?.message || 'Upload failed. Try again.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const canSubmit = () => {
@@ -57,13 +124,43 @@ const CreateGroup = () => {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (canSubmit()) {
-      // Navigate to /groups after creating
+    if (!canSubmit() || submitting) return;
+
+    setSubmitting(true);
+    setError('');
+
+    // Same field shape the admin console posts — only management fields
+    // (status/slogan/image/location) are omitted and default on the server.
+    const payload = {
+      title: groupName.trim(),
+      productName: productName.trim(),
+      category: selectedMainCat,
+      subCategory: selectedSubCat,
+      type: 'user',
+      spotsTotal: Number(goal),
+      image: image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=260&q=80',
+      location: liveLocation || selectedCity || 'Indore, MP',
+      description: productDesc.trim(),
+      // Convert the "N days" picker into an absolute deadline.
+      closesAt: new Date(Date.now() + parseInt(deadline, 10) * 86400000).toISOString(),
+    };
+
+    try {
+      await createGroup(payload);
+      showToast('Group created successfully! 🎉');
       navigate('/groups');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not create the group. Please try again.');
+      setSubmitting(false);
     }
   };
+
+  const selectedCatObj = categories.find(
+    (c) => c.name.toLowerCase() === selectedMainCat?.toLowerCase() || c.slug.toLowerCase() === selectedMainCat?.toLowerCase()
+  );
+  const subCategoriesList = selectedCatObj ? (selectedCatObj.subCategories || []) : [];
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-[430px] mx-auto bg-surface font-sans overflow-hidden">
@@ -98,6 +195,82 @@ const CreateGroup = () => {
             />
             <p className="text-[9px] text-muted font-medium mt-1 text-right">{groupName.length}/60</p>
           </div>
+
+          <div className="mt-1">
+            <label className="text-[10px] font-bold text-muted block mb-1.5">Cover Image</label>
+            
+            {image ? (
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-line bg-surface-alt">
+                <img src={image} alt="Group preview" className="w-full h-full object-cover" />
+                {uploadingImage && (
+                  <div className="absolute inset-0 bg-ink/60 flex flex-col items-center justify-center gap-2 text-white">
+                    <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                    <span className="text-[11px] font-bold">Uploading... {uploadPct}%</span>
+                  </div>
+                )}
+                {!uploadingImage && (
+                  <div className="absolute top-2 right-2 flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18" /></svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImage('')}
+                      className="w-8 h-8 rounded-lg bg-red-500/90 hover:bg-red-600 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-primary/50 bg-surface-alt flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all"
+              >
+                {uploadingImage ? (
+                  <>
+                    <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                    <span className="text-[12px] font-bold text-ink">Uploading... {uploadPct}%</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <span className="text-[12px] font-bold text-ink">Click to upload a group photo</span>
+                    <span className="text-[10px] text-faint">PNG, JPG, WebP — up to 5MB</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {uploadErr && <p className="text-[10px] font-bold text-red-500 mt-1">{uploadErr}</p>}
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImageUpload(file);
+                }
+              }}
+            />
+
+            <input
+              type="text"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="Or paste an image URL..."
+              className="w-full text-[11px] font-bold text-ink placeholder:text-muted bg-surface-alt border border-line rounded-lg px-2.5 py-1.5 mt-2 outline-none focus:border-primary focus:bg-surface transition-all"
+            />
+          </div>
         </div>
 
         {/* ── SECTION 2: DYNAMIC CATEGORY & SUB-CATEGORY ── */}
@@ -123,7 +296,7 @@ const CreateGroup = () => {
                   isMainOpen ? 'border-primary bg-surface ring-2 ring-[#0D9488]/10' : 'border-slate-200/80'
                 }`}
               >
-                <span className="truncate">{selectedMainCat ? mainCategories.find(c => c.id.toLowerCase() === selectedMainCat.toLowerCase())?.name || selectedMainCat : 'Select Category'}</span>
+                <span className="truncate">{selectedMainCat ? categories.find(c => c.name.toLowerCase() === selectedMainCat.toLowerCase() || c.slug.toLowerCase() === selectedMainCat.toLowerCase())?.name || selectedMainCat : 'Select Category'}</span>
                 <svg className={`w-3.5 h-3.5 text-muted transition-transform duration-200 flex-shrink-0 ml-1 ${isMainOpen ? 'rotate-180 text-primary' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -133,22 +306,28 @@ const CreateGroup = () => {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsMainOpen(false)}></div>
                   <div className="absolute left-0 right-0 bottom-full mb-1.5 bg-surface border border-line rounded-xl shadow-xl z-50 py-1 max-h-[220px] overflow-y-auto animate-slideDown">
-                    {mainCategories.map(cat => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedMainCat(cat.id);
-                          setSelectedSubCat('');
-                          setIsMainOpen(false);
-                        }}
-                        className={`w-full px-3.5 py-2.5 text-left text-xs font-bold transition-all hover:bg-surface-alt ${
-                          selectedMainCat?.toLowerCase() === cat.id.toLowerCase() ? 'text-primary bg-primary-soft' : 'text-faint'
-                        }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
+                    {loadingCategories ? (
+                      <div className="px-3.5 py-2.5 text-xs font-bold text-muted">Loading…</div>
+                    ) : categories.length === 0 ? (
+                      <div className="px-3.5 py-2.5 text-xs font-bold text-muted">No Categories</div>
+                    ) : (
+                      categories.map(cat => (
+                        <button
+                          key={cat._id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMainCat(cat.name);
+                            setSelectedSubCat('');
+                            setIsMainOpen(false);
+                          }}
+                          className={`w-full px-3.5 py-2.5 text-left text-xs font-bold transition-all hover:bg-surface-alt ${
+                            selectedMainCat?.toLowerCase() === cat.name.toLowerCase() || selectedMainCat?.toLowerCase() === cat.slug.toLowerCase() ? 'text-primary bg-primary-soft' : 'text-faint'
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </>
               )}
@@ -182,21 +361,25 @@ const CreateGroup = () => {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsSubOpen(false)}></div>
                   <div className="absolute left-0 right-0 bottom-full mb-1.5 bg-surface border border-line rounded-xl shadow-xl z-50 py-1 max-h-[220px] overflow-y-auto animate-slideDown">
-                    {getSubCategories(selectedMainCat).map(sub => (
-                      <button
-                        key={sub}
-                        type="button"
-                        onClick={() => {
-                          setSelectedSubCat(sub);
-                          setIsSubOpen(false);
-                        }}
-                        className={`w-full px-3.5 py-2.5 text-left text-xs font-bold transition-all hover:bg-surface-alt ${
-                          selectedSubCat === sub ? 'text-primary bg-primary-soft' : 'text-faint'
-                        }`}
-                      >
-                        {sub}
-                      </button>
-                    ))}
+                    {subCategoriesList.length === 0 ? (
+                      <div className="px-3.5 py-2.5 text-xs font-bold text-muted">No Sub-categories</div>
+                    ) : (
+                      subCategoriesList.map(sub => (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSubCat(sub);
+                            setIsSubOpen(false);
+                          }}
+                          className={`w-full px-3.5 py-2.5 text-left text-xs font-bold transition-all hover:bg-surface-alt ${
+                            selectedSubCat === sub ? 'text-primary bg-primary-soft' : 'text-faint'
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </>
               )}
@@ -420,6 +603,10 @@ const CreateGroup = () => {
               <span className="opacity-75">Category Range:</span>
               <span className="text-ink font-extrabold">{selectedMainCat ? `${selectedMainCat} › ${selectedSubCat || 'Sub-cat'}` : 'Not Categorized'}</span>
             </div>
+            <div className="flex justify-between items-center border-b border-teal-100/50 pb-1">
+              <span className="opacity-75">Location:</span>
+              <span className="text-ink font-extrabold truncate max-w-[200px]">{liveLocation || selectedCity || 'Detecting Location...'}</span>
+            </div>
             <div className="flex justify-between items-center pt-0.5">
               <span className="opacity-75">Deal Target:</span>
               <span className="text-ink font-extrabold">{goal} Buyers • {deadline} Days Limit</span>
@@ -431,16 +618,25 @@ const CreateGroup = () => {
 
       {/* ── FIXED BOTTOM ACTION BUTTON ── */}
       <div className="flex-shrink-0 bg-surface border-t border-line px-4 py-3 shadow-[0_-8px_35px_rgba(0,0,0,0.04)] z-30">
+        {error && (
+          <p className="text-[11px] font-bold text-red-500 mb-2 text-center">{error}</p>
+        )}
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!canSubmit()}
+          disabled={!canSubmit() || submitting}
           className="w-full h-[48px] bg-primary hover:bg-[#0B7A70] rounded-xl text-white text-[13.5px] font-black flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
         >
-          <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Create Group & Launch
+          {submitting ? (
+            'Creating…'
+          ) : (
+            <>
+              <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Create Group &amp; Launch
+            </>
+          )}
         </button>
       </div>
 

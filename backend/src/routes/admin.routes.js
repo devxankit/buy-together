@@ -38,4 +38,24 @@ router
 router.post('/vendors/:vendorId/approve', validate(adminValidation.vendorId), adminController.approveVendor);
 router.post('/vendors/:vendorId/reject', validate(adminValidation.rejectVendor), adminController.rejectVendor);
 
+// ── Groups ──────────────────────────────────────────────────────────
+router
+  .route('/groups')
+  .get(validate(adminValidation.listGroups), adminController.listGroups)
+  .post(validate(adminValidation.createGroup), adminController.createGroup);
+
+router
+  .route('/groups/:groupId')
+  .get(validate(adminValidation.groupId), adminController.getGroup)
+  .patch(validate(adminValidation.updateGroup), adminController.updateGroup)
+  .delete(validate(adminValidation.groupId), adminController.deleteGroup);
+
+router
+  .route('/groups/:groupId/members')
+  .post(validate(adminValidation.addGroupMember), adminController.addGroupMember);
+
+router
+  .route('/groups/:groupId/members/:userId')
+  .delete(validate(adminValidation.groupMember), adminController.removeGroupMember);
+
 module.exports = router;

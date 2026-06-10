@@ -7,6 +7,6 @@ const uploadController = require('../controllers/upload.controller');
 const router = express.Router();
 
 // Admin-only image upload → Cloudinary. Returns { url, publicId, … }.
-router.post('/image', auth, adminOnly, single('image'), uploadController.uploadImage);
+router.post('/image', auth, single('image'), uploadController.uploadImage);
 
 module.exports = router;

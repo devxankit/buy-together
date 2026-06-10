@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button } from '../components';
+import { showToast } from '../../../utils/toast';
 import {
   listVendorsAdmin,
   createVendorAdmin,
@@ -162,8 +163,13 @@ const VendorModal = ({ initial, onClose, onSaved }) => {
 
     setSaving(true);
     try {
-      if (isEdit) await updateVendorAdmin(initial.id, payload);
-      else await createVendorAdmin(payload);
+      if (isEdit) {
+        await updateVendorAdmin(initial.id, payload);
+        showToast('Vendor updated successfully! 🎉');
+      } else {
+        await createVendorAdmin(payload);
+        showToast('Vendor onboarded successfully! 🎉');
+      }
       onSaved();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not save the vendor.');
@@ -343,18 +349,20 @@ const Vendors = () => {
     if (!window.confirm(`Delete vendor "${v.businessName}"? This cannot be undone.`)) return;
     try {
       await deleteVendorAdmin(v.id);
+      showToast(`Vendor "${v.businessName}" deleted!`, '🗑️');
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete vendor.');
+      showToast(err.response?.data?.message || 'Failed to delete vendor.', '❌');
     }
   };
 
   const handleApprove = async (v) => {
     try {
       await approveVendorAdmin(v.id);
+      showToast(`Vendor "${v.businessName}" approved!`, '✅');
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to approve vendor.');
+      showToast(err.response?.data?.message || 'Failed to approve vendor.', '❌');
     }
   };
 
@@ -363,9 +371,10 @@ const Vendors = () => {
     if (reason === null) return;
     try {
       await rejectVendorAdmin(v.id, reason);
+      showToast(`Vendor "${v.businessName}" rejected.`, '⚠️');
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject vendor.');
+      showToast(err.response?.data?.message || 'Failed to reject vendor.', '❌');
     }
   };
 

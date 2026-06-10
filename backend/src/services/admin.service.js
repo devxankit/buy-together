@@ -2,9 +2,10 @@ const httpStatus = require('http-status').status;
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Vendor = require('../models/Vendor');
+const Group = require('../models/Group');
 const ApiError = require('../utils/ApiError');
 const { normalizePhone } = require('./auth.service');
-const { ROLES, USER_STATUS, VENDOR_STATUS } = require('../utils/constants');
+const { ROLES, USER_STATUS, VENDOR_STATUS, GROUP_STATUS } = require('../utils/constants');
 
 /**
  * List users for the admin console with search + status/role filters and
@@ -130,6 +131,8 @@ const getStats = async () => {
     suspended,
     flagged,
     pending,
+    totalGroups,
+    activeGroups,
   ] = await Promise.all([
     User.countDocuments({}),
     Vendor.countDocuments({}),
@@ -138,8 +141,10 @@ const getStats = async () => {
     User.countDocuments({ status: USER_STATUS.SUSPENDED }),
     User.countDocuments({ status: USER_STATUS.FLAGGED }),
     User.countDocuments({ status: USER_STATUS.PENDING }),
+    Group.countDocuments({}),
+    Group.countDocuments({ status: { $in: [GROUP_STATUS.ACTIVE, GROUP_STATUS.CLOSING] } }),
   ]);
-  return { totalUsers, vendors, pendingVendors, admins, suspended, flagged, pending };
+  return { totalUsers, vendors, pendingVendors, admins, suspended, flagged, pending, totalGroups, activeGroups };
 };
 
 module.exports = {

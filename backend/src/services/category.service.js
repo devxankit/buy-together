@@ -55,7 +55,7 @@ const queryCategories = async (filter = {}) => {
 
   const results = categories.map((c) => ({
     ...c.toObject(),
-    groupCount: counts[c.slug] || 0,
+    groupCount: (counts[c.name] || 0) + (counts[c.slug] || 0),
   }));
 
   const [all, active] = await Promise.all([

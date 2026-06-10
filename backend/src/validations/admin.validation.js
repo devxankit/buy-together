@@ -1,5 +1,13 @@
 const joi = require('joi');
-const { ROLES, USER_STATUS, VENDOR_STATUS, KYC_STATUS, BUSINESS_TYPES } = require('../utils/constants');
+const {
+  ROLES,
+  USER_STATUS,
+  VENDOR_STATUS,
+  KYC_STATUS,
+  BUSINESS_TYPES,
+  GROUP_STATUS,
+  GROUP_TYPE,
+} = require('../utils/constants');
 
 const phone = joi
   .string()
@@ -136,6 +144,77 @@ const rejectVendor = {
   }),
 };
 
+// ── Groups ──────────────────────────────────────────────────────────
+const listGroups = {
+  query: joi.object().keys({
+    search: joi.string().allow('', null),
+    // `locked` is a virtual tab that also covers completed groups.
+    status: joi.string().valid('all', 'locked', ...Object.values(GROUP_STATUS)),
+    category: joi.string().allow('', null),
+    page: joi.number().integer().min(1),
+    limit: joi.number().integer().min(1).max(100),
+    sortBy: joi.string(),
+  }),
+};
+
+const createGroup = {
+  body: joi.object().keys({
+    title: joi.string().trim().min(2).max(120).required(),
+    productName: joi.string().trim().max(120).allow('', null),
+    description: joi.string().max(1000).allow('', null),
+    slogan: joi.string().max(240).allow('', null),
+    category: joi.string().trim().max(60).allow('', null),
+    subCategory: joi.string().trim().max(60).allow('', null),
+    type: joi.string().valid(...Object.values(GROUP_TYPE)),
+    location: joi.string().max(120).allow('', null),
+    image: joi.string().uri().allow('', null),
+    spotsTotal: joi.number().integer().min(0).max(100000),
+    creatorName: joi.string().max(80).allow('', null),
+    status: joi.string().valid(...Object.values(GROUP_STATUS)),
+    closesAt: joi.date().allow('', null),
+    members: joi.array().items(objectId),
+  }),
+};
+
+const groupId = {
+  params: joi.object().keys({ groupId: objectId.required() }),
+};
+
+const updateGroup = {
+  params: joi.object().keys({ groupId: objectId.required() }),
+  body: joi
+    .object()
+    .keys({
+      title: joi.string().trim().min(2).max(120),
+      productName: joi.string().trim().max(120).allow('', null),
+      description: joi.string().max(1000).allow('', null),
+      slogan: joi.string().max(240).allow('', null),
+      category: joi.string().trim().max(60).allow('', null),
+      subCategory: joi.string().trim().max(60).allow('', null),
+      type: joi.string().valid(...Object.values(GROUP_TYPE)),
+      location: joi.string().max(120).allow('', null),
+      image: joi.string().uri().allow('', null),
+      spotsTotal: joi.number().integer().min(0).max(100000),
+      creatorName: joi.string().max(80).allow('', null),
+      status: joi.string().valid(...Object.values(GROUP_STATUS)),
+      closesAt: joi.date().allow('', null),
+      members: joi.array().items(objectId),
+    })
+    .min(1),
+};
+
+const addGroupMember = {
+  params: joi.object().keys({ groupId: objectId.required() }),
+  body: joi.object().keys({ userId: objectId.required() }),
+};
+
+const groupMember = {
+  params: joi.object().keys({
+    groupId: objectId.required(),
+    userId: objectId.required(),
+  }),
+};
+
 module.exports = {
   listUsers,
   createUser,
@@ -146,4 +225,10 @@ module.exports = {
   vendorId,
   updateVendor,
   rejectVendor,
+  listGroups,
+  createGroup,
+  groupId,
+  updateGroup,
+  addGroupMember,
+  groupMember,
 };

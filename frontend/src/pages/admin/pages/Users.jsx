@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Pencil, Trash2, X, Phone, User as UserIcon, MapPin } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button } from '../components';
+import { showToast } from '../../../utils/toast';
 import {
   listUsersAdmin,
   createUserAdmin,
@@ -110,8 +111,13 @@ const UserModal = ({ initial, onClose, onSaved }) => {
 
     setSaving(true);
     try {
-      if (isEdit) await updateUserAdmin(initial.id, payload);
-      else await createUserAdmin(payload);
+      if (isEdit) {
+        await updateUserAdmin(initial.id, payload);
+        showToast('Buyer updated successfully! 🎉');
+      } else {
+        await createUserAdmin(payload);
+        showToast('Buyer created successfully! 🎉');
+      }
       onSaved();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not save the user.');
@@ -235,9 +241,10 @@ const Users = () => {
     if (!window.confirm(`Delete buyer "${u.name}"? This cannot be undone.`)) return;
     try {
       await deleteUserAdmin(u.id);
+      showToast(`Buyer "${u.name}" deleted!`, '🗑️');
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete user.');
+      showToast(err.response?.data?.message || 'Failed to delete user.', '❌');
     }
   };
 

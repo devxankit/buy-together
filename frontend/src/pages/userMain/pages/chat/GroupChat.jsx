@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
+import { showToast } from '../../../../utils/toast';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
@@ -1146,7 +1147,7 @@ const GroupChat = () => {
       {isMenuOpen && (
         <div className="absolute top-[56px] right-3.5 w-[180px] bg-surface rounded-2xl border border-line shadow-2xl py-2 z-50 animate-fadeIn">
           <button 
-            onClick={() => { setIsMenuOpen(false); alert('Group pinned to your home screen!'); }}
+            onClick={() => { setIsMenuOpen(false); showToast('Group pinned to your home screen!', '📌'); }}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1156,7 +1157,7 @@ const GroupChat = () => {
             <span>Pin Group</span>
           </button>
           <button 
-            onClick={() => { setIsMenuOpen(false); alert('Group notifications muted.'); }}
+            onClick={() => { setIsMenuOpen(false); showToast('Group notifications muted.', '🔇'); }}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1166,7 +1167,7 @@ const GroupChat = () => {
             <span>Mute Group</span>
           </button>
           <button 
-            onClick={() => { setIsMenuOpen(false); alert('Thank you for reporting. Our moderation team will investigate this group.'); }}
+            onClick={() => { setIsMenuOpen(false); showToast('Thank you for reporting. Our moderation team will investigate this group.', '📢'); }}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

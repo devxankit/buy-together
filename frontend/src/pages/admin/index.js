@@ -8,6 +8,7 @@ export { default as Dashboard }  from './pages/Dashboard';
 export { default as Users }      from './pages/Users';
 export { default as Groups }     from './pages/Groups';
 export { default as Categories } from './pages/Categories';
+export { default as Banners }    from './pages/Banners';
 export { default as Vendors }   from './pages/Vendors';
 export { default as Deals }     from './pages/Deals';
 export { default as Fraud }     from './pages/Fraud';

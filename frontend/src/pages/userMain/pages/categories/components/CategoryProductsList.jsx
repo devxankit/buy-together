@@ -14,7 +14,7 @@ import WishlistButton from '../../../../../components/ui/WishlistButton';
  *  - Subtle linear progress indicators alongside remaining metrics
  *  - Bottom row with hashtag chips and custom outline action buttons
  */
-const CategoryProductsList = ({ products }) => {
+const CategoryProductsList = ({ products, onJoin }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
@@ -146,7 +146,13 @@ const CategoryProductsList = ({ products }) => {
                       className="mr-1"
                     />
                   <button
-                    onClick={() => navigate(`/groups/${prod.id}/chat`, { state: { group: prod, isJoined: false } })}
+                    onClick={(e) => {
+                      if (onJoin) {
+                        onJoin(e, prod);
+                      } else {
+                        navigate(`/groups/${prod.id}/chat`, { state: { group: prod, isJoined: false } });
+                      }
+                    }}
                     className="border border-primary hover:bg-primary/5 text-primary px-3 py-1.5 rounded-xl text-[10px] font-black transition-all duration-200 active:scale-95"
                   >
                     Join Group

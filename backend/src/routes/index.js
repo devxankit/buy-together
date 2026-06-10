@@ -8,6 +8,8 @@ const chatRoute = require('./chat.routes');
 const adminRoute = require('./admin.routes');
 const categoryRoute = require('./category.routes');
 const uploadRoute = require('./upload.routes');
+const bannerRoute = require('./banner.routes');
+const notificationRoute = require('./notification.routes');
 
 const router = express.Router();
 
@@ -21,6 +23,8 @@ const defaultRoutes = [
   { path: '/admin', route: adminRoute },
   { path: '/categories', route: categoryRoute },
   { path: '/uploads', route: uploadRoute },
+  { path: '/banners', route: bannerRoute },
+  { path: '/notifications', route: notificationRoute },
 ];
 
 defaultRoutes.forEach((route) => {

@@ -24,6 +24,7 @@ const createCategory = {
     color: joi.string().trim().allow('', null),
     displayOrder: joi.number().integer().min(0),
     isActive: joi.boolean(),
+    subCategories: joi.array().items(joi.string().trim().max(60)),
   }),
 };
 
@@ -40,6 +41,7 @@ const updateCategory = {
       color: joi.string().trim().allow('', null),
       displayOrder: joi.number().integer().min(0),
       isActive: joi.boolean(),
+      subCategories: joi.array().items(joi.string().trim().max(60)),
     })
     .min(1),
 };
