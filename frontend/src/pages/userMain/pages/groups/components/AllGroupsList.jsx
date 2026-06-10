@@ -51,7 +51,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
           return (
             <div
               key={group.id}
-              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
+              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true, isAdmin: group.isAdmin } })}
               className="bg-surface border border-line/70 hover:border-primary/15 rounded-2xl p-3 flex gap-3 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] cursor-pointer"
             >
               {/* Product Image on the left */}

@@ -82,7 +82,8 @@ const GroupsList = () => {
       image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
       spotsJoined: 28,
       spotsTotal: 50,
-      daysLeft: '2d left'
+      daysLeft: '2d left',
+      isAdmin: true
     },
     {
       id: 'all-g2',
@@ -118,7 +119,8 @@ const GroupsList = () => {
       image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
       spotsJoined: 18,
       spotsTotal: 40,
-      daysLeft: '2d left'
+      daysLeft: '2d left',
+      isAdmin: true
     }
   ];
 
@@ -219,6 +221,9 @@ const GroupsList = () => {
   // 3. SEARCH & FILTER LOGIC (My Groups)
   const filteredGroups = useMemo(() => {
     let result = allGroupsData.filter((group) => {
+      // Only show groups the user created in My Groups section
+      if (!group.isAdmin) return false;
+
       const matchesSearch =
         group.title.toLowerCase().includes(searchValue.toLowerCase()) ||
         group.category.toLowerCase().includes(searchValue.toLowerCase()) ||
