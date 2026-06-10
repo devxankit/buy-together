@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { reverseGeocode } from '../../../utils/googleMaps';
+import { getNotifications } from '../../../services/notification.api';
 
 const UserMainContext = createContext(null);
 
@@ -13,12 +15,61 @@ export const UserMainProvider = ({ children }) => {
     address: 'Connaught Place, New Delhi'
   });
   
-  const [notificationCount, setNotificationCount] = useState(2);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [headerTitle, setHeaderTitle] = useState('');
 
   // Global Location Selection States
-  const [selectedCity, setSelectedCity] = useState('Mumbai, Maharashtra');
+  const [selectedCity, setSelectedCity] = useState('Detecting Location...');
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+
+  // Auto-detect location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          try {
+            const locName = await reverseGeocode(lat, lng);
+            setSelectedCity(locName);
+            setCurrentLocation({
+              latitude: lat,
+              longitude: lng,
+              address: locName
+            });
+          } catch (err) {
+            console.error('Failed to reverse-geocode coordinates on mount:', err);
+            setSelectedCity('Mumbai, Maharashtra'); // fallback on geocoding failure
+          }
+        },
+        (error) => {
+          console.warn('Geolocation denied or failed on mount:', error);
+          setSelectedCity('Mumbai, Maharashtra'); // fallback on permission denied/error
+        }
+      );
+    } else {
+      setSelectedCity('Mumbai, Maharashtra'); // fallback if geolocation unsupported
+    }
+  }, []);
+
+  // Fetch unread notifications count on mount
+  useEffect(() => {
+    let active = true;
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await getNotifications();
+        if (active) {
+          const unread = data.filter(n => !n.read).length;
+          setNotificationCount(unread);
+        }
+      } catch (err) {
+        console.error('Failed to fetch unread notifications count:', err);
+      }
+    };
+    fetchUnreadCount();
+    return () => { active = false; };
+  }, []);
+
 
   const updateLocation = (coords, addr) => {
     setCurrentLocation({

@@ -1,21 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from '../../hooks/useDispatch';
-import { setAuth } from '../../redux/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { verifyOtp, resendOtp } from '../../redux/asyncActions/authActions';
 
 const N = 6;
 
+// Seed the boxes from a dev OTP (returned by the API only when SMS is off).
+const seedDigits = (code) => {
+  const seed = Array(N).fill('');
+  if (code) [...String(code)].slice(0, N).forEach((d, i) => { seed[i] = d; });
+  return seed;
+};
+
 const OTP = () => {
-  const [digits, setDigits] = useState(Array(N).fill(''));
-  const [focusIdx, setFocusIdx] = useState(0);
-  const [timer, setTimer] = useState(29);
-  const refs = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { role = 'user', mobile = '', name, email, flow } = location.state || {};
+  const { loading, error } = useSelector((state) => state.auth);
+  const { phone = '', name, flow, devOtp, isNewUser } = location.state || {};
 
-  const contactDisplay = email || (mobile ? `+91 ${mobile}` : 'your email/phone');
+  const [nameInput, setNameInput] = useState(name || '');
+  const [digits, setDigits] = useState(() => seedDigits(devOtp));
+  const [focusIdx, setFocusIdx] = useState(0);
+  const [timer, setTimer] = useState(29);
+  const refs = useRef([]);
+
+  const contactDisplay = phone ? `+91 ${phone}` : 'your mobile';
+
+  /* guard: this screen needs a phone from the previous step */
+  useEffect(() => {
+    if (!phone) navigate('/login', { replace: true });
+  }, [phone, navigate]);
 
   /* countdown timer */
   useEffect(() => {
@@ -73,24 +88,35 @@ const OTP = () => {
     focus(Math.min(raw.length, N - 1));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (digits.join('').length < N) return;
-    dispatch(setAuth({
-      user: {
-        name: name || 'Verified User',
-        email: email || '',
-        mobile,
-        role,
-        businessName: role === 'vendor' ? 'Apple India' : undefined,
-      },
-      token: 'mock-jwt-' + Date.now(),
-    }));
-    navigate(role === 'vendor' ? '/vendor/dashboard' : '/');
+    const otp = digits.join('');
+    if (otp.length < N || loading || (isNewUser && !nameInput.trim())) return;
+    try {
+      const { user } = await dispatch(verifyOtp({ phone, otp, name: nameInput.trim() || undefined })).unwrap();
+      navigate(user?.role === 'vendor' ? '/vendor/dashboard' : '/', { replace: true });
+    } catch {
+      // error is surfaced via redux; reset the boxes for a clean retry
+      setDigits(Array(N).fill(''));
+      focus(0);
+    }
+  };
+
+  const handleResend = async () => {
+    if (timer > 0 || loading) return;
+    try {
+      const res = await dispatch(
+        resendOtp({ phone, purpose: flow === 'signup' ? 'signup' : 'login' })
+      ).unwrap();
+      setTimer(29);
+      setDigits(seedDigits(res.devOtp));
+      focus(0);
+    } catch {
+      // surfaced via redux error
+    }
   };
 
   const filled = digits.filter(Boolean).length;
-  const progress = (filled / N) * 100;
 
   return (
     <div className="min-h-screen w-full max-w-[430px] mx-auto flex flex-col bg-[#EAF6F6] font-sans">
@@ -210,27 +236,56 @@ const OTP = () => {
             </div>
             <button
               type="button"
-              disabled={timer > 0}
-              onClick={() => { setTimer(29); setDigits(Array(N).fill('')); focus(0); }}
-              className={`text-[12px] font-black transition-all active:scale-95 ${timer > 0 ? 'text-faint cursor-default' : 'text-primary'}`}
+              disabled={timer > 0 || loading}
+              onClick={handleResend}
+              className={`text-[12px] font-black transition-all active:scale-95 ${timer > 0 || loading ? 'text-faint cursor-default' : 'text-primary'}`}
             >
               Resend OTP
             </button>
           </div>
 
+          {/* Name Input for New User Registration during login flow */}
+          {isNewUser && (
+            <div className="flex flex-col gap-2 mb-5 text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <label className="text-[12.5px] font-bold text-ink">
+                Complete Registration
+              </label>
+              <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
+                <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Enter your Full Name"
+                  className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-[#CBD5E1] outline-none"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <p className="text-[12px] font-semibold text-red-500 text-center mb-3">{error}</p>
+          )}
+
           {/* Verify Button */}
           <button
             type="submit"
-            disabled={filled < N}
+            disabled={filled < N || loading || (isNewUser && !nameInput.trim())}
             className="w-full h-[52px] bg-primary rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
           >
             <svg className="w-4.5 h-4.5 w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            Verify & Continue
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+            {loading ? 'Verifying…' : 'Verify & Continue'}
+            {!loading && (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            )}
           </button>
 
           {/* Security note */}

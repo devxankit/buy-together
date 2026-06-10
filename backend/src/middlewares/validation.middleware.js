@@ -1,5 +1,5 @@
 const joi = require('joi');
-const httpStatus = require('http-status');
+const httpStatus = require('http-status').status;
 const { pick } = require('../utils/helpers');
 
 const validate = (schema) => (req, res, next) => {

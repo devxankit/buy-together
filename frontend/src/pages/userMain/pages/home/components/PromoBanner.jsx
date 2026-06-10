@@ -1,44 +1,65 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components';
+import { getBanners } from '../../../../../services/banner.api';
+
+const DEFAULT_SLIDES = [
+  {
+    badge: 'Smarter Together',
+    titleLine1: 'Buy more.',
+    titleHighlight: 'Save more.',
+    description: 'Join with other buyers, unlock bulk discounts and save big!',
+    image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+    activeBuyers: '2.4K+',
+    link: ''
+  },
+  {
+    badge: 'Mega Pools Live',
+    titleLine1: 'Share deals.',
+    titleHighlight: 'Slash prices.',
+    description: 'Send group invites to neighbors and secure up to 40% OFF!',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
+    activeBuyers: '1.8K+',
+    link: ''
+  },
+  {
+    badge: 'Direct Farm Drops',
+    titleLine1: 'Pure quality.',
+    titleHighlight: 'Zero middleman.',
+    description: 'Fresh vegetables and fruits shipped directly from verified sources.',
+    image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
+    activeBuyers: '3.1K+',
+    link: ''
+  }
+];
 
 /**
- * Auto-sliding compact Promo Banner carousel for the userMain homepage.
- * Slides automatically every 3 seconds inside the exact mockup color theme.
+ * Dynamic Promo Banner carousel.
+ * Fetches banners from database on mount, falling back to mock slider slides.
  */
 const PromoBanner = ({ onExplore }) => {
+  const navigate = useNavigate();
+  const [slides, setSlides] = useState(DEFAULT_SLIDES);
   const [activeSlide, setActiveSlide] = useState(0);
 
-  const slides = [
-    {
-      badge: 'Smarter Together',
-      titleLine1: 'Buy more.',
-      titleLine2: 'Save more.',
-      titleHighlight: 'Save more.',
-      description: 'Join with other buyers, unlock bulk discounts and save big!',
-      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-      activeBuyers: '2.4K+'
-    },
-    {
-      badge: 'Mega Pools Live',
-      titleLine1: 'Share deals.',
-      titleLine2: 'Slash prices.',
-      titleHighlight: 'Slash prices.',
-      description: 'Send group invites to neighbors and secure up to 40% OFF!',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
-      activeBuyers: '1.8K+'
-    },
-    {
-      badge: 'Direct Farm Drops',
-      titleLine1: 'Pure quality.',
-      titleLine2: 'Zero middleman.',
-      titleHighlight: 'Zero middleman.',
-      description: 'Fresh vegetables and fruits shipped directly from verified sources.',
-      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
-      activeBuyers: '3.1K+'
-    }
-  ];
+  useEffect(() => {
+    let active = true;
+    const fetchBanners = async () => {
+      try {
+        const { data } = await getBanners();
+        if (active && data && data.length > 0) {
+          setSlides(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load active promo banners, using fallbacks:', err);
+      }
+    };
+    fetchBanners();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
     }, 3000);
@@ -56,10 +77,13 @@ const PromoBanner = ({ onExplore }) => {
           return (
             <div
               key={index}
-              className={`absolute inset-0 p-3.5 pt-4 flex flex-col items-start justify-between transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+              onClick={() => slide.link && navigate(slide.link)}
+              className={`absolute inset-0 p-3.5 pt-4 flex flex-col items-start justify-between transition-opacity duration-700 ease-in-out ${
+                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+              } ${slide.link ? 'cursor-pointer' : ''}`}
             >
               {/* Badge capsule */}
-              <div className="bg-surface px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-line/10 active:scale-95 transition-all cursor-pointer">
+              <div className="bg-surface px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-line/10 active:scale-95 transition-all">
                 <svg className="w-2.5 h-2.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
@@ -81,7 +105,14 @@ const PromoBanner = ({ onExplore }) => {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={onExplore}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (slide.link) {
+                    navigate(slide.link);
+                  } else {
+                    onExplore();
+                  }
+                }}
                 className="h-[26px] px-3 rounded-[10px] text-[9.5px] font-bold gap-1 mt-auto"
               >
                 Explore Groups
@@ -98,8 +129,8 @@ const PromoBanner = ({ onExplore }) => {
                   {/* Phone Image Mockup */}
                   <img
                     src={slide.image}
-                    alt="Mockup mockup"
-                    className="absolute right-2 top-5 w-14 h-14 object-contain rounded-xl shadow-lg border border-surface/40"
+                    alt="Promo mockup"
+                    className="absolute right-2 top-5 w-14 h-14 object-cover rounded-xl shadow-lg border border-surface/40"
                   />
                   
                   {/* Avatars */}
@@ -116,7 +147,7 @@ const PromoBanner = ({ onExplore }) => {
 
                   {/* Stat Card */}
                   <div className="absolute bottom-2.5 right-4 bg-surface rounded-lg p-1 px-1.5 shadow-md border border-line/10 flex flex-col items-center">
-                    <span className="text-[9px] font-black text-primary leading-none">{slide.activeBuyers}</span>
+                    <span className="text-[9px] font-black text-primary leading-none">{slide.activeBuyers || '1.5K+'}</span>
                     <span className="text-[6px] font-black text-muted leading-none mt-0.5 uppercase tracking-wide">Active Buyers</span>
                   </div>
                 </div>
@@ -127,16 +158,20 @@ const PromoBanner = ({ onExplore }) => {
       </div>
 
       {/* Under-banner dots indicators */}
-      <div className="flex justify-center items-center gap-1">
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setActiveSlide(idx)}
-            className={`transition-all duration-300 ${idx === activeSlide ? 'w-4 h-1 bg-primary rounded-full' : 'w-1 h-1 bg-line rounded-full'}`}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="flex justify-center items-center gap-1">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveSlide(idx)}
+              className={`transition-all duration-300 ${
+                idx === activeSlide ? 'w-4 h-1 bg-primary rounded-full' : 'w-1 h-1 bg-line rounded-full'
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

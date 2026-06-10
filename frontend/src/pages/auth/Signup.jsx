@@ -1,16 +1,25 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { register } from '../../redux/asyncActions/authActions';
 
 const Signup = () => {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [agreed, setAgreed] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/otp', { state: { flow: 'signup', phone, email, name } });
+    if (!agreed || phone.length !== 10) return;
+    try {
+      const res = await dispatch(register({ name, phone })).unwrap();
+      navigate('/otp', { state: { flow: 'signup', phone, name, devOtp: res.devOtp } });
+    } catch {
+      // error is surfaced via redux state below
+    }
   };
 
   return (
@@ -89,20 +98,6 @@ const Signup = () => {
             />
           </div>
 
-          {/* Email */}
-          <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
-            <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email Address"
-              className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-[#CBD5E1] outline-none"
-              required
-            />
-          </div>
 
           {/* Phone */}
           <div className="flex items-center gap-3 bg-surface-alt border border-line rounded-2xl px-4 h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all">
@@ -138,16 +133,23 @@ const Signup = () => {
             </span>
           </label>
 
+          {/* Error */}
+          {error && (
+            <p className="text-[11.5px] font-semibold text-red-500 px-1">{error}</p>
+          )}
+
           {/* Sign Up Button */}
           <button
             type="submit"
-            disabled={!agreed}
+            disabled={!agreed || loading || phone.length !== 10}
             className="w-full h-[52px] bg-primary rounded-2xl text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+            {loading ? 'Sending OTP…' : 'Create Account'}
+            {!loading && (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            )}
           </button>
 
           {/* Already have account */}

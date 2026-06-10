@@ -1,5 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useChat } from '../../hooks/useChat';
+import { showToast } from '../../../../utils/toast';
+
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
 
 // --- Dummy Data & State Init ---
 const initialMessages = [
@@ -812,7 +818,9 @@ const GroupChat = () => {
   };
 
   const [activeTab, setActiveTab] = useState('Chat');
-  const [messages, setMessages] = useState(initialMessages);
+  // `messages` holds client-only items (polls, in-session file shares). Real
+  // text chat comes from Firebase RTDB via the useChat hook and is merged below.
+  const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showPollModal, setShowPollModal] = useState(false);
   const [isJoined, setIsJoined] = useState(location.state?.isJoined ?? true);
@@ -858,6 +866,30 @@ const GroupChat = () => {
   ];
   
   const resolvedGroupId = group.id || groupId || 'g-fallback';
+
+  // ── Realtime chat (Firebase RTDB via backend) ──────────────────────
+  const currentUser = useSelector((state) => state.auth.user);
+  const currentUserId = currentUser?._id || currentUser?.id;
+  const { messages: liveMessages, sendMessage: sendLiveMessage } = useChat(
+    resolvedGroupId,
+    isJoined
+  );
+
+  // Merge live RTDB text messages with client-only items (polls, files),
+  // mapping each live message into the shape <ChatMessage /> expects.
+  const displayMessages = useMemo(() => {
+    const mapped = (liveMessages || []).map((m) => ({
+      id: m.id,
+      _ts: m.createdAt,
+      name: currentUserId && String(m.senderId) === String(currentUserId) ? 'You' : m.senderName,
+      avatar: DEFAULT_AVATAR,
+      time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      content: m.content,
+      replyData: m.replyTo ? { name: m.replyTo.name, content: m.replyTo.content } : undefined,
+    }));
+    const locals = (messages || []).map((m) => ({ ...m, _ts: m._ts ?? m.id }));
+    return [...mapped, ...locals].sort((a, b) => (a._ts || 0) - (b._ts || 0));
+  }, [liveMessages, messages, currentUserId]);
 
   // New Interactive states
   const [showPinnedModal, setShowPinnedModal] = useState(false);
@@ -972,22 +1004,18 @@ const GroupChat = () => {
   };
 
   const handleSendMessage = () => {
-    if (!messageInput.trim() || !isJoined) return;
-    const newMsg = {
-      id: Date.now(),
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80",
-      name: "You",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      content: messageInput
-    };
-    if (replyingToMessage) {
-      newMsg.replyData = {
-        name: replyingToMessage.name,
-        content: replyingToMessage.content
-      };
-      setReplyingToMessage(null);
-    }
-    setMessages(prev => [...prev, newMsg]);
+    const text = messageInput.trim();
+    if (!text || !isJoined) return;
+    const replyTo = replyingToMessage
+      ? {
+          id: String(replyingToMessage.id),
+          name: replyingToMessage.name || '',
+          content: replyingToMessage.content || '',
+        }
+      : null;
+    // Persist to Firebase RTDB via the backend; it echoes back over the socket.
+    sendLiveMessage(text, replyTo).catch(() => {});
+    setReplyingToMessage(null);
     setMessageInput('');
     if (activeTab !== 'Chat') setActiveTab('Chat');
   };
@@ -1154,7 +1182,7 @@ const GroupChat = () => {
       {isMenuOpen && (
         <div className="absolute top-[56px] right-3.5 w-[180px] bg-surface rounded-2xl border border-line shadow-2xl py-2 z-50 animate-fadeIn">
           <button 
-            onClick={() => { setIsMenuOpen(false); alert('Group pinned to your home screen!'); }}
+            onClick={() => { setIsMenuOpen(false); showToast('Group pinned to your home screen!', '📌'); }}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1164,7 +1192,7 @@ const GroupChat = () => {
             <span>Pin Group</span>
           </button>
           <button 
-            onClick={() => { setIsMenuOpen(false); alert('Group notifications muted.'); }}
+            onClick={() => { setIsMenuOpen(false); showToast('Group notifications muted.', '🔇'); }}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1174,7 +1202,7 @@ const GroupChat = () => {
             <span>Mute Group</span>
           </button>
           <button 
-            onClick={() => { setIsMenuOpen(false); alert('Thank you for reporting. Our moderation team will investigate this group.'); }}
+            onClick={() => { setIsMenuOpen(false); showToast('Thank you for reporting. Our moderation team will investigate this group.', '📢'); }}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1224,10 +1252,10 @@ const GroupChat = () => {
             <TabsAndPinned activeTab={activeTab} setActiveTab={setActiveTab} group={group} onPinClick={() => setShowPinnedModal(true)} />
             
             {/* Dynamic Content Based on Tab */}
-            {activeTab === 'Chat' && <ChatFeed messages={messages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
-            {activeTab === 'Polls' && <PollsFeed messages={messages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
+            {activeTab === 'Chat' && <ChatFeed messages={displayMessages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
+            {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
             {activeTab === 'Members' && <MembersFeed groupId={resolvedGroupId} isAdmin={isAdmin} />}
-            {activeTab === 'Media' && <MediaFeed messages={messages} />}
+            {activeTab === 'Media' && <MediaFeed messages={displayMessages} />}
           </>
         )}
       </div>

@@ -10,3 +10,5 @@ export { default as Avatar } from './Avatar';
 export { default as Button } from './Button';
 export { default as SearchInput } from './SearchInput';
 export { default as SegmentTabs } from './SegmentTabs';
+export { default as LocationAutocomplete } from './LocationAutocomplete';
+export { default as ImageUploader } from './ImageUploader';

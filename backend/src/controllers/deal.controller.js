@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const httpStatus = require('http-status').status;
 const dealService = require('../services/deal.service');
 
 const createDeal = async (req, res) => {
