@@ -32,4 +32,39 @@ const single = (field) => (req, res, next) =>
     return next(err);
   });
 
-module.exports = { single, MAX_BYTES };
+const mediaFileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
+    /^image\/(jpe?g|png|webp|gif|avif|svg\+xml)$/,
+    /^video\/(mp4|mpeg|quicktime|x-msvideo|webm|ogg)$/,
+    /^audio\/(mpeg|mp4|ogg|wav|webm|aac|amr|x-wav)$/,
+    /^application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|zip|octet-stream|x-zip-compressed|x-compressed)$/,
+    /^text\/plain$/
+  ];
+
+  const isValid = allowedMimeTypes.some(regex => regex.test(file.mimetype));
+
+  if (isValid) {
+    cb(null, true);
+  } else {
+    cb(new ApiError(httpStatus.BAD_REQUEST, 'File type not allowed (supported: images, videos, audio, documents)'));
+  }
+};
+
+const mediaUpload = multer({ 
+  storage, 
+  fileFilter: mediaFileFilter, 
+  limits: { fileSize: 25 * 1024 * 1024 } 
+});
+
+const mediaSingle = (field) => (req, res, next) =>
+  mediaUpload.single(field)(req, res, (err) => {
+    if (!err) return next();
+    if (err instanceof multer.MulterError) {
+      const message =
+        err.code === 'LIMIT_FILE_SIZE' ? 'File must be 25MB or smaller' : err.message;
+      return next(new ApiError(httpStatus.BAD_REQUEST, message));
+    }
+    return next(err);
+  });
+
+module.exports = { single, mediaSingle, MAX_BYTES };

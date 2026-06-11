@@ -40,8 +40,18 @@ const uploadImage = (buffer, { folder } = {}) =>
     stream.end(buffer);
   });
 
+const uploadMedia = (buffer, { folder, resourceType } = {}) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: folder || config.cloudinary.folder, resource_type: resourceType || 'auto' },
+      (error, result) => (error ? reject(error) : resolve(result))
+    );
+    stream.end(buffer);
+  });
+
 module.exports = {
   cloudinary,
   isConfigured,
   uploadImage,
+  uploadMedia,
 };

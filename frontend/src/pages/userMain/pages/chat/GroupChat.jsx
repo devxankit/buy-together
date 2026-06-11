@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
 import { showToast } from '../../../../utils/toast';
 import { getGroup, joinGroup, leaveGroup, kickGroupMember } from '../../../../services/group.api';
-import { votePollMessage } from '../../../../services/chat.api';
+import { votePollMessage, pinMessage, unpinMessage } from '../../../../services/chat.api';
 import api from '../../../../services/api';
 
 const DEFAULT_AVATAR =
@@ -191,7 +191,7 @@ const StatsCard = ({ group }) => {
   );
 };
 
-const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
+const TabsAndPinned = ({ activeTab, setActiveTab, group, pinnedMessage, onPinClick }) => {
   const tabs = ['Chat', 'Polls', 'Members', 'Media'];
   
   return (
@@ -209,7 +209,7 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
                 <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
               </svg>
             )}
-            {idx === 1 && <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+            {idx === 1 && <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
             {idx === 2 && <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
             {idx === 3 && <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
             {tab}
@@ -224,7 +224,9 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
             <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
           </svg>
-          <p className="text-[11px] font-semibold text-ink flex-1 truncate"><span className="text-primary font-bold">Pinned:</span> {group.targetPrice ? `Target price ${group.targetPrice} & min ${group.spotsTotal} units to order` : group.slogan}</p>
+          <p className="text-[11px] font-semibold text-ink flex-1 truncate">
+            <span className="text-primary font-bold">Pinned:</span> {pinnedMessage ? pinnedMessage.content : (group.targetPrice ? `Target price ${group.targetPrice} & min ${group.spotsTotal} units to order` : group.slogan)}
+          </p>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -234,7 +236,7 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, onPinClick }) => {
   );
 };
 
-const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike, onReply }) => {
+const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike, onReply, uploading }) => {
   let pressTimer = null;
   let lastTap = 0;
   let startX = 0;
@@ -253,7 +255,7 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
 
     pressTimer = setTimeout(() => {
       if (onLongPress) onLongPress({ id, content, name });
-    }, 600);
+    }, 2000); // Long-press hold set to 2 seconds
   };
 
   const handleEnd = () => {
@@ -312,8 +314,36 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
           {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap">{content}</p>}
 
           {image && (
-            <div className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all">
-              <img src={image} alt="Attachment" className="w-full h-auto object-cover max-h-[200px]" />
+            <div className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all relative">
+              <img src={image} alt="Attachment" className={`w-full h-auto object-cover max-h-[200px] transition-all ${uploading ? 'opacity-60 blur-[2px]' : ''}`} />
+              {uploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white backdrop-blur-sm shadow-md">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {video && (
+            <div className="mt-2 rounded-xl overflow-hidden border border-line relative max-w-full">
+              {uploading ? (
+                <div className="relative w-full h-[180px] bg-slate-900 flex items-center justify-center rounded-xl">
+                  <div className="absolute inset-0 bg-slate-950 opacity-60 blur-[2px] rounded-xl" />
+                  <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white backdrop-blur-sm z-10 shadow-md">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </div>
+              ) : (
+                <video src={video} controls className="w-full h-auto max-h-[240px] rounded-xl bg-black" />
+              )}
             </div>
           )}
 
@@ -328,11 +358,32 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
                 <span className="text-xs font-bold text-ink truncate leading-tight">{documentData.name}</span>
                 <span className="text-[9.5px] font-semibold text-faint mt-0.5">{documentData.size} • Document</span>
               </div>
-              <button className="p-1.5 text-muted hover:text-primary active:scale-95 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-              </button>
+              {uploading ? (
+                <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                  <svg className="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4}></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : documentData.url ? (
+                <a 
+                  href={documentData.url.replace('/upload/', '/upload/fl_attachment/')} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  download={documentData.name}
+                  className="p-1.5 text-muted hover:text-primary active:scale-95 transition-colors flex-shrink-0"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </a>
+              ) : (
+                <button className="p-1.5 text-muted hover:text-primary active:scale-95 transition-colors flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </button>
+              )}
             </div>
           )}
 
@@ -344,14 +395,17 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
                 </svg>
               </div>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-xs font-bold text-ink truncate leading-tight">Shared Location</span>
-                <span className="text-[9.5px] font-semibold text-faint mt-0.5">{locationData.city} ({locationData.lat}, {locationData.lng})</span>
+                <span className="text-xs font-bold text-ink truncate leading-tight">{locationData.road || "Shared Location"}</span>
+                <span className="text-[10px] font-bold text-primary truncate leading-normal">{locationData.city}</span>
+                {locationData.fullAddress && (
+                  <span className="text-[9.5px] font-medium text-slate-500 mt-0.5 whitespace-normal leading-normal">{locationData.fullAddress}</span>
+                )}
               </div>
               <a 
                 href={locationData.mapUrl} 
                 target="_blank" 
                 rel="noreferrer"
-                className="px-3 py-1.5 bg-primary text-white text-[10px] font-extrabold rounded-lg active:scale-95 transition-all"
+                className="px-3 py-1.5 bg-primary text-white text-[10px] font-extrabold rounded-lg active:scale-95 transition-all flex-shrink-0"
               >
                 Open Map
               </a>
@@ -450,18 +504,48 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, reactions, 
   );
 };
 
-const ChatFeed = ({ messages, onVote, onLongPress, onLike, onReply }) => {
+const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, onLike, onReply }) => {
   const endRef = useRef(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, typingUsers]);
 
   return (
     <div className="bg-[#F6F6F8] pt-5 w-full max-w-[430px] mx-auto pb-4">
-      {messages.map(msg => (
-        <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} onReply={onReply} />
-      ))}
+      {loading && messages.length === 0 ? (
+        <div className="flex flex-col gap-5 px-4 py-2 w-full animate-pulse">
+          {[1, 2, 3].map((i) => {
+            const isLeft = i % 2 !== 0;
+            return (
+              <div key={i} className={`flex gap-3 w-full ${isLeft ? '' : 'flex-row-reverse'}`}>
+                {isLeft && <div className="w-8 h-8 bg-slate-200 rounded-full flex-shrink-0" />}
+                <div className={`flex flex-col gap-1.5 max-w-[70%] ${isLeft ? 'items-start' : 'items-end'}`}>
+                  {isLeft && <div className="w-24 h-3 bg-slate-200 rounded-full" />}
+                  <div className={`h-12 bg-slate-200 rounded-[14px] w-48 ${isLeft ? 'rounded-tl-sm' : 'rounded-tr-sm'}`} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        messages.map(msg => (
+          <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} onReply={onReply} />
+        ))
+      )}
+
+      {/* Real-time typing indicator */}
+      {typingUsers.length > 0 && (
+        <div className="flex items-center gap-2 px-6 py-2 text-[11px] font-bold text-slate-400 bg-surface/50 border border-line-soft rounded-full w-fit mx-4 mb-4 shadow-sm animate-pulse">
+          <div className="flex gap-1 items-center">
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></span>
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
+          </div>
+          <span>{typingUsers.map(u => u.userName).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...</span>
+        </div>
+      )}
+
       <div ref={endRef} />
     </div>
   );
@@ -745,49 +829,156 @@ const EditInterestModal = ({ currentInterest, onClose, onSave }) => {
   );
 };
 
-const PinnedMessageModal = ({ group, onClose }) => {
+const PinnedMessageModal = ({ group, pinnedMessage, onUnpin, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div className="bg-surface rounded-3xl w-full max-w-[340px] p-5 shadow-2xl relative border border-line">
         <button onClick={onClose} className="absolute top-4 right-4 p-1 text-faint hover:bg-surface-alt rounded-full transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
-        <div className="flex items-center gap-2 mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" /></svg>
-          <h2 className="text-lg font-extrabold text-ink">Pinned Information</h2>
-        </div>
-        <div className="bg-primary-soft border border-primary/20 rounded-xl p-4 mb-2">
-          <p className="text-sm font-semibold text-ink leading-relaxed mb-3">
-            <span className="text-primary font-bold">Goal:</span> {group.targetPrice ? `Reach target price of ${group.targetPrice} by ordering a min. of ${group.spotsTotal} units together.` : group.slogan}
-          </p>
-          <div className="flex flex-col gap-2.5 text-[11px] font-bold text-faint">
-            <div className="flex justify-between items-center"><span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Deadline:</span><span className="text-ink text-sm font-black">{group.daysLeft}</span></div>
-            <div className="flex justify-between items-center"><span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> Buyers Joined:</span><span className="text-ink text-sm font-black">{group.spotsJoined}/{group.spotsTotal}</span></div>
-          </div>
-        </div>
+        
+        {pinnedMessage ? (
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" /></svg>
+              <h2 className="text-lg font-extrabold text-ink">Pinned Message</h2>
+            </div>
+            <div className="bg-primary-soft border border-primary/20 rounded-xl p-4 mb-4">
+              <span className="block font-black text-primary text-[11px] mb-1">{pinnedMessage.senderName}</span>
+              <p className="text-sm font-semibold text-ink leading-relaxed break-words whitespace-pre-wrap">
+                {pinnedMessage.content}
+              </p>
+              <span className="block text-[9px] text-faint mt-2">{new Date(pinnedMessage.createdAt).toLocaleString()}</span>
+            </div>
+            
+            {onUnpin && (
+              <button 
+                onClick={onUnpin}
+                className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-bold text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Unpin Message
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" /></svg>
+              <h2 className="text-lg font-extrabold text-ink">Pinned Information</h2>
+            </div>
+            <div className="bg-primary-soft border border-primary/20 rounded-xl p-4 mb-2">
+              <p className="text-sm font-semibold text-ink leading-relaxed mb-3">
+                <span className="text-primary font-bold">Goal:</span> {group.targetPrice ? `Reach target price of ${group.targetPrice} by ordering a min. of ${group.spotsTotal} units together.` : group.slogan}
+              </p>
+              <div className="flex flex-col gap-2.5 text-[11px] font-bold text-faint">
+                <div className="flex justify-between items-center"><span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Deadline:</span><span className="text-ink text-sm font-black">{group.daysLeft}</span></div>
+                <div className="flex justify-between items-center"><span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> Buyers Joined:</span><span className="text-ink text-sm font-black">{group.spotsJoined}/{group.spotsTotal}</span></div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 };
 
+// --- Screen Skeleton Component ---
+const GroupChatSkeleton = () => (
+  <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] relative overflow-hidden animate-pulse">
+    {/* Header Placeholder */}
+    <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-line w-full gap-2 h-[56px]">
+      <div className="flex items-center gap-3 flex-1">
+        <div className="w-6 h-6 bg-slate-200 rounded-full" />
+        <div className="w-9 h-9 bg-slate-200 rounded-xl" />
+        <div className="flex flex-col gap-1.5 flex-1">
+          <div className="w-32 h-3.5 bg-slate-200 rounded-full" />
+          <div className="w-20 h-2 bg-slate-200 rounded-full" />
+        </div>
+      </div>
+    </div>
+
+    {/* Joined Info & Stats Card Placeholder */}
+    <div className="flex flex-col gap-3 p-4 bg-surface border-b border-line">
+      <div className="w-48 h-3 bg-slate-200 rounded-full" />
+      <div className="bg-surface border border-line rounded-2xl p-4 h-[120px] flex flex-col justify-between">
+        <div className="w-full h-4 bg-slate-200 rounded-full" />
+        <div className="w-full h-2 bg-slate-200 rounded-full" />
+        <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-line">
+          <div className="h-8 bg-slate-200 rounded-lg" />
+          <div className="h-8 bg-slate-200 rounded-lg" />
+          <div className="h-8 bg-slate-200 rounded-lg" />
+        </div>
+      </div>
+    </div>
+
+    {/* Tabs Placeholder */}
+    <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-line">
+      <div className="w-16 h-4 bg-slate-200 rounded-full" />
+      <div className="w-16 h-4 bg-slate-200 rounded-full" />
+      <div className="w-16 h-4 bg-slate-200 rounded-full" />
+      <div className="w-16 h-4 bg-slate-200 rounded-full" />
+    </div>
+
+    {/* Chat Feed Placeholder */}
+    <div className="flex-1 flex flex-col gap-5 px-4 py-6 overflow-y-hidden bg-[#F6F6F8]">
+      {[1, 2, 3].map((i) => {
+        const isLeft = i % 2 !== 0;
+        return (
+          <div key={i} className={`flex gap-3 w-full ${isLeft ? '' : 'flex-row-reverse'}`}>
+            {isLeft && <div className="w-8 h-8 bg-slate-200 rounded-full flex-shrink-0" />}
+            <div className={`flex flex-col gap-1.5 max-w-[70%] ${isLeft ? 'items-start' : 'items-end'}`}>
+              {isLeft && <div className="w-24 h-3 bg-slate-200 rounded-full" />}
+              <div className={`h-12 bg-slate-200 rounded-[14px] w-48 ${isLeft ? 'rounded-tl-sm' : 'rounded-tr-sm'}`} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Bottom Input Area Placeholder */}
+    <div className="p-4 bg-surface border-t border-line h-[72px] flex items-center gap-2">
+      <div className="flex-1 h-10 bg-slate-200 rounded-full" />
+      <div className="w-10 h-10 bg-slate-200 rounded-full" />
+    </div>
+  </div>
+);
+
 // --- Main Page Component ---
+
+const groupDetailsCache = {};
 
 const GroupChat = () => {
   const navigate = useNavigate();
   const { groupId } = useParams(); 
   const location = useLocation();
   
-  const [groupState, setGroupState] = useState(() => location.state?.group || null);
-  const [loading, setLoading] = useState(!groupState);
+  const currentUser = useSelector((state) => state.auth.user);
+  const currentUserId = currentUser?._id || currentUser?.id;
+  
+  const [groupState, setGroupState] = useState(() => location.state?.group || groupDetailsCache[groupId] || null);
+  const [loading, setLoading] = useState(() => !location.state?.group && !groupDetailsCache[groupId]);
 
   useEffect(() => {
     let active = true;
     const fetchDetails = async () => {
       try {
         if (!groupId) return;
+
+        // Auto-join the group silently on page mount for seamless direct chatting
+        try {
+          await joinGroup(groupId);
+        } catch (joinErr) {
+          // Ignore if user is already joined or join fails
+          console.warn('Auto-join on mount status:', joinErr.response?.data?.message || joinErr.message);
+        }
+
         const res = await getGroup(groupId);
         if (active && res?.data) {
           setGroupState(res.data);
+          groupDetailsCache[groupId] = res.data;
         }
       } catch (err) {
         console.error('Failed to fetch group details:', err);
@@ -840,14 +1031,38 @@ const GroupChat = () => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showPollModal, setShowPollModal] = useState(false);
-  const [isJoined, setIsJoined] = useState(() => {
-    if (location.state?.isJoined !== undefined) return location.state.isJoined;
-    return true; // default
-  });
-  const [isAdmin, setIsAdmin] = useState(() => {
-    if (location.state?.isAdmin !== undefined) return location.state.isAdmin;
-    return false; // default
-  });
+
+  const typingTimeoutRef = useRef(null);
+  const currentUserName = currentUser?.name || 'User';
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  const handleNewMessageChange = (val) => {
+    setMessageInput(val);
+    
+    if (val.trim()) {
+      startTyping(currentUserName);
+      
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        stopTyping();
+      }, 2000);
+    } else {
+      stopTyping();
+    }
+  };
+  const { isJoined, isAdmin } = useMemo(() => {
+    const adminId = groupState?.admin?._id || groupState?.admin?.id || groupState?.admin;
+    const userIsAdmin = adminId && currentUserId && String(adminId) === String(currentUserId);
+    return {
+      isJoined: true, // Always true to skip gates and provide instant seamless chat feed
+      isAdmin: !!userIsAdmin,
+    };
+  }, [groupState, currentUserId]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Premium Upgraded states
@@ -891,12 +1106,15 @@ const GroupChat = () => {
   const resolvedGroupId = group.id || groupId || 'g-fallback';
 
   // ── Realtime chat (Firebase RTDB via backend) ──────────────────────
-  const currentUser = useSelector((state) => state.auth.user);
-  const currentUserId = currentUser?._id || currentUser?.id;
-  const { messages: liveMessages, sendMessage: sendLiveMessage } = useChat(
-    resolvedGroupId,
-    isJoined
-  );
+  const { 
+    messages: liveMessages, 
+    sendMessage: sendLiveMessage, 
+    loading: chatLoading,
+    typingUsers,
+    pinnedMessage,
+    startTyping,
+    stopTyping
+  } = useChat(resolvedGroupId, isJoined);
 
   // Merge live RTDB text messages with client-only items (polls, files),
   // mapping each live message into the shape <ChatMessage /> expects.
@@ -937,6 +1155,7 @@ const GroupChat = () => {
         content: m.content,
         replyData: m.replyTo ? { name: m.replyTo.name, content: m.replyTo.content } : undefined,
         image: m.image,
+        video: m.video,
         documentData: m.documentData,
         locationData: m.locationData,
         voiceData: m.voiceData,
@@ -960,19 +1179,7 @@ const GroupChat = () => {
     return localStorage.getItem(`buytogether_confirmed_interest_${resolvedGroupId}`) === 'true' || location.state?.interestConfirmed === true;
   });
 
-  // Sync isJoined and isAdmin with loaded groupState
-  useEffect(() => {
-    if (groupState && currentUserId) {
-      const memberIds = (groupState.members || []).map(m => String(m._id || m.id || m));
-      const adminId = groupState.admin?._id || groupState.admin?.id || groupState.admin;
-      const userIsAdmin = adminId && String(adminId) === String(currentUserId);
-      
-      const userJoined = memberIds.includes(String(currentUserId)) || !!userIsAdmin;
-      
-      setIsJoined(userJoined);
-      setIsAdmin(!!userIsAdmin);
-    }
-  }, [groupState, currentUserId]);
+  // Group membership derived dynamically via useMemo above.
 
   const handleJoinGroup = async () => {
     try {
@@ -1128,14 +1335,91 @@ const GroupChat = () => {
 
     setShowAttachmentDrawer(false);
 
+    const tempId = `temp-${Date.now()}`;
+    const localUrl = URL.createObjectURL(file);
+
     if (fileTypeToUpload === 'image') {
+      const isVideo = file.type.startsWith('video/');
+      
+      // Optimistic preview message
+      const optMsg = {
+        id: tempId,
+        _ts: Date.now(),
+        name: 'You',
+        avatar: currentUser?.avatar || DEFAULT_AVATAR,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        uploading: true,
+        content: ''
+      };
+      if (isVideo) {
+        optMsg.video = localUrl;
+      } else {
+        optMsg.image = localUrl;
+      }
+      setMessages(prev => [...prev, optMsg]);
+
       try {
-        showToast('Uploading image...', '⏳');
-
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('media', file);
 
-        const res = await api.post('/uploads/image?folder=misc', formData, {
+        const res = await api.post('/uploads/media?folder=misc', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (res.data?.url) {
+          if (isVideo) {
+            await sendLiveMessage({
+              type: 'video',
+              video: res.data.url,
+              content: ''
+            });
+            showToast('Video uploaded and shared!', '🎥');
+          } else {
+            await sendLiveMessage({
+              type: 'image',
+              image: res.data.url,
+              content: ''
+            });
+            showToast('Image uploaded and shared!', '📸');
+          }
+        } else {
+          showToast('Failed to upload file', '❌');
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+        showToast(err.response?.data?.message || 'Upload failed', '❌');
+      } finally {
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        URL.revokeObjectURL(localUrl);
+      }
+    } else {
+      const sizeStr = file.size > 1024 * 1024 
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+        : `${Math.round(file.size / 1024)} KB`;
+
+      // Optimistic preview document message
+      const optMsg = {
+        id: tempId,
+        _ts: Date.now(),
+        name: 'You',
+        avatar: currentUser?.avatar || DEFAULT_AVATAR,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        uploading: true,
+        documentData: {
+          name: file.name,
+          size: sizeStr
+        },
+        content: `Shared a document: ${file.name}`
+      };
+      setMessages(prev => [...prev, optMsg]);
+
+      try {
+        const formData = new FormData();
+        formData.append('media', file);
+
+        const res = await api.post('/uploads/media?folder=misc', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -1143,62 +1427,81 @@ const GroupChat = () => {
 
         if (res.data?.url) {
           await sendLiveMessage({
-            type: 'image',
-            image: res.data.url,
-            content: `Shared an image: ${file.name}`
+            type: 'document',
+            documentData: {
+              name: file.name,
+              size: sizeStr,
+              url: res.data.url
+            },
+            content: `Shared a document: ${file.name}`
           });
-          showToast('Image uploaded and shared!', '📸');
+          showToast('Document uploaded and shared!', '📄');
         } else {
-          showToast('Failed to upload image', '❌');
+          showToast('Failed to upload document', '❌');
         }
       } catch (err) {
-        console.error('Image upload failed:', err);
-        showToast(err.response?.data?.message || 'Image upload failed', '❌');
-      }
-    } else {
-      try {
-        const sizeStr = file.size > 1024 * 1024 
-          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
-          : `${Math.round(file.size / 1024)} KB`;
-
-        await sendLiveMessage({
-          type: 'document',
-          documentData: {
-            name: file.name,
-            size: sizeStr
-          },
-          content: `Shared a document: ${file.name}`
-        });
-        showToast('Document shared!', '📄');
-      } catch (err) {
-        console.error('Document sharing failed:', err);
-        showToast('Failed to share document', '❌');
+        console.error('Document upload failed:', err);
+        showToast(err.response?.data?.message || 'Document upload failed', '❌');
+      } finally {
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        URL.revokeObjectURL(localUrl);
       }
     }
   };
 
   const handleShareLocation = () => {
+    setShowAttachmentDrawer(false);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           try {
+            showToast('Fetching address details...', '📍');
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+              headers: {
+                'Accept-Language': 'en'
+              }
+            });
+            const geoData = await geoRes.json();
+            const address = geoData.address || {};
+            const city = address.city || address.town || address.village || address.suburb || "Mumbai";
+            const road = address.road || address.suburb || "Current Location";
+            const fullAddress = geoData.display_name || `${road}, ${city}`;
+            
+            await sendLiveMessage({
+              type: 'location',
+              locationData: {
+                lat: lat.toFixed(4),
+                lng: lng.toFixed(4),
+                city: city,
+                road: road,
+                fullAddress: fullAddress,
+                mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+              },
+              content: `Shared Location: ${fullAddress}`
+            });
+            showToast('Location shared!', '📍');
+          } catch (geoErr) {
+            console.error('Failed to reverse geocode location:', geoErr);
+            // Fallback to coordinates
             await sendLiveMessage({
               type: 'location',
               locationData: {
                 lat: lat.toFixed(4),
                 lng: lng.toFixed(4),
                 city: group.location || "Mumbai",
+                road: "Current Location",
+                fullAddress: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
                 mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
               },
-              content: "Shared current location 📍"
+              content: "Shared location 📍"
             });
-          } catch (err) {
-            console.error('Failed to share location:', err);
+            showToast('Location shared!', '📍');
           }
         },
-        async () => {
+        async (err) => {
+          console.error('Geolocation error:', err);
           try {
             await sendLiveMessage({
               type: 'location',
@@ -1206,32 +1509,21 @@ const GroupChat = () => {
                 lat: "19.0760",
                 lng: "72.8777",
                 city: `${group.location || "Mumbai"}, India`,
-                mapUrl: "https://www.google.com/maps"
+                road: "Pinned Location",
+                fullAddress: "Mumbai, Maharashtra, India",
+                mapUrl: "https://www.google.com/maps?q=19.0760,72.8777"
               },
               content: "Shared location 📍"
             });
-          } catch (err) {
-            console.error('Failed to share location:', err);
+            showToast('Shared default location!', '📍');
+          } catch (sendErr) {
+            console.error('Failed to send fallback location:', sendErr);
           }
         }
       );
+    } else {
+      showToast('Geolocation is not supported by your browser.', '❌');
     }
-    setShowAttachmentDrawer(false);
-  };
-
-  const handleShareVoiceNote = async () => {
-    try {
-      await sendLiveMessage({
-        type: 'voice',
-        voiceData: {
-          duration: "0:12"
-        },
-        content: "Shared a voice message 🎤"
-      });
-    } catch (err) {
-      console.error('Failed to share voice note:', err);
-    }
-    setShowAttachmentDrawer(false);
   };
 
   const handleSendMessage = () => {
@@ -1244,6 +1536,11 @@ const GroupChat = () => {
           content: replyingToMessage.content || '',
         }
       : null;
+
+    // Stop typing indicator on send
+    stopTyping();
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
     // Persist to Firebase RTDB via the backend; it echoes back over the socket.
     sendLiveMessage(text, replyTo).catch(() => {});
     setReplyingToMessage(null);
@@ -1371,13 +1668,34 @@ const GroupChat = () => {
     setSelectedMessageForMenu(null);
   };
 
+  const handlePinMessage = async (msg) => {
+    try {
+      if (!resolvedGroupId || !msg?.id) return;
+      await pinMessage(resolvedGroupId, msg.id);
+      showToast('Message pinned!', '📌');
+    } catch (err) {
+      console.error('Failed to pin message:', err);
+      showToast(err.response?.data?.message || 'Failed to pin message', '❌');
+    } finally {
+      setSelectedMessageForMenu(null);
+    }
+  };
+
+  const handleUnpinMessage = async () => {
+    try {
+      if (!resolvedGroupId) return;
+      await unpinMessage(resolvedGroupId);
+      showToast('Message unpinned!', '📌');
+    } catch (err) {
+      console.error('Failed to unpin message:', err);
+      showToast(err.response?.data?.message || 'Failed to unpin message', '❌');
+    } finally {
+      setShowPinnedModal(false);
+    }
+  };
+
   if (loading && !groupState) {
-    return (
-      <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] justify-center items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0D9488]"></div>
-        <p className="text-xs font-semibold text-faint mt-2">Loading group details...</p>
-      </div>
-    );
+    return <GroupChatSkeleton />;
   }
 
   if (!groupState) {
@@ -1454,50 +1772,26 @@ const GroupChat = () => {
         <JoinedInfo group={group} />
         <StatsCard group={group} />
         
-        {!isJoined ? (
-          <div className="flex flex-col items-center justify-center px-8 py-12 mt-2 bg-surface mx-4 rounded-2xl border border-line shadow-sm shadow-card">
-            <div className="w-16 h-16 bg-primary-soft rounded-full flex items-center justify-center mb-4 shadow-sm shadow-[#0D9488]/10">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-primary" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-black text-ink mb-2 text-center">Join Group to View Chat</h2>
-            <p className="text-xs font-semibold text-[#64748B] text-center mb-6 leading-relaxed">Join {group.spotsJoined ?? group.joined ?? 0} others and get access to exclusive group chat, polls, and discussions.</p>
-            <button
-              onClick={handleJoinGroup}
-              className="w-full bg-gradient-to-r from-[#0B7A70] to-[#0D9488] hover:from-[#09635A] hover:to-[#0B7A70] text-white font-black py-3.5 rounded-xl shadow-md shadow-[#0D9488]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-              </svg>
-              <span>Join Group Now</span>
-            </button>
-          </div>
-        ) : (
-          <>
-            <TabsAndPinned activeTab={activeTab} setActiveTab={setActiveTab} group={group} onPinClick={() => setShowPinnedModal(true)} />
-            
-            {/* Dynamic Content Based on Tab */}
-            {activeTab === 'Chat' && <ChatFeed messages={displayMessages} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
-            {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
-            {activeTab === 'Members' && (
-              <MembersFeed 
-                groupId={resolvedGroupId} 
-                isAdmin={isAdmin} 
-                members={realMembers} 
-                confirmedMembers={realConfirmedMembers} 
-                onRemoveMember={handleRemoveMember} 
-              />
-            )}
-            {activeTab === 'Media' && <MediaFeed messages={displayMessages} />}
-          </>
+        <TabsAndPinned activeTab={activeTab} setActiveTab={setActiveTab} group={group} pinnedMessage={pinnedMessage} onPinClick={() => setShowPinnedModal(true)} />
+        
+        {/* Dynamic Content Based on Tab */}
+        {activeTab === 'Chat' && <ChatFeed messages={displayMessages} loading={chatLoading} typingUsers={typingUsers} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
+        {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
+        {activeTab === 'Members' && (
+          <MembersFeed 
+            groupId={resolvedGroupId} 
+            isAdmin={isAdmin} 
+            members={realMembers} 
+            confirmedMembers={realConfirmedMembers} 
+            onRemoveMember={handleRemoveMember} 
+          />
         )}
+        {activeTab === 'Media' && <MediaFeed messages={displayMessages} />}
       </div>
       
-      {/* Conditional Bottom Action Area */}
-      {isJoined ? (
-        <div className="absolute bottom-0 left-0 w-full bg-[#F6F6F8] z-40">
-          {/* Glassmorphic Sharing Option Drawer */}
+      {/* Bottom Action Area */}
+      <div className="absolute bottom-0 left-0 w-full bg-[#F6F6F8] z-40">
+        {/* Glassmorphic Sharing Option Drawer */}
           {showAttachmentDrawer && (
             <div className="mx-4 mb-2 p-4 bg-surface/80 backdrop-blur-md border border-surface/20 rounded-3xl shadow-xl animate-slideUp z-50">
               <div className="flex justify-between items-center mb-3 px-1">
@@ -1508,7 +1802,7 @@ const GroupChat = () => {
                   </svg>
                 </button>
               </div>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {[
                   {
                     label: 'Gallery',
@@ -1530,16 +1824,6 @@ const GroupChat = () => {
                       </svg>
                     ),
                     action: () => triggerFileUpload('image')
-                  },
-                  {
-                    label: 'Voice Note',
-                    gradient: 'from-teal-500 to-emerald-600',
-                    icon: (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                      </svg>
-                    ),
-                    action: () => handleShareVoiceNote()
                   },
                   {
                     label: 'Location',
@@ -1615,7 +1899,8 @@ const GroupChat = () => {
                   <button
                     key={emoji}
                     onClick={() => {
-                      setMessageInput(prev => prev + emoji);
+                      const nextVal = messageInput + emoji;
+                      handleNewMessageChange(nextVal);
                     }}
                     className="w-10 h-10 text-2xl flex items-center justify-center rounded-xl hover:bg-surface-alt active:scale-75 transition-all duration-200"
                   >
@@ -1666,7 +1951,7 @@ const GroupChat = () => {
                   type="text" 
                   placeholder="Type a message..." 
                   value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
+                  onChange={(e) => handleNewMessageChange(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="flex-1 bg-transparent text-[13px] font-medium text-ink placeholder:text-muted/70 outline-none border-none"
                 />
@@ -1775,20 +2060,10 @@ const GroupChat = () => {
             </div>
           )}
         </div>
-      ) : (
-        <div className="absolute bottom-0 w-full bg-surface border-t border-line p-4 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] z-30">
-          <button
-            onClick={handleJoinGroup}
-            className="w-full bg-primary hover:bg-[#0B7A70] text-white font-black py-4 rounded-2xl shadow-md shadow-[#0D9488]/20 active:scale-[0.98] transition-all text-center"
-          >
-            Join Group To Interact
-          </button>
-        </div>
-      )}
 
       {/* Modals */}
       {showPollModal && <CreatePollModal onClose={() => setShowPollModal(false)} onSubmit={handleCreatePollSubmit} />}
-      {showPinnedModal && <PinnedMessageModal group={group} onClose={() => setShowPinnedModal(false)} />}
+      {showPinnedModal && <PinnedMessageModal group={group} pinnedMessage={pinnedMessage} onUnpin={pinnedMessage ? handleUnpinMessage : null} onClose={() => setShowPinnedModal(false)} />}
       {showInterestModal && (
         <EditInterestModal 
           currentInterest={myInterestUnits} 
@@ -1804,7 +2079,7 @@ const GroupChat = () => {
         ref={fileInputRef} 
         onChange={handleFileChange} 
         className="hidden" 
-        accept={fileTypeToUpload === 'image' ? 'image/*' : '.pdf,.doc,.docx,.txt'} 
+        accept={fileTypeToUpload === 'image' ? 'image/*,video/*' : '.pdf,.doc,.docx,.txt'} 
       />
 
       {/* Premium Glassmorphic Message Options Drawer */}
@@ -1843,6 +2118,16 @@ const GroupChat = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
                 <span>Reply to Message</span>
+              </button>
+
+              <button
+                onClick={() => handlePinMessage(selectedMessageForMenu)}
+                className="w-full px-4 py-3.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-3 transition-colors border-b border-line"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v12l-7-3.5L5 17V5z" />
+                </svg>
+                <span>Pin Message</span>
               </button>
 
               <button

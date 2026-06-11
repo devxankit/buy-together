@@ -1,12 +1,11 @@
 const express = require('express');
 const auth = require('../middlewares/auth.middleware');
-const { adminOnly } = require('../middlewares/auth.middleware');
-const { single } = require('../middlewares/upload.middleware');
+const { single, mediaSingle } = require('../middlewares/upload.middleware');
 const uploadController = require('../controllers/upload.controller');
 
 const router = express.Router();
 
-// Admin-only image upload → Cloudinary. Returns { url, publicId, … }.
 router.post('/image', auth, single('image'), uploadController.uploadImage);
+router.post('/media', auth, mediaSingle('media'), uploadController.uploadMedia);
 
 module.exports = router;

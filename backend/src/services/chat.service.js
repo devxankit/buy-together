@@ -57,6 +57,7 @@ const createMessage = async ({
   content,
   replyTo = null,
   image = null,
+  video = null,
   documentData = null,
   locationData = null,
   voiceData = null,
@@ -73,6 +74,7 @@ const createMessage = async ({
     content: content || '',
     replyTo: replyTo || null,
     image: image || null,
+    video: video || null,
     documentData: documentData || null,
     locationData: locationData || null,
     voiceData: voiceData || null,
@@ -88,6 +90,49 @@ const createMessage = async ({
   });
 
   await ref.set(message);
+
+  // If this is a direct message, update conversations metadata for both users in Firebase RTDB
+  if (String(groupId).startsWith('dm-')) {
+    const parts = String(groupId).split('-');
+    if (parts.length === 3) {
+      const user1 = parts[1];
+      const user2 = parts[2];
+
+      const db = firebase.getDatabase();
+      const convoRef1 = db.ref(`conversations/${user1}/${user2}`);
+      const convoRef2 = db.ref(`conversations/${user2}/${user1}`);
+
+      let lastMessageText = content || '';
+      if (!lastMessageText) {
+        if (type === 'image') lastMessageText = '📷 Image';
+        else if (type === 'video') lastMessageText = '🎥 Video';
+        else if (type === 'document') lastMessageText = '📄 Document';
+        else if (type === 'location') lastMessageText = '📍 Location';
+        else if (type === 'voice') lastMessageText = '🎤 Voice Message';
+        else if (type === 'poll') lastMessageText = '📊 Poll';
+        else lastMessageText = 'Attachment';
+      }
+
+      const updateData1 = {
+        lastMessage: lastMessageText,
+        updatedAt: Date.now(),
+        otherUserId: user2,
+      };
+
+      const updateData2 = {
+        lastMessage: lastMessageText,
+        updatedAt: Date.now(),
+        otherUserId: user1,
+      };
+
+      // Set conversation metadata concurrently
+      await Promise.all([
+        convoRef1.set(updateData1),
+        convoRef2.set(updateData2),
+      ]);
+    }
+  }
+
   return { id: ref.key, groupId, ...message };
 };
 
@@ -99,7 +144,6 @@ const queryMessages = async (groupId, { limit = 100 } = {}) => {
   const parsedLimit = parseInt(limit, 10) || 100;
   const snapshot = await firebase
     .getGroupMessagesRef(groupId)
-    .orderByChild('createdAt')
     .limitToLast(parsedLimit)
     .once('value');
 

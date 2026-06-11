@@ -14,20 +14,24 @@ const sendMessage = {
       .allow(null)
       .optional(),
     image: joi.string().allow('', null).optional(),
+    video: joi.string().allow('', null).optional(),
     documentData: joi.object().keys({
       name: joi.string().required(),
       size: joi.string().required(),
-    }).optional(),
+      url: joi.string().uri().optional(),
+    }).unknown().optional(),
     locationData: joi.object().keys({
       lat: joi.string().required(),
       lng: joi.string().required(),
       city: joi.string().required(),
       mapUrl: joi.string().required(),
-    }).optional(),
+      road: joi.string().allow('', null).optional(),
+      fullAddress: joi.string().allow('', null).optional(),
+    }).unknown().optional(),
     voiceData: joi.object().keys({
       duration: joi.string().required(),
     }).optional(),
-    type: joi.string().valid('text', 'image', 'document', 'location', 'voice', 'poll', 'quote').default('text'),
+    type: joi.string().valid('text', 'image', 'video', 'document', 'location', 'voice', 'poll', 'quote').default('text'),
     quoteData: joi.object().unknown().optional(),
   }),
 };

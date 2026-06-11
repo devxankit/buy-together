@@ -23,3 +23,4 @@ export const deleteUserAdmin = (id) => api.delete(`/admin/users/${id}`);
 // ── Buyer: profile management (requires user JWT) ───────────────────
 export const getUserProfile = () => api.get('/users/profile');
 export const updateUserProfile = (data) => api.patch('/users/profile', data);
+export const getUserPublicProfile = (userId) => api.get(`/users/${userId}`);

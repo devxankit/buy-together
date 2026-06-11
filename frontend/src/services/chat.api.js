@@ -11,3 +11,14 @@ export const sendMessage = (data) => api.post('/chat/messages', data);
 
 export const votePollMessage = (groupId, messageId, optionIndex) =>
   api.post(`/chat/messages/${groupId}/${messageId}/vote`, { optionIndex });
+
+export const pinMessage = (groupId, messageId) =>
+  api.post(`/chat/messages/${groupId}/${messageId}/pin`);
+
+export const unpinMessage = (groupId) =>
+  api.delete(`/chat/messages/${groupId}/pin`);
+
+export const getPinnedMessage = (groupId) =>
+  api.get(`/chat/messages/${groupId}/pin`);
+
+export const getConversations = () => api.get('/chat/conversations');

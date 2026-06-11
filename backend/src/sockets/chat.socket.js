@@ -44,6 +44,16 @@ const chatSocket = (io) => {
       socket.leave(String(groupId));
     });
 
+    socket.on('typing', ({ groupId, userName }) => {
+      if (!groupId) return;
+      socket.to(String(groupId)).emit('user_typing', { groupId, userId: socket.user?.id, userName });
+    });
+
+    socket.on('stop_typing', ({ groupId }) => {
+      if (!groupId) return;
+      socket.to(String(groupId)).emit('user_stop_typing', { groupId, userId: socket.user?.id });
+    });
+
     socket.on('disconnect', () => {
       logger.info(`Chat socket disconnected: ${socket.id}`);
     });

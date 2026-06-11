@@ -2,6 +2,24 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
+import { getUserPublicProfile } from '../../../../services/user.api';
+
+const ChatSkeleton = () => (
+  <div className="flex flex-col gap-5 px-4 py-6 w-full max-w-[430px] mx-auto animate-pulse">
+    {[1, 2, 3, 4].map((i) => {
+      const isLeft = i % 2 !== 0;
+      return (
+        <div key={i} className={`flex gap-3 w-full ${isLeft ? '' : 'flex-row-reverse'}`}>
+          {isLeft && <div className="w-8 h-8 bg-slate-200 rounded-full flex-shrink-0" />}
+          <div className={`flex flex-col gap-1.5 max-w-[70%] ${isLeft ? 'items-start' : 'items-end'}`}>
+            {isLeft && <div className="w-24 h-3.5 bg-slate-200 rounded-full" />}
+            <div className={`h-12 bg-slate-200 rounded-[14px] w-48 ${isLeft ? 'rounded-tl-sm' : 'rounded-tr-sm'}`} />
+          </div>
+        </div>
+      );
+    })}
+  </div>
+);
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
@@ -131,9 +149,32 @@ const PersonalChat = () => {
   const currentUser = useSelector((state) => state.auth.user);
   const currentUserId = currentUser?._id || currentUser?.id;
 
-  const user = useMemo(() => {
+  const [chatPartner, setChatPartner] = useState(() => {
     if (location.state?.user) return location.state.user;
-    
+    return null;
+  });
+
+  useEffect(() => {
+    if (chatPartner) return;
+    if (!chatId || chatId === '1' || chatId === '2' || chatId === '3') return;
+
+    let active = true;
+    getUserPublicProfile(chatId)
+      .then((res) => {
+        if (active && res.data) {
+          setChatPartner(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch chat partner details:', err);
+      });
+
+    return () => { active = false; };
+  }, [chatId, chatPartner]);
+
+  const activePartner = useMemo(() => {
+    if (chatPartner) return chatPartner;
+
     const mockNames = {
       '1': 'Rohan Sharma',
       '2': 'Neha Singh',
@@ -144,12 +185,12 @@ const PersonalChat = () => {
       '2': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80',
       '3': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80',
     };
-    
+
     return {
       name: mockNames[chatId] || 'Chat Partner',
       avatar: mockAvatars[chatId] || DEFAULT_AVATAR,
     };
-  }, [chatId, location.state]);
+  }, [chatId, chatPartner]);
 
   const dmRoomId = useMemo(() => {
     if (!currentUserId || !chatId) return '';
@@ -157,7 +198,7 @@ const PersonalChat = () => {
     return `dm-${sorted[0]}-${sorted[1]}`;
   }, [currentUserId, chatId]);
 
-  const { messages: liveMessages, sendMessage: sendLiveMessage } = useChat(
+  const { messages: liveMessages, sendMessage: sendLiveMessage, loading, typingUsers, startTyping, stopTyping } = useChat(
     dmRoomId,
     Boolean(dmRoomId)
   );
@@ -167,23 +208,51 @@ const PersonalChat = () => {
       const isMe = currentUserId && String(m.senderId) === String(currentUserId);
       return {
         id: m.id,
-        avatar: isMe ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" : user.avatar,
-        name: isMe ? "You" : user.name,
+        avatar: isMe ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" : activePartner.avatar,
+        name: isMe ? "You" : activePartner.name,
         time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         content: m.content,
         isMe
       };
     });
-  }, [liveMessages, currentUserId, user]);
+  }, [liveMessages, currentUserId, activePartner]);
+
+  const typingTimeoutRef = useRef(null);
+  const currentUserName = currentUser?.name || 'User';
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, typingUsers]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  const handleNewMessageChange = (val) => {
+    setNewMessage(val);
+    
+    if (val.trim()) {
+      startTyping(currentUserName);
+      
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        stopTyping();
+      }, 2000);
+    } else {
+      stopTyping();
+    }
+  };
 
   const handleSendMessage = async () => {
     const text = newMessage.trim();
     if (!text || !dmRoomId) return;
-    
+
+    // Stop typing indicator on send
+    stopTyping();
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
     try {
       await sendLiveMessage(text);
       setNewMessage('');
@@ -194,18 +263,35 @@ const PersonalChat = () => {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-[#F6F6F8] font-sans pb-[76px]">
-      <TopBar navigate={navigate} user={user} />
+      <TopBar navigate={navigate} user={activePartner} />
       
       <div className="flex-1 overflow-y-auto pt-5 pb-4 w-full max-w-[430px] mx-auto no-scrollbar">
-        {messages.map(msg => (
-          <ChatMessage key={msg.id} {...msg} />
-        ))}
+        {loading ? (
+          <ChatSkeleton />
+        ) : (
+          messages.map(msg => (
+            <ChatMessage key={msg.id} {...msg} />
+          ))
+        )}
+
+        {/* Real-time typing indicator */}
+        {typingUsers.length > 0 && (
+          <div className="flex items-center gap-2 px-6 py-2 text-[11px] font-bold text-slate-400 bg-surface/50 border border-line-soft rounded-full w-fit mx-4 mb-4 shadow-sm animate-pulse">
+            <div className="flex gap-1 items-center">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></span>
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
+            </div>
+            <span>{typingUsers.map(u => u.userName).join(', ')} is typing...</span>
+          </div>
+        )}
+
         <div ref={endRef} />
       </div>
 
       <BottomInputArea 
         newMessage={newMessage} 
-        setNewMessage={setNewMessage} 
+        setNewMessage={handleNewMessageChange} 
         handleSendMessage={handleSendMessage} 
       />
     </div>

@@ -34,4 +34,37 @@ const uploadImage = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { uploadImage };
+const uploadMedia = catchAsync(async (req, res) => {
+  if (!cloudinary.isConfigured()) {
+    throw new ApiError(
+      httpStatus.SERVICE_UNAVAILABLE,
+      'Uploads are unavailable: Cloudinary is not configured on the server'
+    );
+  }
+  if (!req.file) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'No media file provided (form field name: media)');
+  }
+
+  const folder = FOLDERS[req.query.folder] || 'buy-together/misc';
+  
+  let resourceType = 'auto';
+  if (req.file.mimetype.startsWith('image/')) {
+    resourceType = 'image';
+  } else if (req.file.mimetype.startsWith('video/') || req.file.mimetype.startsWith('audio/')) {
+    resourceType = 'video';
+  } else {
+    resourceType = 'raw';
+  }
+
+  const result = await cloudinary.uploadMedia(req.file.buffer, { folder, resourceType });
+
+  res.status(httpStatus.CREATED).send({
+    url: result.secure_url,
+    publicId: result.public_id,
+    resourceType: result.resource_type,
+    format: result.format,
+    bytes: result.bytes,
+  });
+});
+
+module.exports = { uploadImage, uploadMedia };
