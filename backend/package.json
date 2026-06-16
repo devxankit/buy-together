@@ -6,6 +6,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
+    "seed:home": "node src/scripts/seedHome.js",
+    "verify:push": "node src/scripts/verifyPush.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

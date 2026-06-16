@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import * as authApi from '../../services/auth.api';
 import { setAuth, setError, setLoading, clearError } from '../slices/authSlice';
+import { registerWebPush } from '../../services/push';
 
 const msgFrom = (error, fallback) =>
   error.response?.data?.message || error.message || fallback;
@@ -62,6 +63,8 @@ export const verifyOtp = createAsyncThunk(
     try {
       const { data } = await authApi.verifyOtp(payload);
       dispatch(setAuth(data));
+      // Register this browser for push notifications (non-blocking).
+      registerWebPush();
       return data;
     } catch (error) {
       const message = msgFrom(error, 'OTP verification failed.');

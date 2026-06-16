@@ -113,22 +113,32 @@ const createMessage = async ({
         else lastMessageText = 'Attachment';
       }
 
-      const updateData1 = {
+      const senderUid = String(senderId);
+      const isUser1Sender = senderUid === String(user1);
+      const receiverUid = isUser1Sender ? user2 : user1;
+
+      const receiverConvoSnap = await db.ref(`conversations/${receiverUid}/${senderUid}`).once('value');
+      const receiverConvoVal = receiverConvoSnap.val();
+      const currentUnread = (receiverConvoVal && receiverConvoVal.unread) ? Number(receiverConvoVal.unread) : 0;
+
+      const senderUpdate = {
         lastMessage: lastMessageText,
         updatedAt: Date.now(),
-        otherUserId: user2,
+        otherUserId: receiverUid,
+        unread: 0,
       };
 
-      const updateData2 = {
+      const receiverUpdate = {
         lastMessage: lastMessageText,
         updatedAt: Date.now(),
-        otherUserId: user1,
+        otherUserId: senderUid,
+        unread: currentUnread + 1,
       };
 
       // Set conversation metadata concurrently
       await Promise.all([
-        convoRef1.set(updateData1),
-        convoRef2.set(updateData2),
+        db.ref(`conversations/${senderUid}/${receiverUid}`).set(senderUpdate),
+        db.ref(`conversations/${receiverUid}/${senderUid}`).set(receiverUpdate),
       ]);
     }
   }

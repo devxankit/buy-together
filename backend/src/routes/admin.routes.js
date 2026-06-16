@@ -1,9 +1,11 @@
 const express = require('express');
 const adminController = require('../controllers/admin.controller');
+const pushController = require('../controllers/push.controller');
 const auth = require('../middlewares/auth.middleware');
 const { adminOnly } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const adminValidation = require('../validations/admin.validation');
+const pushValidation = require('../validations/push.validation');
 
 const router = express.Router();
 
@@ -57,5 +59,13 @@ router
 router
   .route('/groups/:groupId/members/:userId')
   .delete(validate(adminValidation.groupMember), adminController.removeGroupMember);
+
+// ── Push notifications ──────────────────────────────────────────────
+// Separate endpoints for web vs. mobile-app delivery (plus an "all" combo).
+router.post('/push/web', validate(pushValidation.sendBroadcast), pushController.sendWeb);
+router.post('/push/mobile', validate(pushValidation.sendBroadcast), pushController.sendMobile);
+router.post('/push/all', validate(pushValidation.sendBroadcast), pushController.sendAll);
+router.get('/push/coverage', pushController.coverage);
+router.get('/push/campaigns', validate(pushValidation.listCampaigns), pushController.campaigns);
 
 module.exports = router;

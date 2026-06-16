@@ -9,6 +9,8 @@ const adminRoute = require('./admin.routes');
 const categoryRoute = require('./category.routes');
 const uploadRoute = require('./upload.routes');
 const bannerRoute = require('./banner.routes');
+const homeSectionRoute = require('./homeSection.routes');
+const fcmRoute = require('./fcm.routes');
 const notificationRoute = require('./notification.routes');
 
 const router = express.Router();
@@ -24,6 +26,8 @@ const defaultRoutes = [
   { path: '/categories', route: categoryRoute },
   { path: '/uploads', route: uploadRoute },
   { path: '/banners', route: bannerRoute },
+  { path: '/home-sections', route: homeSectionRoute },
+  { path: '/fcm', route: fcmRoute },
   { path: '/notifications', route: notificationRoute },
 ];
 

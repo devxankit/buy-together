@@ -22,3 +22,10 @@ export const getPinnedMessage = (groupId) =>
   api.get(`/chat/messages/${groupId}/pin`);
 
 export const getConversations = () => api.get('/chat/conversations');
+
+export const reactMessage = (groupId, messageId, emoji) =>
+  api.post(`/chat/messages/${groupId}/${messageId}/react`, { emoji });
+
+export const deleteMessage = (groupId, messageId) =>
+  api.delete(`/chat/messages/${groupId}/${messageId}`);
+

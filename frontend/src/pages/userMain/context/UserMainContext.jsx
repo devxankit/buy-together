@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { reverseGeocode } from '../../../utils/googleMaps';
 import { getNotifications } from '../../../services/notification.api';
+import api from '../../../services/api';
 
 const UserMainContext = createContext(null);
 
@@ -16,6 +17,7 @@ export const UserMainProvider = ({ children }) => {
   });
   
   const [notificationCount, setNotificationCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [headerTitle, setHeaderTitle] = useState('');
 
   // Global Location Selection States
@@ -70,6 +72,20 @@ export const UserMainProvider = ({ children }) => {
     return () => { active = false; };
   }, []);
 
+  const refreshUnreadMessageCount = useCallback(async () => {
+    try {
+      const { data } = await api.get('/chat/conversations');
+      const totalUnread = (data || []).reduce((acc, convo) => acc + (convo.unread || 0), 0);
+      setUnreadMessageCount(totalUnread);
+    } catch (err) {
+      console.error('Failed to fetch unread message count:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUnreadMessageCount();
+  }, [refreshUnreadMessageCount]);
+
 
   const updateLocation = (coords, addr) => {
     setCurrentLocation({
@@ -88,6 +104,8 @@ export const UserMainProvider = ({ children }) => {
       value={{
         currentLocation,
         notificationCount,
+        unreadMessageCount,
+        refreshUnreadMessageCount,
         headerTitle,
         updateLocation,
         clearNotifications,

@@ -50,6 +50,11 @@ const userSchema = mongoose.Schema(
     gender: { type: String, trim: true },
     location: { type: String, trim: true },
     lastLoginAt: { type: Date },
+    // FCM push notification tokens. Web (browser) and mobile (Flutter/native)
+    // are kept separate so the admin console can target each platform. Capped
+    // at the most-recent 10 per platform to avoid unbounded growth.
+    fcmTokens: { type: [String], default: [] },
+    fcmTokensMobile: { type: [String], default: [] },
   },
   {
     timestamps: true,
@@ -60,6 +65,9 @@ const userSchema = mongoose.Schema(
         delete ret._id;
         delete ret.__v;
         delete ret.password;
+        // Never expose push tokens to clients.
+        delete ret.fcmTokens;
+        delete ret.fcmTokensMobile;
         return ret;
       },
     },

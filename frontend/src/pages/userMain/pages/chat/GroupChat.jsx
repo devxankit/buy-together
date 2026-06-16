@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
 import { showToast } from '../../../../utils/toast';
 import { getGroup, joinGroup, leaveGroup, kickGroupMember } from '../../../../services/group.api';
-import { votePollMessage, pinMessage, unpinMessage } from '../../../../services/chat.api';
+import { votePollMessage, pinMessage, unpinMessage, reactMessage, deleteMessage } from '../../../../services/chat.api';
 import api from '../../../../services/api';
 
 const DEFAULT_AVATAR =
@@ -1113,7 +1113,9 @@ const GroupChat = () => {
     typingUsers,
     pinnedMessage,
     startTyping,
-    stopTyping
+    stopTyping,
+    deleteMessage: deleteLiveMessage,
+    reactMessage: reactLiveMessage
   } = useChat(resolvedGroupId, isJoined);
 
   // Merge live RTDB text messages with client-only items (polls, files),
@@ -1162,6 +1164,7 @@ const GroupChat = () => {
         type: m.type,
         quoteData,
         reactions: m.reactions,
+        senderId: m.senderId,
       };
     });
     const locals = (messages || []).map((m) => ({ ...m, _ts: m._ts ?? m.id }));
@@ -1587,33 +1590,28 @@ const GroupChat = () => {
     }
   };
 
-  const handleMessageReaction = (messageId, emoji) => {
-    setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId) {
-        const existingReactions = msg.reactions || [];
-        const index = existingReactions.findIndex(r => r.emoji === emoji);
-        let newReactions = [...existingReactions];
-        if (index > -1) {
-          newReactions[index] = {
-            ...newReactions[index],
-            count: newReactions[index].count + 1
-          };
-        } else {
-          newReactions.push({ emoji, count: 1 });
-        }
-        return {
-          ...msg,
-          reactions: newReactions
-        };
-      }
-      return msg;
-    }));
-    setSelectedMessageForMenu(null);
+  const handleMessageReaction = async (messageId, emoji) => {
+    try {
+      if (!resolvedGroupId || !messageId) return;
+      await reactLiveMessage(messageId, emoji);
+    } catch (err) {
+      console.error('Failed to react to message:', err);
+    } finally {
+      setSelectedMessageForMenu(null);
+    }
   };
 
-  const handleDeleteMessage = (messageId) => {
-    setMessages(prev => prev.filter(m => m.id !== messageId));
-    setSelectedMessageForMenu(null);
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      if (!resolvedGroupId || !messageId) return;
+      await deleteLiveMessage(messageId);
+      showToast('Message deleted', '🗑️');
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+      showToast(err.response?.data?.message || 'Failed to delete message', '❌');
+    } finally {
+      setSelectedMessageForMenu(null);
+    }
   };
 
   const handleCopyMessage = (content) => {
@@ -1632,35 +1630,20 @@ const GroupChat = () => {
     setSelectedMessageForMenu(null);
   };
 
-  const handleLikeMessage = (messageId) => {
-    setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId) {
-        const existingReactions = msg.reactions || [];
-        const index = existingReactions.findIndex(r => r.emoji === '❤️');
-        let newReactions = [...existingReactions];
-        if (index > -1) {
-          newReactions[index] = {
-            ...newReactions[index],
-            count: newReactions[index].count + 1
-          };
-        } else {
-          newReactions.push({ emoji: '❤️', count: 1 });
-        }
-        
-        // Premium heart burst pop overlay feedback
-        const burst = document.createElement('div');
-        burst.className = "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500 text-7xl font-bold select-none pointer-events-none z-[100] animate-heartPop";
-        burst.innerHTML = "❤️";
-        document.body.appendChild(burst);
-        setTimeout(() => burst.remove(), 800);
-
-        return {
-          ...msg,
-          reactions: newReactions
-        };
-      }
-      return msg;
-    }));
+  const handleLikeMessage = async (messageId) => {
+    try {
+      if (!resolvedGroupId || !messageId) return;
+      await reactLiveMessage(messageId, '❤️');
+      
+      // Premium heart burst pop overlay feedback
+      const burst = document.createElement('div');
+      burst.className = "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500 text-7xl font-bold select-none pointer-events-none z-[100] animate-heartPop";
+      burst.innerHTML = "❤️";
+      document.body.appendChild(burst);
+      setTimeout(() => burst.remove(), 800);
+    } catch (err) {
+      console.error('Failed to like message:', err);
+    }
   };
 
   const handleReplyMessage = (msg) => {
@@ -2140,15 +2123,17 @@ const GroupChat = () => {
                 <span>Copy Message Text</span>
               </button>
               
-              <button
-                onClick={() => handleDeleteMessage(selectedMessageForMenu.id)}
-                className="w-full px-4 py-3.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span>Delete Message</span>
-              </button>
+              {selectedMessageForMenu && selectedMessageForMenu.name === 'You' && (
+                <button
+                  onClick={() => handleDeleteMessage(selectedMessageForMenu.id)}
+                  className="w-full px-4 py-3.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Delete Message</span>
+                </button>
+              )}
             </div>
 
             {/* Cancel Button */}

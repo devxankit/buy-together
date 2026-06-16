@@ -13,10 +13,10 @@ const listBanners = {
 
 const createBanner = {
   body: joi.object().keys({
-    badge: joi.string().trim().max(40).required(),
-    titleLine1: joi.string().trim().max(60).required(),
-    titleHighlight: joi.string().trim().max(60).required(),
-    description: joi.string().trim().max(250).required(),
+    badge: joi.string().trim().max(40).allow('', null),
+    titleLine1: joi.string().trim().max(60).allow('', null),
+    titleHighlight: joi.string().trim().max(60).allow('', null),
+    description: joi.string().trim().max(250).allow('', null),
     image: joi.string().uri().required().messages({
       'string.uri': 'Image must be a valid URL',
       'any.required': 'Banner image is required',
@@ -33,10 +33,10 @@ const updateBanner = {
   body: joi
     .object()
     .keys({
-      badge: joi.string().trim().max(40),
-      titleLine1: joi.string().trim().max(60),
-      titleHighlight: joi.string().trim().max(60),
-      description: joi.string().trim().max(250),
+      badge: joi.string().trim().max(40).allow('', null),
+      titleLine1: joi.string().trim().max(60).allow('', null),
+      titleHighlight: joi.string().trim().max(60).allow('', null),
+      description: joi.string().trim().max(250).allow('', null),
       image: joi.string().uri().messages({ 'string.uri': 'Image must be a valid URL' }),
       activeBuyers: joi.string().trim().max(20).allow('', null),
       link: joi.string().trim().max(250).allow('', null),

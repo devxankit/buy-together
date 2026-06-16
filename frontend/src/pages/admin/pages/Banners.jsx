@@ -9,6 +9,7 @@ import {
   updateBanner,
   deleteBanner,
 } from '../../../services/banner.api';
+import { listGroupsAdmin } from '../../../services/group.api';
 
 const EMPTY_FORM = {
   badge: '',
@@ -71,6 +72,46 @@ const BannerModal = ({ initial, onClose, onSaved }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const isGroupLink = form.link && form.link.startsWith('/groups/');
+  const [linkType, setLinkType] = useState(isGroupLink ? 'group' : form.link ? 'custom' : 'group');
+  const [selectedGroupId, setSelectedGroupId] = useState(isGroupLink ? form.link.replace('/groups/', '') : '');
+  const [groups, setGroups] = useState([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [groupSearchQuery, setGroupSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const filteredGroups = groups.filter((g) => {
+    const titleMatch = g.title && g.title.toLowerCase().includes(groupSearchQuery.toLowerCase());
+    const productMatch = g.productName && g.productName.toLowerCase().includes(groupSearchQuery.toLowerCase());
+    return titleMatch || productMatch;
+  });
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClose = () => setDropdownOpen(false);
+    window.addEventListener('click', handleClose);
+    return () => window.removeEventListener('click', handleClose);
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchGroups = async () => {
+      setLoadingGroups(true);
+      try {
+        const { data } = await listGroupsAdmin({ limit: 100 });
+        if (active) {
+          setGroups(data.results || []);
+        }
+      } catch (err) {
+        console.error('Failed to load groups for banner redirect:', err);
+      } finally {
+        if (active) setLoadingGroups(false);
+      }
+    };
+    fetchGroups();
+    return () => { active = false; };
+  }, []);
+
   const set = (key) => (e) => {
     const value = e?.target?.type === 'checkbox' ? e.target.checked : e?.target ? e.target.value : e;
     setForm((f) => ({ ...f, [key]: value }));
@@ -79,19 +120,15 @@ const BannerModal = ({ initial, onClose, onSaved }) => {
   const submit = async (e) => {
     e?.preventDefault();
     setError('');
-    if (!form.badge.trim()) return setError('Badge is required.');
-    if (!form.titleLine1.trim()) return setError('Title Line 1 is required.');
-    if (!form.titleHighlight.trim()) return setError('Title Highlight is required.');
-    if (!form.description.trim()) return setError('Description is required.');
     if (!form.image.trim()) return setError('Banner image URL is required.');
 
     const payload = {
-      badge: form.badge.trim(),
-      titleLine1: form.titleLine1.trim(),
-      titleHighlight: form.titleHighlight.trim(),
-      description: form.description.trim(),
+      badge: '',
+      titleLine1: '',
+      titleHighlight: '',
+      description: '',
       image: form.image.trim(),
-      activeBuyers: form.activeBuyers?.trim() || '1.5K+',
+      activeBuyers: '',
       link: form.link?.trim() || '',
       displayOrder: Number(form.displayOrder) || 0,
       isActive: form.isActive,
@@ -127,7 +164,7 @@ const BannerModal = ({ initial, onClose, onSaved }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: `1px solid ${T.lineSoft}`, position: 'sticky', top: 0, background: T.surface, borderRadius: `${radius['2xl']}px ${radius['2xl']}px 0 0`, zIndex: 1 }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.ink, letterSpacing: '-0.01em' }}>{isEdit ? 'Edit Banner' : 'New Promo Banner'}</div>
-            <div style={{ fontSize: 12.5, color: T.muted, marginTop: 2 }}>{isEdit ? 'Update details for this user app homepage banner.' : 'Create a promo banner to display on the user app slider.'}</div>
+            <div style={{ fontSize: 12.5, color: T.muted, marginTop: 2 }}>{isEdit ? 'Update details for this homepage banner image.' : 'Create a banner to display on the user app home page.'}</div>
           </div>
           <button type="button" onClick={onClose} className="admin-icon-btn" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: T.surfaceAlt, color: T.muted, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={18} />
@@ -139,42 +176,164 @@ const BannerModal = ({ initial, onClose, onSaved }) => {
             <div style={{ background: T.dangerSoft, color: T.danger, fontSize: 12.5, fontWeight: 600, padding: '10px 12px', borderRadius: radius.md }}>{error}</div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="Badge capsule text">
-              <input style={inputStyle} value={form.badge} onChange={set('badge')} placeholder="e.g. Smarter Together" required />
-            </Field>
-            <Field label="Active Buyers stat">
-              <input style={inputStyle} value={form.activeBuyers} onChange={set('activeBuyers')} placeholder="e.g. 2.4K+" />
-            </Field>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="Title Line 1">
-              <input style={inputStyle} value={form.titleLine1} onChange={set('titleLine1')} placeholder="e.g. Buy more." required />
-            </Field>
-            <Field label="Title Highlight (Line 2)">
-              <input style={inputStyle} value={form.titleHighlight} onChange={set('titleHighlight')} placeholder="e.g. Save more." required />
-            </Field>
-          </div>
-
-          <Field label="Description text">
-            <textarea
-              style={{ ...inputStyle, height: 'auto', minHeight: 64, padding: '10px 12px', resize: 'vertical' }}
-              value={form.description}
-              onChange={set('description')}
-              placeholder="e.g. Join with other buyers, unlock bulk discounts and save big!"
-              required
-            />
-          </Field>
-
-          <Field label="Banner Image" hint="Square or rectangle graphic for the right collage side.">
+          <Field label="Banner Image" hint="Upload the main banner graphic. Ideal resolution is landscape.">
             <ImageUploader value={form.image} onChange={(url) => setForm((f) => ({ ...f, image: url }))} />
           </Field>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14 }}>
-            <Field label="Redirect Link (Route Path)" hint="App page or external link (optional)">
-              <input style={inputStyle} value={form.link} onChange={set('link')} placeholder="e.g. /groups/g-h1" />
+          <Field label="Redirect Link Type" hint="Decide where the user is taken when they click this banner.">
+            <select
+              style={inputStyle}
+              value={linkType}
+              onChange={(e) => {
+                const newType = e.target.value;
+                setLinkType(newType);
+                if (newType === 'group') {
+                  setForm((f) => ({ ...f, link: selectedGroupId ? `/groups/${selectedGroupId}` : '' }));
+                } else {
+                  setForm((f) => ({ ...f, link: '' }));
+                }
+              }}
+            >
+              <option value="group">Redirect to a Group</option>
+              <option value="custom">Custom / External Link</option>
+            </select>
+          </Field>
+
+          {linkType === 'group' ? (
+            <Field label="Select Target Group" hint={loadingGroups ? 'Loading groups list...' : 'Click to open and search the group list.'}>
+              <div style={{ position: 'relative' }}>
+                {/* Trigger Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDropdownOpen(!dropdownOpen);
+                  }}
+                  disabled={loadingGroups}
+                  style={{
+                    ...inputStyle,
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    opacity: loadingGroups ? 0.6 : 1,
+                  }}
+                >
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                    {selectedGroupId
+                      ? (groups.find((g) => (g.id || g._id) === selectedGroupId)?.title || 'Selected Group')
+                      : 'Select a group...'}
+                  </span>
+                  <span style={{ fontSize: 9, color: T.muted }}>▼</span>
+                </button>
+
+                {/* Dropdown Menu Popup */}
+                {dropdownOpen && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 100,
+                      marginTop: 6,
+                      border: `1px solid ${T.line}`,
+                      borderRadius: radius.lg,
+                      background: T.surface,
+                      boxShadow: T.shadowLg,
+                      padding: 8,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                    }}
+                  >
+                    {/* Search Field Inside Dropdown */}
+                    <input
+                      type="text"
+                      value={groupSearchQuery}
+                      onChange={(e) => setGroupSearchQuery(e.target.value)}
+                      placeholder="🔍 Type to search group..."
+                      style={{
+                        ...inputStyle,
+                        height: 36,
+                        borderRadius: radius.md,
+                      }}
+                      autoFocus
+                    />
+
+                    {/* Scrollable Match List */}
+                    <div style={{ maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column' }} className="admin-scroll">
+                      {filteredGroups.length === 0 ? (
+                        <div style={{ padding: '12px 8px', fontSize: 12.5, color: T.faint, fontStyle: 'italic', textAlign: 'center' }}>
+                          No groups found
+                        </div>
+                      ) : (
+                        filteredGroups.map((g) => {
+                          const val = g.id || g._id;
+                          const isSelected = val === selectedGroupId;
+                          return (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => {
+                                setSelectedGroupId(val);
+                                setForm((f) => ({ ...f, link: val ? `/groups/${val}` : '' }));
+                                setDropdownOpen(false);
+                                setGroupSearchQuery('');
+                              }}
+                              style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 12px',
+                                border: 'none',
+                                borderRadius: radius.md,
+                                background: isSelected ? T.primarySoft : 'transparent',
+                                color: isSelected ? T.primary : T.ink,
+                                cursor: 'pointer',
+                                fontSize: 12.5,
+                                fontWeight: isSelected ? 700 : 500,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                                transition: 'background 0.2s',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSelected) e.currentTarget.style.background = T.surfaceAlt;
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) e.currentTarget.style.background = 'transparent';
+                              }}
+                            >
+                              <div style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{g.title}</div>
+                              {g.productName && (
+                                <div style={{ fontSize: 10.5, color: isSelected ? T.primary : T.muted }}>
+                                  {g.productName}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </Field>
+          ) : (
+            <Field label="Custom / External Redirect Link" hint="Provide any other link, starting with http://, https://, or a local path.">
+              <input
+                style={inputStyle}
+                value={form.link}
+                onChange={set('link')}
+                placeholder="e.g. /deals or https://google.com"
+                required
+              />
+            </Field>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
             <Field label="Display Order">
               <input type="number" min={0} style={inputStyle} value={form.displayOrder} onChange={set('displayOrder')} />
             </Field>
@@ -183,7 +342,7 @@ const BannerModal = ({ initial, onClose, onSaved }) => {
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginTop: 8 }}>
             <input type="checkbox" checked={form.isActive} onChange={set('isActive')} style={{ width: 16, height: 16, accentColor: T.primary }} />
             <span style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>Active</span>
-            <span style={{ fontSize: 12, color: T.muted }}>— visible in user app slider</span>
+            <span style={{ fontSize: 12, color: T.muted }}>— visible in user app banner slider</span>
           </label>
         </div>
 
@@ -231,10 +390,10 @@ const Banners = () => {
   }, [fetchData]);
 
   const handleDelete = async (banner) => {
-    if (!window.confirm(`Delete banner with badge "${banner.badge}"? This cannot be undone.`)) return;
+    if (!window.confirm('Delete this banner? This cannot be undone.')) return;
     try {
       await deleteBanner(banner.id);
-      showToast(`Banner "${banner.badge}" deleted successfully!`, '🗑️');
+      showToast('Banner deleted successfully!', '🗑️');
       fetchData();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to delete banner.', '❌');
@@ -244,34 +403,31 @@ const Banners = () => {
   const columns = [
     {
       key: 'image', label: 'Preview', render: (b) => (
-        <Thumb src={b.image} name={b.badge} />
+        <Thumb src={b.image} name="Banner Image" />
       ),
     },
     {
-      key: 'badge', label: 'Badge', strong: true, render: (b) => (
-        <div style={{ display: 'inline-flex' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: T.primary, background: T.primarySoft, padding: '3px 8px', borderRadius: 999 }}>
-            {b.badge}
-          </span>
-        </div>
-      ),
+      key: 'link', label: 'Redirect Link', strong: true, render: (b) => {
+        const isGroup = b.link && b.link.startsWith('/groups/');
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>
+              {b.link || <span style={{ color: T.faint, fontStyle: 'italic' }}>No Redirect Link</span>}
+            </span>
+            {isGroup && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: T.primary, background: T.primarySoft, padding: '2px 8px', borderRadius: 999, alignSelf: 'flex-start' }}>
+                Group Redirect
+              </span>
+            )}
+            {!isGroup && b.link && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: T.info, background: T.infoSoft, padding: '2px 8px', borderRadius: 999, alignSelf: 'flex-start' }}>
+                Custom / External Link
+              </span>
+            )}
+          </div>
+        );
+      }
     },
-    {
-      key: 'title', label: 'Title text', render: (b) => (
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: T.ink }}>{b.titleLine1}</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: T.primary }}>{b.titleHighlight}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'description', label: 'Description', render: (b) => (
-        <div style={{ maxWidth: 220, fontSize: 12.5, color: T.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {b.description}
-        </div>
-      ),
-    },
-    { key: 'activeBuyers', label: 'Stat', align: 'center', mono: true },
     { key: 'displayOrder', label: 'Order', align: 'center', mono: true },
     { key: 'status', label: 'Status', render: (b) => <StatusBadge status={b.isActive ? 'active' : 'low'} label={b.isActive ? 'Active' : 'Hidden'} /> },
     {

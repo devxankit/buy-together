@@ -56,6 +56,8 @@ import {
   Revenue as AdminRevenue,
   Settings as AdminSettings,
   Banners as AdminBanners,
+  HomeSections as AdminHomeSections,
+  PushNotifications as AdminPushNotifications,
 } from '../pages/admin';
 
 const AppRoutes = () => {
@@ -123,6 +125,8 @@ const AppRoutes = () => {
           <Route path="/admin/groups" element={<AdminGroups />} />
           <Route path="/admin/categories" element={<AdminCategories />} />
           <Route path="/admin/banners" element={<AdminBanners />} />
+          <Route path="/admin/home-sections" element={<AdminHomeSections />} />
+          <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
           <Route path="/admin/vendors" element={<AdminVendors />} />
           <Route path="/admin/deals" element={<AdminDeals />} />
           <Route path="/admin/fraud" element={<AdminFraud />} />

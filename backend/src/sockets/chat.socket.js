@@ -14,6 +14,7 @@ const CHAT_NAMESPACE = '/chat';
  */
 const chatSocket = (io) => {
   const chatNamespace = io.of(CHAT_NAMESPACE);
+  const onlineUsers = {}; // Track user connection counts (userId -> socketCount)
 
   // Authenticate every chat socket with the same JWT used by the REST API.
   chatNamespace.use((socket, next) => {
@@ -31,6 +32,14 @@ const chatSocket = (io) => {
   });
 
   chatNamespace.on('connection', (socket) => {
+    const userIdStr = socket.user?.id ? String(socket.user.id) : null;
+    if (userIdStr) {
+      onlineUsers[userIdStr] = (onlineUsers[userIdStr] || 0) + 1;
+      if (onlineUsers[userIdStr] === 1) {
+        chatNamespace.emit('user_status', { userId: userIdStr, status: 'online' });
+      }
+    }
+
     logger.info(`Chat socket connected: ${socket.id} (user ${socket.user?.id})`);
 
     socket.on('join_group', (groupId) => {
@@ -44,6 +53,13 @@ const chatSocket = (io) => {
       socket.leave(String(groupId));
     });
 
+    socket.on('get_user_status', (targetUserId, callback) => {
+      if (typeof callback === 'function') {
+        const isOnline = !!onlineUsers[String(targetUserId)];
+        callback({ status: isOnline ? 'online' : 'offline' });
+      }
+    });
+
     socket.on('typing', ({ groupId, userName }) => {
       if (!groupId) return;
       socket.to(String(groupId)).emit('user_typing', { groupId, userId: socket.user?.id, userName });
@@ -55,6 +71,13 @@ const chatSocket = (io) => {
     });
 
     socket.on('disconnect', () => {
+      if (userIdStr && onlineUsers[userIdStr]) {
+        onlineUsers[userIdStr]--;
+        if (onlineUsers[userIdStr] === 0) {
+          delete onlineUsers[userIdStr];
+          chatNamespace.emit('user_status', { userId: userIdStr, status: 'offline' });
+        }
+      }
       logger.info(`Chat socket disconnected: ${socket.id}`);
     });
   });

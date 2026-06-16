@@ -11,22 +11,26 @@ const bannerSchema = mongoose.Schema(
   {
     badge: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       trim: true,
     },
     titleLine1: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       trim: true,
     },
     titleHighlight: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       trim: true,
     },
     description: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       trim: true,
     },
     image: {
@@ -36,7 +40,7 @@ const bannerSchema = mongoose.Schema(
     },
     activeBuyers: {
       type: String,
-      default: '1.5K+',
+      default: '',
       trim: true,
     },
     link: {

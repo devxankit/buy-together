@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserMainContext } from '../../context';
 import newAssetImg from '../../../../assets/7f4a33ac63a8121e371d2b2d1473ae55.jpg';
+import { getHomeSections } from '../../../../services/homeSection.api';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
 import HotGroupsCarousel from './components/HotGroupsCarousel';
@@ -9,6 +10,79 @@ import TrustBadges from './components/TrustBadges';
 import LiveActivitySection from './components/LiveActivitySection';
 import ActiveGroupsList from './components/ActiveGroupsList';
 import CreateGroupBanner from './components/CreateGroupBanner';
+
+// Color palette cycled through for the "list" layout avatar backgrounds,
+// preserving the original multi-colour look of that section.
+const LIST_BG_PALETTE = ['bg-indigo-500', 'bg-orange-500', 'bg-red-500', 'bg-green-500', 'bg-blue-600', 'bg-pink-500', 'bg-blue-400', 'bg-black', 'bg-red-600'];
+
+/**
+ * Maps a populated Group document (from the API) onto the card shape the home
+ * section components expect — covering both the carousel and list layouts.
+ */
+const mapGroupToCard = (group, i = 0) => {
+  const joined = group.spotsJoined ?? 0;
+  const total = group.spotsTotal ?? 0;
+  return {
+    id: group.id || group._id,
+    title: group.title || '',
+    subtitle: group.slogan || group.productName || group.location || '',
+    image: group.image || '',
+    spotsJoined: joined,
+    spotsTotal: total,
+    joined,
+    needed: Math.max(total - joined, 0),
+    daysLeft: group.daysLeft || '—',
+    seriousCount: Math.floor(joined * 0.35),
+    readyCount: Math.floor(joined * 0.18),
+    bgColor: LIST_BG_PALETTE[i % LIST_BG_PALETTE.length],
+  };
+};
+
+/**
+ * Premium wholesale ad banner — interleaved between the curated sections to
+ * preserve the original home-page rhythm.
+ */
+const WholesaleAdBanner = ({ onClick }) => (
+  <div
+    onClick={onClick}
+    className="relative overflow-hidden bg-gradient-to-br from-[var(--ad-gradient-from)] via-[var(--ad-gradient-via)] to-[var(--ad-gradient-to)] rounded-[24px] p-4.5 shadow-md shadow-primary/10 border border-primary/20 flex flex-col justify-between min-h-[125px] cursor-pointer hover:shadow-lg transition-all duration-300 group active:scale-[0.99] select-none my-1"
+  >
+    {/* Modern glowing glassmorphism gradients */}
+    <div className="absolute -top-10 -right-10 w-28 h-28 bg-surface/10 rounded-full blur-2xl group-hover:bg-surface/15 transition-all"></div>
+    <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-primary/20 rounded-full blur-xl"></div>
+
+    {/* Upper Banner Section */}
+    <div className="relative z-10 flex flex-col gap-1">
+      <div className="flex items-center gap-1.5 bg-surface/12 backdrop-blur-md border border-surface/15 rounded-full px-2.5 py-0.5 w-fit">
+        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+        <span className="text-[9px] font-black tracking-widest text-white/95 uppercase">Save Big Together</span>
+      </div>
+
+      <h2 className="text-[16px] font-black tracking-tight text-white leading-tight mt-0.5">
+        Unlock Direct Wholesale Pricing
+      </h2>
+
+      <p className="text-[10.5px] font-bold text-white/85 leading-snug max-w-[95%]">
+        Start a custom group buying pool, share with friends, and unlock massive manufacturing price cuts.
+      </p>
+    </div>
+
+    {/* Lower Banner Section */}
+    <div className="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-surface/10">
+      <div className="flex items-baseline gap-1">
+        <span className="text-[9.5px] font-semibold text-white/70">Discounts up to</span>
+        <span className="text-[15px] font-black text-white leading-none">40% OFF</span>
+      </div>
+
+      <div className="bg-surface text-primary border border-line font-black text-[11px] px-4 py-2 rounded-xl shadow-sm group-hover:bg-surface-alt group-hover:scale-[1.03] transition-all flex items-center gap-1">
+        <span>Start a Pool</span>
+        <svg className="w-3 h-3 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </div>
+  </div>
+);
 
 /**
  * High-performance, clean Homepage controller component.
@@ -35,7 +109,11 @@ const Home = () => {
   }, [placeholders.length]);
 
   // Shared Location Selection Context
-  const { selectedCity, setIsLocationPickerOpen, notificationCount } = useUserMainContext();
+  const { selectedCity, setIsLocationPickerOpen, notificationCount, unreadMessageCount, refreshUnreadMessageCount } = useUserMainContext();
+
+  useEffect(() => {
+    refreshUnreadMessageCount();
+  }, [refreshUnreadMessageCount]);
 
   // Popular category configurations (exactly 7 categories for single-row layout)
   const categories = [
@@ -131,167 +209,24 @@ const Home = () => {
   ];
 
 
-  // Hot buying groups list
-  const hotGroups = [
-    {
-      id: 'g-h1',
-      title: 'iPhone 15 Pro',
-      subtitle: 'Get up to ₹8,000 OFF',
-      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=180&q=80',
-      spotsJoined: 28,
-      spotsTotal: 50,
-      daysLeft: '2d left'
-    },
-    {
-      id: 'g-h2',
-      title: 'MacBook Air M3',
-      subtitle: 'Save up to ₹12,000',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=180&q=80',
-      spotsJoined: 16,
-      spotsTotal: 30,
-      daysLeft: '3d left'
-    },
-    {
-      id: 'g-h3',
-      title: 'LG 55" 4K TV',
-      subtitle: 'Save up to ₹6,500',
-      image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=180&q=80',
-      spotsJoined: 34,
-      spotsTotal: 60,
-      daysLeft: '4d left'
-    },
-    {
-      id: 'g-h4',
-      title: 'Samsung Washer',
-      subtitle: 'Save up to ₹5,500',
-      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=180&q=80',
-      spotsJoined: 18,
-      spotsTotal: 40,
-      daysLeft: '2d left'
-    }
-  ];
+  // ── Dynamic, admin-curated home sections ──────────────────────────
+  // Sections (heading + chosen groups + layout) are managed from the admin
+  // console (Home Sections page) and fetched live here.
+  const [sections, setSections] = useState([]);
 
-
-
-  const fashionGroups = [
-    {
-      id: 5,
-      title: 'Puma Running Shoes',
-      subtitle: 'Puma Factory Outlet',
-      spotsJoined: 15,
-      spotsTotal: 20,
-      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=200&q=80',
-      daysLeft: '3d left'
-    },
-    {
-      id: 6,
-      title: 'H&M Summer Collection',
-      subtitle: 'H&M Infinity Mall',
-      spotsJoined: 40,
-      spotsTotal: 50,
-      image: 'https://images.unsplash.com/photo-1489987707023-af827052efa1?auto=format&fit=crop&w=200&q=80',
-      daysLeft: '1d left'
-    },
-    {
-      id: 7,
-      title: 'Levi\'s Denim Jackets',
-      subtitle: 'Levi\'s Phoenix Market',
-      spotsJoined: 8,
-      spotsTotal: 15,
-      image: 'https://images.unsplash.com/photo-1542272454315-4c01d7abdf4a?auto=format&fit=crop&w=200&q=80',
-      daysLeft: '4h left'
-    }
-  ];
-
-  const groceriesGroups = [
-    {
-      id: 8,
-      title: 'Aashirvaad Atta 10kg',
-      subtitle: 'DMart Malad',
-      spotsJoined: 85,
-      spotsTotal: 100,
-      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80',
-      daysLeft: '5d left'
-    },
-    {
-      id: 9,
-      title: 'Fresh Alphonso Mangoes',
-      subtitle: 'APMC Market',
-      spotsJoined: 42,
-      spotsTotal: 50,
-      image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=200&q=80',
-      daysLeft: '12h left'
-    },
-    {
-      id: 10,
-      title: 'Amul Butter 500g',
-      subtitle: 'Star Bazaar',
-      spotsJoined: 120,
-      spotsTotal: 150,
-      image: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?auto=format&fit=crop&w=200&q=80',
-      daysLeft: '2d left'
-    }
-  ];
-
-  const propertyGroups = [
-    {
-      id: 'prop-1',
-      title: 'Fractional Beach Villa',
-      subtitle: 'Goa co-buy: 10% Share',
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=200&q=80',
-      spotsJoined: 4,
-      spotsTotal: 10,
-      daysLeft: '15d left'
-    },
-    {
-      id: 'prop-2',
-      title: 'Commercial Office Space',
-      subtitle: 'Bengaluru Tech Park',
-      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=200&q=80',
-      spotsJoined: 7,
-      spotsTotal: 15,
-      daysLeft: '8d left'
-    },
-    {
-      id: 'prop-3',
-      title: 'Premium Co-Living Hub',
-      subtitle: 'Mumbai Rent & Deposit Split',
-      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=200&q=80',
-      spotsJoined: 3,
-      spotsTotal: 4,
-      daysLeft: '2d left'
-    }
-  ];
-
-  const vehicleGroups = [
-    {
-      id: 'veh-1',
-      title: 'Tesla Model Y Lease',
-      subtitle: 'Pune premium co-lease pool',
-      image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=200&q=80',
-      spotsJoined: 2,
-      spotsTotal: 5,
-      daysLeft: '12d left'
-    },
-    {
-      id: 'veh-2',
-      title: 'Ather 450X EV Scooter',
-      subtitle: 'Bulk discount of ₹15,000',
-      image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=200&q=80',
-      spotsJoined: 12,
-      spotsTotal: 20,
-      daysLeft: '4d left'
-    },
-    {
-      id: 'veh-3',
-      title: 'Thar Roxx Offroader',
-      subtitle: 'Indore club bulk deal',
-      image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=200&q=80',
-      spotsJoined: 18,
-      spotsTotal: 25,
-      daysLeft: '6d left'
-    }
-  ];
+  useEffect(() => {
+    let active = true;
+    const fetchSections = async () => {
+      try {
+        const { data } = await getHomeSections();
+        if (active && Array.isArray(data)) setSections(data);
+      } catch (err) {
+        console.warn('Failed to load home sections:', err);
+      }
+    };
+    fetchSections();
+    return () => { active = false; };
+  }, []);
 
   return (
     <div className="flex flex-col gap-5 pb-24 animate-fadeIn select-none bg-gradient-to-b from-[var(--home-gradient-from)] via-[var(--home-gradient-via)] to-[var(--home-gradient-to)] px-4 pt-0">
@@ -322,9 +257,11 @@ const Home = () => {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
-              <span className="absolute top-1 right-1 w-3 h-3 bg-danger text-white text-[7.5px] font-black rounded-full flex items-center justify-center border border-surface">
-                2
-              </span>
+              {unreadMessageCount > 0 && (
+                <span className="absolute top-1 right-1 w-3 h-3 bg-danger text-white text-[7.5px] font-black rounded-full flex items-center justify-center border border-surface">
+                  {unreadMessageCount}
+                </span>
+              )}
             </button>
             <button onClick={() => navigate('/notifications')} className="w-[35px] h-[35px] bg-surface/12 backdrop-blur-md border border-surface/15 rounded-lg flex items-center justify-center relative active:scale-90 transition-all text-white">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -443,94 +380,51 @@ const Home = () => {
         </div>
       </div>
 
-      {/* ── 6. HOT BUYING GROUPS CAROUSEL ── */}
-      <HotGroupsCarousel
-        groups={hotGroups}
-        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: hotGroups.find(g => g.id === id), isJoined: false } })}
-        onViewAll={() => navigate('/groups')}
-      />
+      {/* ── 6+. ADMIN-CURATED HOME SECTIONS ──
+          Each section's heading, layout, and groups are managed from the admin
+          console. Decorative blocks are interleaved at the original positions
+          to preserve the home-page rhythm. */}
+      {sections.length === 0 ? (
+        <>
+          <LiveActivitySection />
+          <CreateGroupBanner />
+          <WholesaleAdBanner onClick={() => navigate('/groups/create')} />
+        </>
+      ) : (
+        sections.map((section, idx) => {
+          const cards = (section.groups || []).map(mapGroupToCard);
+          const viewAll = () =>
+            section.viewAllLink ? navigate(section.viewAllLink) : navigate('/groups');
+          const openGroup = (id) =>
+            navigate(`/groups/${id}/chat`, {
+              state: { group: cards.find((g) => g.id === id), isJoined: false },
+            });
 
-      {/* ── 8. LIVE ACTIVITY ── */}
-      <LiveActivitySection />
+          return (
+            <React.Fragment key={section.id}>
+              {section.layout === 'list' ? (
+                <ActiveGroupsList
+                  title={section.title}
+                  groups={cards}
+                  onViewAll={viewAll}
+                />
+              ) : (
+                <HotGroupsCarousel
+                  title={section.title}
+                  groups={cards}
+                  onGroupClick={openGroup}
+                  onViewAll={viewAll}
+                />
+              )}
 
-      {/* ── 9. ACTIVE GROUPS YOU MIGHT LIKE ── */}
-      <ActiveGroupsList />
-
-      {/* ── 14. CREATE GROUP BANNER (Shifted here as requested) ── */}
-      <CreateGroupBanner />
-
-      {/* ── 10. TRENDING IN FASHION ── */}
-      <HotGroupsCarousel
-        title="Trending in Fashion"
-        groups={fashionGroups}
-        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: fashionGroups.find(g => g.id === id), isJoined: false } })}
-        onViewAll={() => navigate('/categories', { state: { categoryId: 'fashion' } })}
-      />
-
-      {/* ── 11. WEEKLY GROCERIES DEALS ── */}
-      <HotGroupsCarousel
-        title="Weekly Groceries Deals"
-        groups={groceriesGroups}
-        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: groceriesGroups.find(g => g.id === id), isJoined: false } })}
-        onViewAll={() => navigate('/categories', { state: { categoryId: 'groceries' } })}
-      />
-
-      {/* ── 12. CO-OWN REAL ESTATE & PROPERTIES ── */}
-      <HotGroupsCarousel
-        title="Co-Own Properties & Spaces"
-        groups={propertyGroups}
-        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: propertyGroups.find(g => g.id === id), isJoined: false } })}
-        onViewAll={() => navigate('/categories', { state: { categoryId: 'properties' } })}
-      />
-
-      {/* ── PREMIUM CO-BUYING AD BANNER (COMPACT & MODERN REDESIGN) ── */}
-      <div 
-        onClick={() => navigate('/groups/create')}
-        className="relative overflow-hidden bg-gradient-to-br from-[var(--ad-gradient-from)] via-[var(--ad-gradient-via)] to-[var(--ad-gradient-to)] rounded-[24px] p-4.5 shadow-md shadow-primary/10 border border-primary/20 flex flex-col justify-between min-h-[125px] cursor-pointer hover:shadow-lg transition-all duration-300 group active:scale-[0.99] select-none my-1"
-      >
-        {/* Modern glowing glassmorphism gradients */}
-        <div className="absolute -top-10 -right-10 w-28 h-28 bg-surface/10 rounded-full blur-2xl group-hover:bg-surface/15 transition-all"></div>
-        <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-primary/20 rounded-full blur-xl"></div>
-        
-        {/* Upper Banner Section */}
-        <div className="relative z-10 flex flex-col gap-1">
-          <div className="flex items-center gap-1.5 bg-surface/12 backdrop-blur-md border border-surface/15 rounded-full px-2.5 py-0.5 w-fit">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-            <span className="text-[9px] font-black tracking-widest text-white/95 uppercase">Save Big Together</span>
-          </div>
-          
-          <h2 className="text-[16px] font-black tracking-tight text-white leading-tight mt-0.5">
-            Unlock Direct Wholesale Pricing
-          </h2>
-          
-          <p className="text-[10.5px] font-bold text-white/85 leading-snug max-w-[95%]">
-            Start a custom group buying pool, share with friends, and unlock massive manufacturing price cuts.
-          </p>
-        </div>
-
-        {/* Lower Banner Section */}
-        <div className="relative z-10 flex items-center justify-between mt-3 pt-2 border-t border-surface/10">
-          <div className="flex items-baseline gap-1">
-            <span className="text-[9.5px] font-semibold text-white/70">Discounts up to</span>
-            <span className="text-[15px] font-black text-white leading-none">40% OFF</span>
-          </div>
-          
-          <div className="bg-surface text-primary border border-line font-black text-[11px] px-4 py-2 rounded-xl shadow-sm group-hover:bg-surface-alt group-hover:scale-[1.03] transition-all flex items-center gap-1">
-            <span>Start a Pool</span>
-            <svg className="w-3 h-3 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 13. VEHICLE CO-LEASING & BULK BUYS ── */}
-      <HotGroupsCarousel
-        title="Vehicle Co-Leasing & EV Pools"
-        groups={vehicleGroups}
-        onGroupClick={(id) => navigate(`/groups/${id}/chat`, { state: { group: vehicleGroups.find(g => g.id === id), isJoined: false } })}
-        onViewAll={() => navigate('/categories', { state: { categoryId: 'cars-bikes' } })}
-      />
+              {/* Interleaved decorative blocks (original layout positions) */}
+              {idx === 0 && <LiveActivitySection />}
+              {idx === 1 && <CreateGroupBanner />}
+              {idx === 4 && <WholesaleAdBanner onClick={() => navigate('/groups/create')} />}
+            </React.Fragment>
+          );
+        })
+      )}
 
       {/* ── 15. PREMIUM MADE IN INDIA FOOTER ── */}
       <div className="mt-12 mb-6 flex flex-col items-center justify-center gap-3 text-center">

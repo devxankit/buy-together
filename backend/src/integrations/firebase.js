@@ -1,10 +1,11 @@
-const logger = require('../utils/logger');
+// Backwards-compatible shim. Real push logic now lives in services/push.service.js.
+const pushService = require('../services/push.service');
 
-const sendPushNotification = async (token, payload) => {
-  logger.info(`Sending Firebase push notification to ${token}`);
-  return { success: true };
-};
+/** Send a notification to a single token (legacy signature). */
+const sendPushNotification = (token, payload) =>
+  pushService.sendToTokens([token], payload);
 
 module.exports = {
   sendPushNotification,
+  ...pushService,
 };

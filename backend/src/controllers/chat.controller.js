@@ -92,7 +92,7 @@ const getConversations = catchAsync(async (req, res) => {
         lastMessage: convoInfo.lastMessage || '',
         time: convoInfo.updatedAt ? new Date(convoInfo.updatedAt).toISOString() : new Date().toISOString(),
         updatedAt: convoInfo.updatedAt || Date.now(),
-        unread: 0,
+        unread: convoInfo.unread || 0,
       });
     }
   }
@@ -164,6 +164,75 @@ const getPinnedMessage = catchAsync(async (req, res) => {
   res.send(val || null);
 });
 
+const deleteMessage = catchAsync(async (req, res) => {
+  const { groupId, messageId } = req.params;
+  const userId = req.user._id;
+
+  await chatService.verifyGroupAccess(groupId, userId);
+
+  const msgRef = firebase.getGroupMessagesRef(groupId).child(messageId);
+  const snap = await msgRef.once('value');
+  const msgVal = snap.val();
+
+  if (!msgVal) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Message not found');
+  }
+
+  // Check permissions: strictly only sender can delete
+  const canDelete = String(msgVal.senderId) === String(userId);
+
+  if (!canDelete) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You can only delete your own messages');
+  }
+
+  await msgRef.remove();
+
+  // Broadcast deletion to Socket.IO namespace
+  const io = req.app.get('io');
+  if (io) {
+    io.of('/chat').to(String(groupId)).emit('message_deleted', { messageId, groupId });
+  }
+
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const reactMessage = catchAsync(async (req, res) => {
+  const { groupId, messageId } = req.params;
+  const { emoji } = req.body;
+  const userId = req.user._id;
+
+  await chatService.verifyGroupAccess(groupId, userId);
+
+  const ref = firebase.getGroupMessagesRef(groupId).child(messageId).child('reactions');
+  const currentSnap = await ref.child(String(userId)).once('value');
+  const currentEmoji = currentSnap.val();
+
+  if (currentEmoji === emoji) {
+    await ref.child(String(userId)).remove();
+  } else {
+    await ref.child(String(userId)).set(emoji);
+  }
+
+  const msgRef = firebase.getGroupMessagesRef(groupId).child(messageId);
+  const snapshot = await msgRef.once('value');
+  const updatedMessage = { id: messageId, groupId, ...snapshot.val() };
+
+  emitNewMessage(req.app.get('io'), groupId, updatedMessage);
+  res.send(updatedMessage);
+});
+
+const clearUnreadCount = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const { otherUserId } = req.params;
+
+  if (firebase.isConfigured()) {
+    const db = firebase.getDatabase();
+    await db.ref(`conversations/${userId}/${otherUserId}`).update({ unread: 0 });
+  }
+
+  res.status(httpStatus.OK).send({ success: true });
+});
+
 module.exports = {
   sendMessage,
   getMessages,
@@ -172,4 +241,8 @@ module.exports = {
   pinMessage,
   unpinMessage,
   getPinnedMessage,
+  deleteMessage,
+  reactMessage,
+  clearUnreadCount,
 };
+
