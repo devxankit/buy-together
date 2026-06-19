@@ -13,6 +13,12 @@ const getGroups = catchAsync(async (req, res) => {
   res.send(groups);
 });
 
+// Public: admin-curated trending groups for the Groups page carousel.
+const getTrending = catchAsync(async (req, res) => {
+  const groups = await groupService.getTrendingGroups();
+  res.send(groups);
+});
+
 const getGroup = catchAsync(async (req, res) => {
   const group = await groupService.getGroupById(req.params.groupId);
   res.send(group);
@@ -47,6 +53,7 @@ const removeMember = catchAsync(async (req, res) => {
 module.exports = {
   createGroup,
   getGroups,
+  getTrending,
   getGroup,
   joinGroup,
   leaveGroup,

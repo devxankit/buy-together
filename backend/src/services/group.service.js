@@ -8,14 +8,23 @@ const { GROUP_STATUS } = require('../utils/constants');
 
 const createGroup = async (groupBody) => {
   // The consumer app historically posted `name`; the model now uses `title`.
-  const { name, ...rest } = groupBody;
-  return Group.create({ ...rest, title: rest.title || name });
+  const { name, members = [], ...rest } = groupBody;
+  // The creator is automatically the group's first member, so the "joined"
+  // count (members.length) reflects them immediately — a freshly created group
+  // reads as 1 joined, not 0. Dedupe in case members were passed explicitly.
+  const memberSet = new Set((members || []).map((id) => String(id)));
+  if (rest.admin) memberSet.add(String(rest.admin));
+  return Group.create({ ...rest, title: rest.title || name, members: [...memberSet] });
 };
 
 const queryGroups = async (userId, filter = {}) => {
   const query = {};
   if (filter.joined === 'true') {
     query.members = userId;
+    // "Joined" means groups the user joined but didn't create — their own
+    // groups belong under the "created" tab, so exclude them here even though
+    // the creator is now a member of their own group.
+    query.admin = { $ne: userId };
   }
   if (filter.created === 'true') {
     query.admin = userId;
@@ -23,13 +32,27 @@ const queryGroups = async (userId, filter = {}) => {
   if (filter.category && filter.category !== 'all') {
     query.category = filter.category;
   }
-  return Group.find(query).populate('members', 'name email').populate('admin', 'name');
+  return Group.find(query)
+    .populate('members', 'name email avatar')
+    .populate('admin', 'name');
 };
 
 const getGroupById = async (id) => {
   return Group.findById(id)
     .populate('members', 'name phone email avatar status')
     .populate('admin', 'name phone');
+};
+
+/**
+ * Admin-curated "Trending Right Now" list for the consumer app's Groups page.
+ * Returns only groups the admin has flagged as trending (and not flagged for
+ * moderation), newest first. Members aren't populated — the cards only need the
+ * derived `spotsJoined` count.
+ */
+const getTrendingGroups = async () => {
+  return Group.find({ trending: true, status: { $ne: GROUP_STATUS.FLAGGED } })
+    .sort({ updatedAt: -1 })
+    .limit(20);
 };
 
 // ── Admin console ───────────────────────────────────────────────────
@@ -106,10 +129,12 @@ const createGroupAdmin = async (body) => {
     subCategory: body.subCategory,
     type: body.type,
     location: body.location,
+    coordinates: body.coordinates || { lat: null, lng: null },
     image: body.image,
     spotsTotal: body.spotsTotal,
     creatorName: body.creatorName,
     status: body.status,
+    trending: body.trending || false,
     closesAt: body.closesAt,
     members: body.members || [],
   });
@@ -154,6 +179,7 @@ module.exports = {
   createGroup,
   queryGroups,
   getGroupById,
+  getTrendingGroups,
   queryGroupsAdmin,
   getGroupByIdAdmin,
   createGroupAdmin,

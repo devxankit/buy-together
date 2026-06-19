@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleWishlist } from '../../../../redux/slices/wishlistSlice';
+import { toggleWishlist, fetchWishlist } from '../../../../redux/slices/wishlistSlice';
 
 const Wishlist = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
+  const loaded = useSelector((state) => state.wishlist.loaded);
+
+  // Ensure saved groups are loaded (e.g. on a hard refresh / direct visit).
+  useEffect(() => {
+    if (!loaded) dispatch(fetchWishlist());
+  }, [loaded, dispatch]);
 
   const handleGroupClick = (group) => {
     navigate(`/groups/${group.id || group.groupId}/chat`, { state: { group, isJoined: false } });
@@ -72,14 +78,23 @@ const Wishlist = () => {
                 
                 <div className="p-3 flex-1 flex flex-col justify-between">
                   <div>
-                    <span className="text-[9px] font-bold text-teal-600 uppercase tracking-wider mb-1 block">{group.category || 'Mixed'}</span>
+                    <span className="text-[9px] font-bold text-teal-600 uppercase tracking-wider mb-1 block">{group.category || 'Group'}</span>
                     <h3 className="font-bold text-ink text-xs leading-tight line-clamp-2">{group.title}</h3>
                   </div>
-                  
-                  <div className="mt-2.5 pt-2.5 border-t border-line flex items-center justify-between">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-muted text-[10px] line-through">₹{group.originalPrice || '0'}</span>
-                      <span className="text-teal-600 font-extrabold text-xs">₹{group.dealPrice || '0'}</span>
+
+                  {/* Real group metrics — buyers progress + deadline */}
+                  <div className="mt-2.5 pt-2.5 border-t border-line flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold text-teal-600">
+                        {group.spotsJoined ?? 0}/{group.spotsTotal ?? 0} <span className="text-muted font-bold">buyers</span>
+                      </span>
+                      <span className="text-[9px] font-bold text-muted">{group.daysLeft || '—'}</span>
+                    </div>
+                    <div className="h-[4px] bg-surface-alt rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-teal-500 rounded-full transition-all duration-500"
+                        style={{ width: `${group.spotsTotal ? Math.min(100, Math.round((group.spotsJoined / group.spotsTotal) * 100)) : 0}%` }}
+                      />
                     </div>
                   </div>
                 </div>

@@ -967,18 +967,20 @@ const GroupChat = () => {
       try {
         if (!groupId) return;
 
-        // Auto-join the group silently on page mount for seamless direct chatting
-        try {
-          await joinGroup(groupId);
-        } catch (joinErr) {
-          // Ignore if user is already joined or join fails
-          console.warn('Auto-join on mount status:', joinErr.response?.data?.message || joinErr.message);
-        }
-
         const res = await getGroup(groupId);
         if (active && res?.data) {
           setGroupState(res.data);
           groupDetailsCache[groupId] = res.data;
+
+          const userId = currentUser?._id || currentUser?.id;
+          const membersList = res.data.members || [];
+          const isUserMember = membersList.some(m => String(m._id || m.id || m) === String(userId));
+          const isUserAdmin = res.data.admin && String(res.data.admin._id || res.data.admin.id || res.data.admin) === String(userId);
+
+          if (!isUserMember && !isUserAdmin) {
+            showToast('You must join the group to view the chat.', '🔒');
+            navigate(`/groups/${groupId}`, { replace: true });
+          }
         }
       } catch (err) {
         console.error('Failed to fetch group details:', err);
@@ -988,7 +990,7 @@ const GroupChat = () => {
     };
     fetchDetails();
     return () => { active = false; };
-  }, [groupId]);
+  }, [groupId, currentUser, navigate]);
 
   const group = useMemo(() => {
     if (!groupState) {
@@ -1058,8 +1060,9 @@ const GroupChat = () => {
   const { isJoined, isAdmin } = useMemo(() => {
     const adminId = groupState?.admin?._id || groupState?.admin?.id || groupState?.admin;
     const userIsAdmin = adminId && currentUserId && String(adminId) === String(currentUserId);
+    const userIsMember = groupState?.members?.some(m => String(m._id || m.id || m) === String(currentUserId));
     return {
-      isJoined: true, // Always true to skip gates and provide instant seamless chat feed
+      isJoined: !!userIsMember || !!userIsAdmin,
       isAdmin: !!userIsAdmin,
     };
   }, [groupState, currentUserId]);

@@ -27,6 +27,13 @@ export const navSections = [
     ],
   },
   {
+    title: 'Support & Content',
+    items: [
+      { label: 'Support Tickets', icon: 'LifeBuoy', path: '/admin/support', badge: 'support', permission: 'support' },
+      { label: 'Content Pages',   icon: 'FileText', path: '/admin/content-pages', permission: 'content' },
+    ],
+  },
+  {
     title: 'System',
     items: [
       { label: 'Push Notifications', icon: 'BellRing', path: '/admin/push-notifications', permission: 'pushNotifications' },
@@ -65,6 +72,8 @@ export const routeMeta = {
   '/admin/vendors':   { title: 'Vendors',       section: 'Management' },
   '/admin/fraud':     { title: 'Fraud & Risk',  section: 'Intelligence' },
   '/admin/revenue':   { title: 'Revenue',       section: 'Intelligence' },
+  '/admin/support':   { title: 'Support Tickets', section: 'Support & Content' },
+  '/admin/content-pages': { title: 'Content Pages', section: 'Support & Content' },
   '/admin/push-notifications': { title: 'Push Notifications', section: 'System' },
   '/admin/settings':  { title: 'Settings',      section: 'System' },
 };

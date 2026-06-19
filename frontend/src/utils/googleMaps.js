@@ -103,3 +103,39 @@ export const getPlaceSuggestions = async (input) => {
   });
 };
 
+/**
+ * Geocodes an address string into { lat, lng } using the Google Geocoder.
+ * Resolves to null if the address can't be resolved.
+ */
+export const geocodeAddress = async (address) => {
+  if (!address || !address.trim()) return null;
+  const google = await loadGoogleMaps();
+  const geocoder = new google.maps.Geocoder();
+  return new Promise((resolve) => {
+    geocoder.geocode({ address }, (results, status) => {
+      if (status === 'OK' && results[0]) {
+        const loc = results[0].geometry.location;
+        resolve({ lat: loc.lat(), lng: loc.lng() });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+};
+
+/**
+ * Great-circle distance in kilometres between two { lat, lng } points
+ * (Haversine formula). Returns null if either point is missing coordinates.
+ */
+export const haversineKm = (a, b) => {
+  if (!a || !b || a.lat == null || a.lng == null || b.lat == null || b.lng == null) return null;
+  const R = 6371; // Earth radius (km)
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
+

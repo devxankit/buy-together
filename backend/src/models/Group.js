@@ -55,6 +55,13 @@ const groupSchema = mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Pinpoint coordinates for the group's location, used to sort groups by
+    // distance from the user on the Explore page. Captured by the admin when
+    // picking a place from Google autocomplete. Null when unknown.
+    coordinates: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
     image: {
       type: String,
       trim: true,
@@ -85,6 +92,14 @@ const groupSchema = mongoose.Schema(
       type: String,
       enum: Object.values(GROUP_STATUS),
       default: GROUP_STATUS.ACTIVE,
+    },
+    // Admin-controlled flag: when true, the group appears in the consumer app's
+    // "Trending Right Now" carousel on the Groups page. Curated entirely from
+    // the admin Groups console.
+    trending: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     // Deadline by which the group must fill — powers the countdown display.
     closesAt: {
@@ -120,6 +135,14 @@ const groupSchema = mongoose.Schema(
     },
   }
 );
+
+// Indexes backing the common query/sort paths:
+//  - status + createdAt: admin listing filters by status and sorts by -createdAt
+//  - members: user-facing "joined" lookups (query.members = userId)
+//  - admin: user-facing "created by me" lookups (query.admin = userId)
+groupSchema.index({ status: 1, createdAt: -1 });
+groupSchema.index({ members: 1 });
+groupSchema.index({ admin: 1 });
 
 const Group = mongoose.model('Group', groupSchema);
 

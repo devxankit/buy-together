@@ -13,7 +13,6 @@ export { default as SavedAddresses } from './addresses/SavedAddresses';
 export { default as PersonalInfo } from './profile/PersonalInfo';
 export { default as ChangePassword } from './profile/ChangePassword';
 export { default as NotificationPreferences } from './profile/NotificationPreferences';
-export { default as Language } from './profile/Language';
 export { default as PrivacySettings } from './profile/PrivacySettings';
 export { default as HelpCenter } from './profile/HelpCenter';
 export { default as TermsConditions } from './profile/TermsConditions';

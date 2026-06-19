@@ -8,6 +8,8 @@
     "seed:admin": "node src/scripts/seedAdmin.js",
     "seed:home": "node src/scripts/seedHome.js",
     "seed:categories": "node src/scripts/seedCategories.js",
+    "seed:content": "node src/scripts/seedContent.js",
+    "seed:trending": "node src/scripts/seedTrending.js",
     "verify:push": "node src/scripts/verifyPush.js",
     "check:fcm": "node src/scripts/checkFcmSave.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +21,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",

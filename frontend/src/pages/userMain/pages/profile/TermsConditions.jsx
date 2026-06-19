@@ -1,19 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useContentPage } from './useContentPage';
 
 const TermsConditions = () => {
   const navigate = useNavigate();
-  const sections = [
-    { title: '1. Acceptance of Terms', content: 'By downloading, installing, or using BuyTogether ("the App"), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the App.' },
-    { title: '2. User Accounts', content: 'You must provide accurate and complete information when creating your account. You are responsible for maintaining the confidentiality of your account. You must be at least 18 years old to use BuyTogether.' },
-    { title: '3. Group Buying Mechanism', content: 'BuyTogether facilitates group purchases by connecting buyers with similar interests. A deal is confirmed only when the minimum number of buyers is reached within the specified deadline. BuyTogether acts as a platform and is not a party to transactions between buyers and vendors.' },
-    { title: '4. Payments & Pricing', content: 'All prices are in Indian Rupees (INR). Payment is collected only after a deal is confirmed. Prices shown are estimates and may vary based on vendor availability and group size. All transactions are processed through RBI-compliant payment gateways.' },
-    { title: '5. Cancellations & Refunds', content: 'You may leave a group before the deal is confirmed at no cost. Once a deal is confirmed and payment is made, cancellations are subject to vendor policies. Refunds, if applicable, will be processed within 7-10 business days.' },
-    { title: '6. User Conduct', content: 'Users must not engage in fraudulent activities, spam other users, create fake groups or accounts, harass other members, or post misleading product information. Violation may result in account suspension.' },
-    { title: '7. Intellectual Property', content: 'All content, logos, and trademarks on BuyTogether are owned by us. You may not copy, modify, or distribute any content without prior written consent.' },
-    { title: '8. Limitation of Liability', content: 'BuyTogether is not liable for any direct, indirect, incidental, or consequential damages arising from the use of the platform. We do not guarantee the quality of products purchased through vendor deals.' },
-    { title: '9. Changes to Terms', content: 'We reserve the right to modify these terms at any time. Continued use of the App after changes constitutes acceptance of the new terms. Major changes will be notified via email or in-app notification.' },
-  ];
+  const { page, loading, error } = useContentPage('terms');
+  const sections = page?.sections || [];
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans">
@@ -21,17 +13,26 @@ const TermsConditions = () => {
         <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all">
           <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <h1 className="text-[15px] font-black text-ink">Terms & Conditions</h1>
+        <h1 className="text-[15px] font-black text-ink">{page?.title || 'Terms & Conditions'}</h1>
       </div>
 
       <div className="flex-1 px-5 py-5 flex flex-col gap-4 pb-10">
-        <p className="text-[11px] text-muted font-medium">Last updated: May 2026</p>
-        {sections.map((sec, idx) => (
-          <div key={idx} className="bg-surface border border-line rounded-2xl p-4">
-            <h3 className="text-[13px] font-black text-ink mb-2">{sec.title}</h3>
-            <p className="text-[12px] text-faint leading-relaxed">{sec.content}</p>
-          </div>
-        ))}
+        {loading ? (
+          <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
+        ) : error ? (
+          <p className="text-[12px] text-muted text-center py-12">{error}</p>
+        ) : (
+          <>
+            {page?.lastUpdated && <p className="text-[11px] text-muted font-medium">Last updated: {page.lastUpdated}</p>}
+            {sections.map((sec, idx) => (
+              <div key={sec.id || idx} className="bg-surface border border-line rounded-2xl p-4">
+                <h3 className="text-[13px] font-black text-ink mb-2">{sec.title}</h3>
+                <p className="text-[12px] text-faint leading-relaxed whitespace-pre-line">{sec.body}</p>
+              </div>
+            ))}
+            {sections.length === 0 && <p className="text-[12px] text-muted text-center py-12">No content available yet.</p>}
+          </>
+        )}
       </div>
     </div>
   );

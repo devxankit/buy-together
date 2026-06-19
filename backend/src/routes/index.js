@@ -12,6 +12,8 @@ const bannerRoute = require('./banner.routes');
 const homeSectionRoute = require('./homeSection.routes');
 const fcmRoute = require('./fcm.routes');
 const notificationRoute = require('./notification.routes');
+const ticketRoute = require('./ticket.routes');
+const contentPageRoute = require('./contentPage.routes');
 
 const router = express.Router();
 
@@ -29,6 +31,8 @@ const defaultRoutes = [
   { path: '/home-sections', route: homeSectionRoute },
   { path: '/fcm', route: fcmRoute },
   { path: '/notifications', route: notificationRoute },
+  { path: '/tickets', route: ticketRoute },
+  { path: '/content-pages', route: contentPageRoute },
 ];
 
 defaultRoutes.forEach((route) => {

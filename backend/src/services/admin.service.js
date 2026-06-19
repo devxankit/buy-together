@@ -5,6 +5,7 @@ const Vendor = require('../models/Vendor');
 const Group = require('../models/Group');
 const Setting = require('../models/Setting');
 const firebase = require('../config/firebase');
+const ticketService = require('./ticket.service');
 const ApiError = require('../utils/ApiError');
 const { normalizePhone } = require('./auth.service');
 const { ROLES, USER_STATUS, VENDOR_STATUS, GROUP_STATUS, ADMIN_PERMISSIONS } = require('../utils/constants');
@@ -259,6 +260,7 @@ const getStats = async () => {
     pending,
     totalGroups,
     activeGroups,
+    openTickets,
   ] = await Promise.all([
     User.countDocuments({}),
     Vendor.countDocuments({}),
@@ -269,8 +271,9 @@ const getStats = async () => {
     User.countDocuments({ status: USER_STATUS.PENDING }),
     Group.countDocuments({}),
     Group.countDocuments({ status: { $in: [GROUP_STATUS.ACTIVE, GROUP_STATUS.CLOSING] } }),
+    ticketService.countOpenTickets(),
   ]);
-  return { totalUsers, vendors, pendingVendors, admins, suspended, flagged, pending, totalGroups, activeGroups };
+  return { totalUsers, vendors, pendingVendors, admins, suspended, flagged, pending, totalGroups, activeGroups, openTickets };
 };
 
 // ── Admin team management (super-admin only) ────────────────────────

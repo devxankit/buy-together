@@ -65,6 +65,7 @@ const AdminLayout = () => {
 
   const badges = {
     vendors: stats?.pendingVendors || 0,
+    support: stats?.openTickets || 0,
   };
 
   return (

@@ -61,6 +61,8 @@ const userSchema = mongoose.Schema(
     // at the most-recent 10 per platform to avoid unbounded growth.
     fcmTokens: { type: [String], default: [] },
     fcmTokensMobile: { type: [String], default: [] },
+    // Groups the user has saved to their wishlist (heart icon across the app).
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
   },
   {
     timestamps: true,

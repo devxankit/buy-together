@@ -129,46 +129,33 @@ const JoinedGroupsList = ({ groups }) => {
             {/* ── DIVIDING LINE ── */}
             <div className="border-t border-[#F1F5F9]" />
 
-            {/* ── BOTTOM SECTION (Metrics Columns & CTA) ── */}
+            {/* ── BOTTOM SECTION (real metrics + CTA) ── */}
             <div className="flex items-center justify-between gap-2.5 pt-0.5">
-              {/* Metrics grid */}
-              <div className="flex-1 grid grid-cols-3 gap-2">
-                {/* Column 1: Target Price */}
+              {/* Real metrics only — derived from backend group data */}
+              <div className="flex-1 grid grid-cols-2 gap-2">
+                {/* Column 1: Spots Left */}
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-0.5 text-[8.5px] font-bold text-muted">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M6 20a1 1 0 02-1-1v-2.586a1 1 0 01.293-.707l7.534-7.534a1 1 0 021.414 0l2.586 2.586a1 1 0 020 1.414l-7.534 7.534a1 1 0 01-.707.293H6z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>Target Price</span>
+                    <span>Spots Left</span>
                   </div>
                   <p className="text-[10px] font-black text-[#475569] leading-tight">
-                    {group.targetPrice}
+                    {Math.max(group.spotsTotal - group.spotsJoined, 0)} of {group.spotsTotal}
                   </p>
                 </div>
 
-                {/* Column 2: Best Offer */}
+                {/* Column 2: Category */}
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-0.5 text-[8.5px] font-bold text-muted">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M3 5a2 2 0 012-2h4.586a1 1 0 01.707.293l7 7a1 1 0 010 1.414l-4.586 4.586a1 1 0 01-1.414 0l-7-7A1 1 0 013 9.586V5z" />
                     </svg>
-                    <span>Best Offer</span>
+                    <span>Category</span>
                   </div>
-                  <p className="text-[10px] font-black text-[#15803D] leading-tight">
-                    {group.bestOffer}
-                  </p>
-                </div>
-
-                {/* Column 3: My Interest */}
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-0.5 text-[8.5px] font-bold text-muted">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    <span>My Interest</span>
-                  </div>
-                  <p className="text-[10px] font-black text-[#475569] leading-tight">
-                    {group.myInterest}
+                  <p className="text-[10px] font-black text-[#475569] leading-tight truncate">
+                    {group.category}
                   </p>
                 </div>
               </div>

@@ -110,9 +110,6 @@ const Categories = () => {
         badgeLabel = 'RISING';
       }
 
-      // Default tags fallback
-      const hashtags = ['#' + (g.category || 'Group'), '#' + (g.subCategory || 'Deal'), '#CoBuy'];
-
       return {
         id: g.id,
         title: g.title,
@@ -124,8 +121,8 @@ const Categories = () => {
         spotsJoined,
         spotsTotal,
         creatorName: (g.creator && g.creator !== '—') ? g.creator : (g.admin && g.admin.name) || 'Platform Creator',
+        creatorId: g.admin?._id || g.admin?.id || g.admin,
         creatorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
-        hashtags,
         badgeType,
         badgeLabel,
         daysLeft: neededText,
@@ -139,6 +136,15 @@ const Categories = () => {
   const filteredProducts = useMemo(() => {
     let list = mappedGroups;
 
+    // Filter out groups created or joined by the current user
+    const currentUserId = currentUser.id || currentUser._id;
+    if (currentUserId) {
+      list = list.filter(p => 
+        String(p.creatorId) !== String(currentUserId) &&
+        !p.members.some(m => String(m._id || m.id || m) === String(currentUserId))
+      );
+    }
+
     // Filter by Selected Category slug
     if (selectedCategory !== 'all' && selectedCategory !== 'more') {
       list = list.filter(p => String(p.category).toLowerCase() === String(selectedCategory).toLowerCase());
@@ -147,10 +153,10 @@ const Categories = () => {
     // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      list = list.filter(p => 
-        p.title.toLowerCase().includes(q) || 
+      list = list.filter(p =>
+        p.title.toLowerCase().includes(q) ||
         p.slogan.toLowerCase().includes(q) ||
-        p.hashtags.some(tag => tag.toLowerCase().includes(q))
+        String(p.category).toLowerCase().includes(q)
       );
     }
 

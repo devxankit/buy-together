@@ -12,6 +12,16 @@ const updateProfile = async (req, res) => {
   res.send(user);
 };
 
+const getWishlist = catchAsync(async (req, res) => {
+  const items = await userService.getWishlist(req.user.id);
+  res.send(items);
+});
+
+const toggleWishlist = catchAsync(async (req, res) => {
+  const result = await userService.toggleWishlist(req.user.id, req.params.groupId);
+  res.send(result);
+});
+
 const getUserPublicProfile = catchAsync(async (req, res) => {
   const user = await userService.getUserById(req.params.userId);
   if (!user) {
@@ -32,5 +42,7 @@ const getUserPublicProfile = catchAsync(async (req, res) => {
 module.exports = {
   getProfile,
   updateProfile,
+  getWishlist,
+  toggleWishlist,
   getUserPublicProfile,
 };

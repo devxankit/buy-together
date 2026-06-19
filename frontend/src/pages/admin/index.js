@@ -14,4 +14,6 @@ export { default as PushNotifications } from './pages/PushNotifications';
 export { default as Vendors }   from './pages/Vendors';
 export { default as Fraud }     from './pages/Fraud';
 export { default as Revenue }   from './pages/Revenue';
+export { default as Support }   from './pages/Support';
+export { default as ContentPages } from './pages/ContentPages';
 export { default as Settings }  from './pages/Settings';

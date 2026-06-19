@@ -12,7 +12,7 @@ import WishlistButton from '../../../../../components/ui/WishlistButton';
  *  - Inline title verify checkmark badge & member counts
  *  - Full location pin & creator profile avatar details
  *  - Subtle linear progress indicators alongside remaining metrics
- *  - Bottom row with hashtag chips and custom outline action buttons
+ *  - Bottom row with custom outline action buttons
  */
 const CategoryProductsList = ({ products, onJoin }) => {
   const navigate = useNavigate();
@@ -37,7 +37,8 @@ const CategoryProductsList = ({ products, onJoin }) => {
         return (
           <div
             key={prod.id}
-            className="bg-surface border border-line/70 rounded-[22px] p-3.5 flex gap-3.5 shadow-sm hover:shadow-md transition-all duration-300"
+            onClick={() => navigate(`/groups/${prod.id}`)}
+            className="bg-surface border border-line/70 rounded-[22px] p-3.5 flex gap-3.5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer active:scale-[0.99]"
           >
             {/* ── LEFT: DIRECT IMAGE (No visual styled box container!) ── */}
             <div className="relative w-[72px] h-[72px] flex-shrink-0 self-center">
@@ -56,97 +57,82 @@ const CategoryProductsList = ({ products, onJoin }) => {
             </div>
 
             {/* ── RIGHT: DETAILS BLOCK ── */}
-            <div className="flex-1 flex flex-col justify-between min-w-0">
-              
-              {/* Row 1: Title + Verified Badge AND Member Count */}
-              <div className="flex items-start justify-between gap-1">
+            <div className="flex-1 flex flex-col min-w-0 gap-1.5">
+
+              {/* Row 1: Title + verified · members count */}
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1 min-w-0">
-                  <h3 className="text-[12px] font-black text-ink truncate leading-tight">
+                  <h3 className="text-[12.5px] font-black text-ink truncate leading-tight">
                     {prod.title}
                   </h3>
-                  {/* Verified checkmark SVG in purple-teal */}
                   <svg className="w-3 h-3 text-[#7C3AED] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4.13-5.69z" clipRule="evenodd" />
                   </svg>
                 </div>
 
-                {/* Member indicators: 324/500 members */}
                 <div className="flex items-center gap-0.5 text-primary flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                   </svg>
-                  <span className="text-[9px] font-extrabold text-primary tracking-tight leading-none">
+                  <span className="text-[9.5px] font-extrabold tracking-tight leading-none">
                     {prod.spotsJoined}/{prod.spotsTotal}
-                    <span className="text-muted font-bold text-[8px] ml-0.5">members</span>
                   </span>
                 </div>
               </div>
 
-              {/* Row 2: Description text */}
-              <p className="text-[9.5px] font-semibold text-[#64748B] leading-tight line-clamp-2 mt-0.5 pr-1">
+              {/* Row 2: Slogan (single line keeps every card the same height) */}
+              <p className="text-[9.5px] font-semibold text-[#64748B] leading-snug line-clamp-1">
                 {prod.slogan}
               </p>
 
-              {/* Row 3: Location and Creator Details */}
-              <div className="flex items-center gap-2.5 mt-1 flex-wrap">
-                {/* Location */}
-                <div className="flex items-center gap-0.5 text-[#64748B] flex-shrink-0">
+              {/* Row 3: Meta — location · creator */}
+              <div className="flex items-center gap-1.5 min-w-0 text-[9px] text-[#64748B]">
+                <span className="flex items-center gap-0.5 flex-shrink-0">
                   <svg className="w-2.5 h-2.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-[9px] font-extrabold">{prod.location}</span>
-                </div>
-
-                {/* Creator info */}
-                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="font-bold">{prod.location}</span>
+                </span>
+                <span className="w-[3px] h-[3px] rounded-full bg-slate-300 flex-shrink-0" />
+                <span className="flex items-center gap-1 min-w-0">
                   <img
                     src={prod.creatorAvatar}
                     alt={prod.creatorName}
-                    className="w-4 h-4 rounded-full object-cover border border-line"
+                    className="w-3.5 h-3.5 rounded-full object-cover border border-line flex-shrink-0"
                   />
-                  <span className="text-[9px] font-bold text-[#64748B]">
-                    Created by <span className="text-ink font-extrabold">{prod.creatorName}</span>
-                  </span>
-                </div>
+                  <span className="font-bold truncate">{prod.creatorName}</span>
+                </span>
               </div>
 
-              {/* Row 4: Progress Bar + Needed count */}
-              <div className="flex items-center justify-between gap-3 mt-1.5">
-                <div className="flex-1 h-[5px] bg-surface-alt rounded-full overflow-hidden border border-slate-200/10 relative">
+              {/* Row 4: Progress bar + percentage */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-[5px] bg-surface-alt rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[#0B7A70] to-[#0D9488] rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <span className="text-[8.5px] font-bold text-[#64748B] flex-shrink-0">
-                  {prod.daysLeft}
-                </span>
+                <span className="text-[8.5px] font-black text-primary flex-shrink-0">{percentage}%</span>
               </div>
 
-              {/* Row 5: Tags Row AND CTA Join Group Button */}
-              <div className="flex items-center justify-between gap-2 mt-2 w-full">
-                {/* Hashtags list */}
-                <div className="flex items-center gap-1 overflow-hidden flex-1 flex-wrap h-[18px]">
-                  {(prod.hashtags || []).map((tag, tIdx) => (
-                    <span
-                      key={tIdx}
-                      className="bg-[#E8F8F5] text-primary text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none tracking-tight whitespace-nowrap"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+              {/* Row 5: Needed count (left) · wishlist + Join (right) */}
+              <div className="flex items-center justify-between gap-2 mt-0.5">
+                <span className="flex items-center gap-1 text-[9px] font-bold text-[#64748B] min-w-0">
+                  <svg className="w-2.5 h-2.5 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="truncate">{prod.daysLeft}</span>
+                </span>
 
-                {/* Join Group / View Group Button */}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <WishlistButton
-                      isWishlisted={wishlistItems.some(item => item.id === prod.id)}
-                      onClick={() => dispatch(toggleWishlist(prod))}
-                      className="mr-1"
-                    />
+                  <WishlistButton
+                    isWishlisted={wishlistItems.some(item => item.id === prod.id)}
+                    onClick={() => dispatch(toggleWishlist(prod))}
+                  />
                   <button
                     onClick={(e) => {
+                      e.stopPropagation();
                       if (onJoin) {
                         onJoin(e, prod);
                       } else {

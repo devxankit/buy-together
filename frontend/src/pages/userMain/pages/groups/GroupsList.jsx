@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useUserMainContext } from '../../context';
-import { getGroups } from '../../../../services/group.api';
+import { getGroups, getTrendingGroups } from '../../../../services/group.api';
 
 // My Groups sub-components
 import GroupsHeader from './components/GroupsHeader';
@@ -36,6 +36,7 @@ const GroupsList = () => {
   // API Data States
   const [createdGroups, setCreatedGroups] = useState([]);
   const [joinedGroups, setJoinedGroups] = useState([]);
+  const [trendingGroups, setTrendingGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch real data on tab change or mount
@@ -62,50 +63,45 @@ const GroupsList = () => {
     return () => { active = false; };
   }, []);
 
+  // Trending list — admin-curated via the admin Groups console (trending flag).
+  useEffect(() => {
+    let active = true;
+    getTrendingGroups()
+      .then(({ data }) => { if (active && Array.isArray(data)) setTrendingGroups(data); })
+      .catch((err) => console.warn('Failed to load trending groups:', err));
+    return () => { active = false; };
+  }, []);
+
   // 2. DYNAMIC DATA MODELS (Loaded from database)
-  const trendingGroupsData = [
-    {
-      id: 'iphone-15',
-      title: 'iPhone 15 Pro',
-      subtitle: '₹8,000 OFF',
-      image: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 28,
-      spotsTotal: 50,
-      daysLeft: '2d left'
-    },
-    {
-      id: 'macbook-m3',
-      title: 'MacBook Air M3',
-      subtitle: '₹12,000 OFF',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 16,
-      spotsTotal: 30,
-      daysLeft: '3d left'
-    },
-    {
-      id: 'lg-tv',
-      title: 'LG 55" 4K TV',
-      subtitle: '₹6,500 OFF',
-      image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 34,
-      spotsTotal: 60,
-      daysLeft: '4d left'
-    },
-    {
-      id: 'samsung-washer',
-      title: 'Samsung Washer',
-      subtitle: '₹5,000 OFF',
-      image: 'https://images.unsplash.com/photo-1610557892470-76d74cd120a8?auto=format&fit=crop&w=150&q=80',
-      spotsJoined: 18,
-      spotsTotal: 40,
-      daysLeft: '2d left'
-    }
-  ];
+  // Trending carousel — maps admin-flagged groups onto the card shape. The
+  // green "OFF" badge subtitle comes from each group's slogan.
+  const trendingGroupsData = useMemo(() => {
+    return trendingGroups.map((g) => ({
+      id: g.id || g._id,
+      title: g.title,
+      subtitle: g.slogan || g.productName || '',
+      image: g.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=150&q=80',
+      spotsJoined: g.spotsJoined || 0,
+      spotsTotal: g.spotsTotal || 0,
+      daysLeft: g.daysLeft || '—',
+    }));
+  }, [trendingGroups]);
 
   const allGroupsData = useMemo(() => {
-    return createdGroups.map(g => {
+    const all = [...createdGroups, ...joinedGroups];
+    const uniqueGroups = [];
+    const seen = new Set();
+    for (const g of all) {
+      if (!seen.has(g.id)) {
+        seen.add(g.id);
+        uniqueGroups.push(g);
+      }
+    }
+
+    return uniqueGroups.map(g => {
       const spotsJoined = g.spotsJoined || 0;
       const spotsTotal = g.spotsTotal || 0;
+      const isCreator = createdGroups.some(cg => cg.id === g.id);
 
       return {
         id: g.id,
@@ -118,21 +114,17 @@ const GroupsList = () => {
         spotsJoined,
         spotsTotal,
         daysLeft: g.daysLeft || '—',
-        isAdmin: true
+        members: Array.isArray(g.members) ? g.members : [],
+        isAdmin: isCreator
       };
     });
-  }, [createdGroups]);
+  }, [createdGroups, joinedGroups]);
 
   const joinedGroupsData = useMemo(() => {
     return joinedGroups.map(g => {
       const spotsJoined = g.spotsJoined || 0;
       const spotsTotal = g.spotsTotal || 0;
 
-      // Mocked detailed pricing details for joined groups, falling back gracefully
-      const targetPrice = `Under ₹${(spotsTotal * 1000).toLocaleString()}`;
-      const bestOffer = `₹${Math.round(spotsTotal * 900).toLocaleString()} (10% OFF)`;
-      const myInterest = '1 Unit';
-
       return {
         id: g.id,
         title: g.title,
@@ -144,9 +136,7 @@ const GroupsList = () => {
         spotsJoined,
         spotsTotal,
         daysLeft: g.daysLeft || '—',
-        targetPrice,
-        bestOffer,
-        myInterest,
+        members: Array.isArray(g.members) ? g.members : [],
         closingLabel: g.status === 'closing' ? 'Closing Soon' : null
       };
     });
@@ -155,9 +145,6 @@ const GroupsList = () => {
   // 3. SEARCH & FILTER LOGIC (My Groups)
   const filteredGroups = useMemo(() => {
     let result = allGroupsData.filter((group) => {
-      // Only show groups the user created in My Groups section
-      if (!group.isAdmin) return false;
-
       const matchesSearch =
         group.title.toLowerCase().includes(searchValue.toLowerCase()) ||
         group.category.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -198,6 +185,14 @@ const GroupsList = () => {
   }, [allGroupsData, searchValue, selectedFilter, selectedCity, filterCategory, filterStatus, filterSort]);
 
   // 4. SUB-TAB FILTER LOGIC (Joined Groups)
+  const joinedSubTabCounts = useMemo(() => {
+    return {
+      active: joinedGroupsData.filter(g => g.status === 'active').length,
+      'closing-soon': joinedGroupsData.filter(g => g.status === 'closing').length,
+      completed: joinedGroupsData.filter(g => g.status === 'completed').length,
+    };
+  }, [joinedGroupsData]);
+
   const filteredJoinedGroups = useMemo(() => {
     return joinedGroupsData.filter((group) => {
       if (joinedSubTab === 'active') return group.status === 'active';
@@ -247,15 +242,15 @@ const GroupsList = () => {
               {/* All Groups List */}
               <AllGroupsList groups={filteredGroups} />
 
-              {/* Trending Horizontal list */}
-              <TrendingGroups groups={trendingGroupsData} />
+              {/* Trending Horizontal list — admin-curated; hidden when empty */}
+              {trendingGroupsData.length > 0 && <TrendingGroups groups={trendingGroupsData} />}
             </>
           )}
         </>
       ) : (
         <div className="flex flex-col gap-4 mt-1">
           {/* Segmented Pills count filters */}
-          <JoinedTabs selectedTab={joinedSubTab} onChange={setJoinedSubTab} />
+          <JoinedTabs selectedTab={joinedSubTab} onChange={setJoinedSubTab} counts={joinedSubTabCounts} />
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2">

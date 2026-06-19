@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.post('/', auth, validate(groupValidation.createGroup), groupController.createGroup);
 router.get('/', auth, groupController.getGroups);
+// Public trending list — declared before '/:groupId' so it isn't matched as one.
+router.get('/trending', groupController.getTrending);
 router.post('/:groupId/join', auth, groupController.joinGroup);
 router.post('/:groupId/leave', auth, groupController.leaveGroup);
 router.delete('/:groupId/members/:userId', auth, groupController.removeMember);

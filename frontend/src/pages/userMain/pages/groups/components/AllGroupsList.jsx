@@ -4,17 +4,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
 import WishlistButton from '../../../../../components/ui/WishlistButton';
 
+// Resolve a member's display avatar — falls back to a generated initial-avatar
+// when the account has no photo.
+const memberAvatar = (m) =>
+  m?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m?.name || 'User')}&background=random&color=fff`;
+
 const AllGroupsList = ({ groups, onSortChange }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
-
-  // Overlapping avatar assets
-  const AVATARS = [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=50&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=50&q=80',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=50&q=80'
-  ];
 
   return (
     <div className="flex flex-col gap-3 select-none pb-4">
@@ -96,21 +94,31 @@ const AllGroupsList = ({ groups, onSortChange }) => {
 
                 {/* Avatar stack and Progress bar stack */}
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  {/* Overlapping Avatar Stack */}
-                  <div className="flex items-center flex-shrink-0">
-                    {AVATARS.map((avatar, idx) => (
-                      <img
-                        key={idx}
-                        src={avatar}
-                        alt="Member avatar"
-                        className="w-5 h-5 rounded-full border border-surface object-cover -mr-1.5"
-                        style={{ zIndex: 3 - idx }}
-                      />
-                    ))}
-                    <div className="w-5 h-5 rounded-full bg-[#E2E8F0] border border-surface text-[8px] font-black text-[#475569] flex items-center justify-center -mr-1.5 z-[0]">
-                      +{group.spotsJoined - 3 > 0 ? group.spotsJoined - 3 : 9}
-                    </div>
-                  </div>
+                  {/* Real member avatars (up to 3) with a real overflow count */}
+                  {(() => {
+                    const shown = (group.members || []).slice(0, 3);
+                    const extra = Math.max((group.spotsJoined || 0) - shown.length, 0);
+                    if (shown.length === 0) return null;
+                    return (
+                      <div className="flex items-center flex-shrink-0">
+                        {shown.map((m, idx) => (
+                          <img
+                            key={m.id || m._id || idx}
+                            src={memberAvatar(m)}
+                            alt={m.name || 'Member'}
+                            className="w-5 h-5 rounded-full border border-surface object-cover -mr-1.5 bg-surface-alt"
+                            style={{ zIndex: 3 - idx }}
+                            loading="lazy"
+                          />
+                        ))}
+                        {extra > 0 && (
+                          <div className="w-5 h-5 rounded-full bg-[#E2E8F0] border border-surface text-[8px] font-black text-[#475569] flex items-center justify-center -mr-1.5 z-[0]">
+                            +{extra}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Progress Line */}
                   <div className="flex-1 min-w-[70px] h-[5px] bg-[#F1F5F9] rounded-full overflow-hidden self-center">

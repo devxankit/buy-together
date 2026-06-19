@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   X, Pencil, Trash2, Users, Check, Search, Loader2,
-  Boxes, Tag, Lock, Flag, UserPlus, UserMinus, MessageSquare,
+  Boxes, Tag, Lock, Flag, UserPlus, UserMinus, MessageSquare, Star,
 } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button, LocationAutocomplete, ImageUploader, ChatTranscript } from '../components';
@@ -38,6 +38,7 @@ const EMPTY_FORM = {
   description: '',
   spotsTotal: 50,
   status: 'active',
+  trending: false,
   closesAt: '',
   creatorName: '',
 };
@@ -253,6 +254,7 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
       description: form.description?.trim() || '',
       spotsTotal: total,
       status: form.status,
+      trending: !!form.trending,
       creatorName: form.creatorName?.trim() || '',
       closesAt: form.closesAt || null,
       members: members.map((m) => m.id || m._id),
@@ -392,6 +394,14 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
           <Field label="Creator name" hint="Display name of who started this group (optional).">
             <input style={inputStyle} value={form.creatorName} onChange={set('creatorName')} placeholder="e.g. Rahul Sharma" maxLength={80} />
           </Field>
+
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', background: T.surfaceAlt, border: `1px solid ${form.trending ? T.warning : T.line}`, borderRadius: radius.lg, padding: 12 }}>
+            <input type="checkbox" checked={!!form.trending} onChange={(e) => setForm((f) => ({ ...f, trending: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.warning, marginTop: 2 }} />
+            <span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: T.ink, display: 'flex', alignItems: 'center', gap: 6 }}><Star size={15} color={T.warning} /> Trending</span>
+              <span style={{ fontSize: 12, color: T.muted, lineHeight: 1.4, display: 'block', marginTop: 2 }}>Show this group in the “Trending Right Now” carousel on the app’s Groups page.</span>
+            </span>
+          </label>
 
           <SectionHeader icon={Users} title="Group members" subtitle="Search and select users to add to this group." />
           
@@ -893,13 +903,26 @@ const Groups = () => {
     }
   };
 
+  const toggleTrending = async (g) => {
+    try {
+      await updateGroupAdmin(g.id, { trending: !g.trending });
+      showToast(g.trending ? 'Removed from Trending.' : 'Added to Trending! ⭐');
+      fetchData();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update group.', '❌');
+    }
+  };
+
   const columns = [
     {
       key: 'title', label: 'Group', strong: true, render: (g) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, maxWidth: 300 }}>
           <Avatar name={g.title} src={g.image} color={g.status === 'flagged' ? T.danger : g.status === 'locked' || g.status === 'completed' ? T.success : T.primary} size={36} square />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.title}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 5 }}>
+              {g.trending && <Star size={13} color={T.warning} fill={T.warning} style={{ flexShrink: 0 }} />}
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.title}</span>
+            </div>
             <div style={{ fontSize: 11.5, color: T.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {g.productName ? `${g.productName} · ` : ''}by {g.creator || '—'}
             </div>
@@ -935,6 +958,9 @@ const Groups = () => {
           </button>
           <button onClick={() => setChatOf(g)} className="admin-icon-btn" title="View group chat" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.info, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageSquare size={15} />
+          </button>
+          <button onClick={() => toggleTrending(g)} className="admin-icon-btn" title={g.trending ? 'Remove from Trending' : 'Mark as Trending'} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${g.trending ? T.warning : T.line}`, background: g.trending ? T.warningSoft : T.surface, color: T.warning, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Star size={15} fill={g.trending ? T.warning : 'none'} />
           </button>
           {g.status !== 'flagged' ? (
             <button onClick={() => setStatus(g, 'flagged')} className="admin-icon-btn" title="Flag group" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.danger, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -73,6 +73,43 @@ const ADMIN_PERMISSIONS = [
   'fraud',
   'revenue',
   'pushNotifications',
+  'support',
+  'content',
+];
+
+// Support-ticket lifecycle surfaced in the admin Support console.
+//  open → in_progress (an admin is handling it) → resolved → closed.
+const TICKET_STATUS = {
+  OPEN: 'open',
+  IN_PROGRESS: 'in_progress',
+  RESOLVED: 'resolved',
+  CLOSED: 'closed',
+};
+
+const TICKET_PRIORITY = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+};
+
+// User-selectable ticket topics in the Help Center.
+const TICKET_CATEGORY = {
+  GENERAL: 'general',
+  ACCOUNT: 'account',
+  PAYMENT: 'payment',
+  GROUP: 'group',
+  ORDER: 'order',
+  OTHER: 'other',
+};
+
+// Fixed set of admin-editable content pages, keyed by slug. These back the
+// consumer app's Help Center, legal, and info screens.
+const CONTENT_PAGE_SLUGS = [
+  'help-center',
+  'terms',
+  'privacy',
+  'community-guidelines',
+  'about',
 ];
 
 module.exports = {
@@ -86,4 +123,8 @@ module.exports = {
   GROUP_STATUS,
   GROUP_TYPE,
   ADMIN_PERMISSIONS,
+  TICKET_STATUS,
+  TICKET_PRIORITY,
+  TICKET_CATEGORY,
+  CONTENT_PAGE_SLUGS,
 };

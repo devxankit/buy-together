@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { MapPin, Loader2, X } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
-import { loadGoogleMaps } from '../../../utils/googleMaps';
+import { loadGoogleMaps, geocodeAddress } from '../../../utils/googleMaps';
 
 /**
  * LocationAutocomplete
@@ -17,7 +17,7 @@ import { loadGoogleMaps } from '../../../utils/googleMaps';
  *   onChange    (string) => void — fires on every keystroke and on select
  *   placeholder input placeholder
  */
-const LocationAutocomplete = ({ value = '', onChange, placeholder = 'Search city or area…' }) => {
+const LocationAutocomplete = ({ value = '', onChange, onCoordinates, placeholder = 'Search city or area…' }) => {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -140,6 +140,9 @@ const LocationAutocomplete = ({ value = '', onChange, placeholder = 'Search city
   const handleInput = (e) => {
     const text = e.target.value;
     onChange?.(text);
+    // Manually edited text invalidates any previously resolved pinpoint — the
+    // admin must pick a suggestion again to attach coordinates.
+    onCoordinates?.(null);
     setOpen(true);
     if (!ready) return;
     clearTimeout(debounceRef.current);
@@ -150,6 +153,12 @@ const LocationAutocomplete = ({ value = '', onChange, placeholder = 'Search city
     onChange?.(prediction.description);
     setSuggestions([]);
     setOpen(false);
+    // Resolve the picked place to pinpoint coordinates for distance sorting.
+    if (onCoordinates) {
+      geocodeAddress(prediction.description)
+        .then((coords) => onCoordinates(coords))
+        .catch(() => onCoordinates(null));
+    }
     // Fresh session token for the next lookup (Places billing best practice).
     if (window.google?.maps?.places) {
       tokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
@@ -158,6 +167,7 @@ const LocationAutocomplete = ({ value = '', onChange, placeholder = 'Search city
 
   const clear = () => {
     onChange?.('');
+    onCoordinates?.(null);
     setSuggestions([]);
     setOpen(false);
   };

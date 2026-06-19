@@ -2,6 +2,8 @@ import api from './api';
 
 // ── Consumer app ────────────────────────────────────────────────────
 export const getGroups = (params) => api.get('/groups', { params });
+// Admin-curated trending groups for the Groups page carousel.
+export const getTrendingGroups = () => api.get('/groups/trending');
 export const getGroup = (id) => api.get(`/groups/${id}`);
 export const createGroup = (data) => api.post('/groups', data);
 export const joinGroup = (id) => api.post(`/groups/${id}/join`);

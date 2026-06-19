@@ -1,22 +1,26 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const GroupTabs = ({ activeTab, onChange }) => {
   return (
-    <div className="bg-[#F1F5F9] p-1.5 rounded-[18px] flex w-full relative select-none">
+    <div className="bg-[#F1F5F9]/80 border border-slate-200/40 p-1 rounded-full flex w-full relative select-none">
       {/* My Groups Tab */}
       <button
         onClick={() => onChange('my-groups')}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[13px] text-xs font-bold transition-all duration-300 ${
-          activeTab === 'my-groups'
-            ? 'bg-surface text-primary shadow-sm shadow-[#0F172A]/5 scale-[1.01]'
-            : 'text-[#64748B] hover:text-[#475569]'
+        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-extrabold relative transition-colors duration-300 z-10 ${
+          activeTab === 'my-groups' ? 'text-primary' : 'text-[#64748B] hover:text-[#475569]'
         }`}
       >
+        {activeTab === 'my-groups' && (
+          <motion.div
+            layoutId="activeGroupTabIndicator"
+            className="absolute inset-0 bg-white rounded-full -z-10 shadow-sm shadow-slate-200/50"
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          />
+        )}
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={`w-4 h-4 transition-colors ${
-            activeTab === 'my-groups' ? 'text-primary' : 'text-muted'
-          }`}
+          className="w-4 h-4 transition-colors"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -34,17 +38,20 @@ const GroupTabs = ({ activeTab, onChange }) => {
       {/* Joined Groups Tab */}
       <button
         onClick={() => onChange('joined-groups')}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[13px] text-xs font-bold transition-all duration-300 ${
-          activeTab === 'joined-groups'
-            ? 'bg-surface text-primary shadow-sm shadow-[#0F172A]/5 scale-[1.01]'
-            : 'text-[#64748B] hover:text-[#475569]'
+        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-extrabold relative transition-colors duration-300 z-10 ${
+          activeTab === 'joined-groups' ? 'text-primary' : 'text-[#64748B] hover:text-[#475569]'
         }`}
       >
+        {activeTab === 'joined-groups' && (
+          <motion.div
+            layoutId="activeGroupTabIndicator"
+            className="absolute inset-0 bg-white rounded-full -z-10 shadow-sm shadow-slate-200/50"
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          />
+        )}
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={`w-4 h-4 transition-colors ${
-            activeTab === 'joined-groups' ? 'text-primary' : 'text-muted'
-          }`}
+          className="w-4 h-4 transition-colors"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

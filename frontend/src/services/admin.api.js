@@ -47,5 +47,7 @@ export const ADMIN_PERMISSION_OPTIONS = [
   { key: 'vendors', label: 'Vendors' },
   { key: 'fraud', label: 'Fraud & Risk' },
   { key: 'revenue', label: 'Revenue' },
+  { key: 'support', label: 'Support Tickets' },
+  { key: 'content', label: 'Content Pages' },
   { key: 'pushNotifications', label: 'Push Notifications' },
 ];
