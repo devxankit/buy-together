@@ -1,4 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+// Load .env from the backend root regardless of the current working directory,
+// so `node src/server.js` works whether launched from backend/ or backend/src/.
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const joi = require('joi');
 
 const envVarsSchema = joi.object({
