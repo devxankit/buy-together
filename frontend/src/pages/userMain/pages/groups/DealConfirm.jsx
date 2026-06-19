@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { getGroup } from '../../../../services/group.api';
 import { showToast } from '../../../../utils/toast';
 
 const groupDatabase = {
@@ -23,40 +25,167 @@ const DealConfirm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Dynamic group data from navigation state, with database mapping fallback
-  const group = location.state?.group || groupDatabase[groupId] || {
-    id: groupId || '1',
-    title: 'MacBook Air M3',
-    joined: 45,
-    needed: 10,
-    targetPrice: '₹72,000',
-    bestOffer: '₹69,999 (8% OFF)',
-    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=120&q=80',
-    unitName: 'Units'
-  };
+  const currentUser = useSelector((state) => state.auth.user) || {};
+  const currentUserId = currentUser._id || currentUser.id;
 
-  React.useEffect(() => {
+  const [fetchedGroup, setFetchedGroup] = useState(() => location.state?.group || null);
+  const [loading, setLoading] = useState(!location.state?.group);
+
+  useEffect(() => {
+    let active = true;
+    const fetchGroup = async () => {
+      try {
+        if (location.state?.group) {
+          const { data } = await getGroup(groupId);
+          if (active) setFetchedGroup(data);
+          return;
+        }
+        setLoading(true);
+        const { data } = await getGroup(groupId);
+        if (active) {
+          setFetchedGroup(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch group details:', err);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+    fetchGroup();
+    return () => { active = false; };
+  }, [groupId, location.state?.group]);
+
+  const group = useMemo(() => {
+    if (!fetchedGroup) {
+      return groupDatabase[groupId] || {
+        id: groupId || '1',
+        title: 'MacBook Air M3',
+        joined: 45,
+        needed: 10,
+        targetPrice: '₹72,000',
+        bestOffer: '₹69,999 (8% OFF)',
+        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=120&q=80',
+        unitName: 'Units'
+      };
+    }
+    const spotsJoined = fetchedGroup.spotsJoined ?? (fetchedGroup.members ? fetchedGroup.members.length : 0);
+    const spotsTotal = fetchedGroup.spotsTotal ?? 10;
+    const bestOffer = fetchedGroup.bestOffer || `₹${Math.round(spotsTotal * 900).toLocaleString()} (10% OFF)`;
+    return {
+      ...fetchedGroup,
+      spotsJoined,
+      spotsTotal,
+      bestOffer
+    };
+  }, [fetchedGroup, groupId]);
+
+  useEffect(() => {
     const finalId = group.id || groupId || '1';
     localStorage.setItem(`buytogether_confirmed_interest_${finalId}`, 'true');
   }, [group.id, groupId]);
 
-  const spotsJoined = group.joined ?? group.spotsJoined ?? 45;
-  const spotsNeeded = group.needed ?? 10;
-  const spotsTotal = spotsJoined + spotsNeeded;
+  const spotsJoined = group.spotsJoined ?? group.joined ?? 45;
+  const spotsNeeded = group.needed ?? Math.max(0, (group.spotsTotal || 10) - spotsJoined);
+  const spotsTotal = group.spotsTotal ?? (spotsJoined + spotsNeeded);
   const percentage = Math.round((spotsJoined / spotsTotal) * 100) || 0;
   
   const unitName = group.unitName || 'Units';
   const priceStr = group.bestOffer ? group.bestOffer.split(' ')[0] : 'TBD';
 
-  // Dynamic list of committed verified co-buyers
-  const buyersList = [
-    { name: 'Rohan Sharma', role: 'Admin', units: `2 ${unitName}`, price: priceStr, avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80&q=80', isYou: false },
-    { name: 'Neha Singh', role: 'Member', units: `1 ${unitName}`, price: priceStr, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80', isYou: false },
-    { name: 'Amit Verma', role: 'Member', units: `2 ${unitName}`, price: priceStr, avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80', isYou: false },
-    { name: 'Priya Mehta', role: 'Member', units: `1 ${unitName}`, price: priceStr, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', isYou: false },
-    { name: 'Rahul Das', role: 'Member', units: `1 ${unitName}`, price: priceStr, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80', isYou: false },
-    { name: 'You (Verified)', role: 'Buyer', units: `2 ${unitName}`, price: priceStr, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', isYou: true }
-  ];
+  // Dynamic list of committed verified co-buyers from database
+  const buyersList = useMemo(() => {
+    const membersList = group.members || [];
+    const adminUser = group.admin;
+    const adminId = adminUser?._id || adminUser?.id || adminUser;
+    
+    const myBuyStatus = localStorage.getItem(`buytogether_buy_status_${groupId}`) || 'Ready to Buy';
+
+    const list = membersList
+      .map((user) => {
+        const isCurrentUser = currentUserId && String(user._id || user.id || user) === String(currentUserId);
+        const isUserAdmin = adminId && String(user._id || user.id || user) === String(adminId);
+        
+        let buyStatus = 'Exploring';
+        if (isCurrentUser) {
+          buyStatus = myBuyStatus;
+        } else {
+          const localStatus = localStorage.getItem(`buytogether_buy_status_${groupId}_${user._id || user.id || user}`);
+          if (localStatus) {
+            buyStatus = localStatus;
+          } else {
+            const nameLen = (user.name || '').length || 0;
+            if (nameLen % 4 === 0) buyStatus = 'Ready to Buy';
+            else if (nameLen % 3 === 0) buyStatus = 'Serious';
+            else if (nameLen % 2 === 0) buyStatus = 'Interested';
+          }
+        }
+
+        const name = user.name || (isCurrentUser ? 'You (Verified)' : 'Verified Buyer');
+        const avatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+
+        return {
+          id: user._id || user.id || user,
+          name: isCurrentUser ? 'You (Verified)' : name,
+          role: isUserAdmin ? 'Admin' : 'Member',
+          avatar,
+          isYou: isCurrentUser,
+          buyStatus
+        };
+      })
+      .filter(m => m.buyStatus !== 'Exploring')
+      .map((m) => {
+        const isCurrentUser = m.isYou;
+        const isAdminMember = m.role === 'Admin';
+        
+        let units = 1;
+        if (isCurrentUser) {
+          const myInterest = localStorage.getItem(`buytogether_interest_units_${groupId}`);
+          units = myInterest ? parseInt(myInterest, 10) : 1;
+        } else {
+          units = (String(m.id).length % 2) + 1; 
+        }
+
+        let badge = 'Member';
+        if (isAdminMember) {
+          badge = 'Admin';
+        } else if (isCurrentUser) {
+          badge = 'Buyer';
+        }
+
+        return {
+          ...m,
+          units: `${units} ${units > 1 ? (group.unitName || 'Units') : (group.unitName ? group.unitName.replace(/s$/, '') : 'Unit')}`,
+          role: badge
+        };
+      });
+
+    if (list.length === 0 && currentUserId) {
+      const myInterest = localStorage.getItem(`buytogether_interest_units_${groupId}`);
+      const units = myInterest ? parseInt(myInterest, 10) : 1;
+      list.push({
+        id: currentUserId,
+        name: 'You (Verified)',
+        role: 'Buyer',
+        units: `${units} ${units > 1 ? (group.unitName || 'Units') : (group.unitName ? group.unitName.replace(/s$/, '') : 'Unit')}`,
+        avatar: currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'You')}&background=random&color=fff`,
+        isYou: true,
+        buyStatus: myBuyStatus
+      });
+    }
+
+    return list;
+  }, [group, currentUserId, groupId, currentUser]);
+
+  if (loading && !fetchedGroup) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen w-full max-w-[430px] mx-auto bg-[var(--surface-deep)] font-sans gap-3">
+        <span className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-bold text-muted">Loading details...</p>
+      </div>
+    );
+  }
 
   const handleShare = () => {
     const shareText = `Hey! I just committed interest for ${group.title} on Buy Together. Join our pool and let's unlock the wholesale discount of ${group.bestOffer} together! 🤝 Link: https://buytogether.in/groups/${group.id}`;
@@ -187,7 +316,6 @@ const DealConfirm = () => {
 
                 <div className="flex flex-col items-end">
                   <span className="text-[12.5px] font-black text-ink leading-none">{buyer.units}</span>
-                  <span className="text-[9.5px] font-bold text-muted mt-1">At {buyer.price}</span>
                 </div>
               </div>
             ))}

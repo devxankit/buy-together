@@ -26,7 +26,7 @@ const replyToMyTicket = catchAsync(async (req, res) => {
 
 // ── Admin ───────────────────────────────────────────────────────────
 const listTicketsAdmin = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ['search', 'status', 'priority', 'page', 'limit']);
+  const filter = pick(req.query, ['search', 'status', 'priority', 'category', 'page', 'limit']);
   const result = await ticketService.queryTicketsAdmin(filter);
   res.send(result);
 });

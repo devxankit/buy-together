@@ -38,7 +38,11 @@ export const showToast = (message) => {
   toast.style.backdropFilter = 'blur(6px)';
   toast.style.webkitBackdropFilter = 'blur(6px)';
   toast.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  toast.style.whiteSpace = 'nowrap';
+  toast.style.whiteSpace = 'normal';
+  toast.style.wordBreak = 'break-word';
+  toast.style.maxWidth = 'calc(100vw - 32px)';
+  toast.style.textAlign = 'center';
+  toast.style.lineHeight = '1.4';
   toast.style.pointerEvents = 'none';
 
   toast.innerHTML = `<span>${cleanMessage}</span>`;

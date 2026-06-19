@@ -43,6 +43,7 @@ const listTickets = {
     search: joi.string().allow('', null),
     status: joi.string().valid('all', ...Object.values(TICKET_STATUS)),
     priority: joi.string().valid('all', ...Object.values(TICKET_PRIORITY)),
+    category: joi.string().valid('all', ...Object.values(TICKET_CATEGORY)),
     page: joi.number().integer().min(1),
     limit: joi.number().integer().min(1).max(100),
   }),
