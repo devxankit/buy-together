@@ -3,7 +3,7 @@
  * Isolates endpoint paths, global fetch interceptors, and JWT headers.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/v1';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const getHeaders = () => {
   const headers = {

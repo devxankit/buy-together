@@ -8,7 +8,7 @@
  * this script authenticates as a real user (signs a JWT exactly like login
  * does) and hits the live HTTP endpoint the browser calls:
  *
- *   POST /v1/fcm/web/register   { token }
+ *   POST /api/fcm/web/register   { token }
  *
  * then re-reads the user from MongoDB to confirm the token landed in
  * `fcmTokens`. It also exercises the service layer directly as a control, so a
@@ -27,7 +27,7 @@ const ok = (m) => console.log(`  \x1b[32m✓\x1b[0m ${m}`);
 const bad = (m) => console.log(`  \x1b[31m✗\x1b[0m ${m}`);
 const head = (m) => console.log(`\n\x1b[1m${m}\x1b[0m`);
 
-const BASE = `http://localhost:${config.port || process.env.PORT || 5000}/v1`;
+const BASE = `http://localhost:${config.port || process.env.PORT || 5000}/api`;
 
 const run = async () => {
   let failures = 0;

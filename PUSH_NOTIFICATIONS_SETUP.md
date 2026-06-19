@@ -54,7 +54,7 @@ Then restart the Vite dev server so it picks up the new env (`npm run dev` in `f
 
 ### How it behaves
 
-- On login (OTP verify), the browser asks for notification permission and registers its web token (`POST /v1/fcm/web/register`).
+- On login (OTP verify), the browser asks for notification permission and registers its web token (`POST /api/fcm/web/register`).
 - Foreground messages show an in-page notification; background/closed messages are shown by the service worker. Tapping a notification opens/focuses the app at the notification's **deep link**.
 - Web push requires **HTTPS** in production (`localhost` is allowed for development).
 
@@ -97,7 +97,7 @@ Future<void> registerFcmToken(String authToken, String apiBase) async {
   if (token == null) return;
 
   await http.post(
-    Uri.parse('$apiBase/fcm/mobile/register'),   // e.g. https://api.yourhost.com/v1/fcm/mobile/register
+    Uri.parse('$apiBase/fcm/mobile/register'),   // e.g. https://api.yourhost.com/api/fcm/mobile/register
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $authToken',
@@ -129,7 +129,7 @@ FirebaseMessaging.onMessageOpenedApp.listen((msg) {
 });
 ```
 
-> `apiBase` is your backend base **with the `/v1` prefix** (same as the web app's `VITE_API_URL`).
+> `apiBase` is your backend base **with the `/api` prefix** (same as the web app's `VITE_API_URL`).
 
 ---
 
@@ -162,20 +162,20 @@ Dead/expired tokens are pruned automatically after each send.
 
 | Method | Path | Body | Purpose |
 |--------|------|------|---------|
-| POST | `/v1/fcm/web/register` | `{ token }` | Save a web browser token |
-| POST | `/v1/fcm/mobile/register` | `{ token }` | Save a mobile-app token |
-| DELETE | `/v1/fcm/unregister` | `{ token, platform? }` | Remove a token (logout) |
-| POST | `/v1/fcm/test` | `{ title?, body?, link? }` | Send a test push to your own devices |
+| POST | `/api/fcm/web/register` | `{ token }` | Save a web browser token |
+| POST | `/api/fcm/mobile/register` | `{ token }` | Save a mobile-app token |
+| DELETE | `/api/fcm/unregister` | `{ token, platform? }` | Remove a token (logout) |
+| POST | `/api/fcm/test` | `{ title?, body?, link? }` | Send a test push to your own devices |
 
 **Admin broadcast endpoints** (require admin JWT):
 
 | Method | Path | Body | Purpose |
 |--------|------|------|---------|
-| POST | `/v1/admin/push/web` | `{ title, body, image?, link? }` | Broadcast to all web tokens |
-| POST | `/v1/admin/push/mobile` | `{ title, body, image?, link? }` | Broadcast to all mobile tokens |
-| POST | `/v1/admin/push/all` | `{ title, body, image?, link? }` | Broadcast to both |
-| GET | `/v1/admin/push/coverage` | — | `{ webUsers, mobileUsers, totalUsers }` |
-| GET | `/v1/admin/push/campaigns?limit=` | — | Recent broadcast history |
+| POST | `/api/admin/push/web` | `{ title, body, image?, link? }` | Broadcast to all web tokens |
+| POST | `/api/admin/push/mobile` | `{ title, body, image?, link? }` | Broadcast to all mobile tokens |
+| POST | `/api/admin/push/all` | `{ title, body, image?, link? }` | Broadcast to both |
+| GET | `/api/admin/push/coverage` | — | `{ webUsers, mobileUsers, totalUsers }` |
+| GET | `/api/admin/push/campaigns?limit=` | — | Recent broadcast history |
 
 ### Sending notifications from app code (server-side)
 

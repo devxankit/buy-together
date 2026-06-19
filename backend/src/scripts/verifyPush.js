@@ -74,20 +74,20 @@ const run = async () => {
 
   // ── 3. Routes ──────────────────────────────────────────────────────
   // Verify each route exists on its own router module (mount prefix shown for
-  // reference). /fcm/* is mounted at /v1/fcm; /admin/* at /v1/admin.
+  // reference). /fcm/* is mounted at /api/fcm; /admin/* at /api/admin.
   head('3. Registered routes');
   const fcmPaths = routerPaths(require('./../routes/fcm.routes'));
   const adminPaths = routerPaths(require('./../routes/admin.routes'));
   const checks = [
-    ['/v1/fcm', fcmPaths, 'POST', '/web/register'],
-    ['/v1/fcm', fcmPaths, 'POST', '/mobile/register'],
-    ['/v1/fcm', fcmPaths, 'DELETE', '/unregister'],
-    ['/v1/fcm', fcmPaths, 'POST', '/test'],
-    ['/v1/admin', adminPaths, 'POST', '/push/web'],
-    ['/v1/admin', adminPaths, 'POST', '/push/mobile'],
-    ['/v1/admin', adminPaths, 'POST', '/push/all'],
-    ['/v1/admin', adminPaths, 'GET', '/push/coverage'],
-    ['/v1/admin', adminPaths, 'GET', '/push/campaigns'],
+    ['/api/fcm', fcmPaths, 'POST', '/web/register'],
+    ['/api/fcm', fcmPaths, 'POST', '/mobile/register'],
+    ['/api/fcm', fcmPaths, 'DELETE', '/unregister'],
+    ['/api/fcm', fcmPaths, 'POST', '/test'],
+    ['/api/admin', adminPaths, 'POST', '/push/web'],
+    ['/api/admin', adminPaths, 'POST', '/push/mobile'],
+    ['/api/admin', adminPaths, 'POST', '/push/all'],
+    ['/api/admin', adminPaths, 'GET', '/push/coverage'],
+    ['/api/admin', adminPaths, 'GET', '/push/campaigns'],
   ];
   checks.forEach(([mount, paths, method, path]) => {
     if (hasRoute(paths, method, path)) ok(`${method} ${mount}${path}`);

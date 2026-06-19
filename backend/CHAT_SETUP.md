@@ -5,7 +5,7 @@ Messages are stored in **Firebase Realtime Database**; all other data stays in
 RTDB and broadcasts the saved message to connected clients over **Socket.IO**.
 
 ```
-Browser ──POST /v1/chat/messages──▶ Backend ──write──▶ Firebase RTDB (/messages/{groupId})
+Browser ──POST /api/chat/messages──▶ Backend ──write──▶ Firebase RTDB (/messages/{groupId})
    ▲                                   │
    └────────── Socket.IO  ◀────────────┘  (backend broadcasts the saved message)
 ```
@@ -52,8 +52,8 @@ which bypasses rules) does. So lock the database down completely:
 
 ## API
 
-- `POST /v1/chat/messages` — body `{ groupId, content, replyTo? }` (auth required)
-- `GET  /v1/chat/messages/:groupId?limit=100` — history, oldest-first (auth required)
+- `POST /api/chat/messages` — body `{ groupId, content, replyTo? }` (auth required)
+- `GET  /api/chat/messages/:groupId?limit=100` — history, oldest-first (auth required)
 
 Socket.IO namespace `/chat` (JWT in `auth.token`): emit `join_group`/`leave_group`
 with a `groupId`; listen for `new_message`.
