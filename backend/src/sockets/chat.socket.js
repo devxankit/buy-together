@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
 const logger = require('../utils/logger');
+const pushService = require('../services/push.service');
+const Group = require('../models/Group');
 
 const CHAT_NAMESPACE = '/chat';
 
@@ -25,6 +27,9 @@ const chatSocket = (io) => {
       if (!token) return next(new Error('Authentication required'));
       const decoded = jwt.verify(token, config.jwt.secret);
       socket.user = { id: decoded.sub, role: decoded.role };
+      // Also stash on `data` — fetchSockets() (used for room presence) only
+      // exposes socket.data, not arbitrary props like socket.user.
+      socket.data.userId = String(decoded.sub);
       return next();
     } catch (err) {
       return next(new Error('Invalid or expired token'));
@@ -34,6 +39,9 @@ const chatSocket = (io) => {
   chatNamespace.on('connection', (socket) => {
     const userIdStr = socket.user?.id ? String(socket.user.id) : null;
     if (userIdStr) {
+      // Personal room for user-targeted events (e.g. DM unread-badge updates)
+      // even when the user isn't viewing any specific chat.
+      socket.join(`user:${userIdStr}`);
       onlineUsers[userIdStr] = (onlineUsers[userIdStr] || 0) + 1;
       if (onlineUsers[userIdStr] === 1) {
         chatNamespace.emit('user_status', { userId: userIdStr, status: 'online' });
@@ -94,7 +102,87 @@ const emitNewMessage = (io, groupId, message) => {
   io.of(CHAT_NAMESPACE).to(String(groupId)).emit('new_message', message);
 };
 
+/** Short, human preview of a message for a notification body. */
+const messagePreview = (m) => {
+  if (m && m.content && String(m.content).trim()) {
+    const t = String(m.content).trim();
+    return t.length > 120 ? `${t.slice(0, 117)}…` : t;
+  }
+  switch (m && m.type) {
+    case 'image': return '📷 Photo';
+    case 'video': return '🎥 Video';
+    case 'document': return '📄 Document';
+    case 'location': return '📍 Location';
+    case 'voice': return '🎤 Voice message';
+    case 'poll': return '📊 Poll';
+    default: return 'New message';
+  }
+};
+
+/**
+ * WhatsApp-style chat push. Sends a push notification to a message's recipients,
+ * but SKIPS anyone who currently has that conversation open (their socket is
+ * joined to the room) — so an active reader never gets a redundant buzz.
+ *
+ * Best-effort and non-throwing: never breaks the send request.
+ */
+const notifyNewMessage = async (io, message) => {
+  try {
+    if (!message || !message.groupId) return;
+    const roomId = String(message.groupId);
+    const senderId = String(message.senderId);
+    const isDM = roomId.startsWith('dm-');
+
+    // Who is currently viewing this chat (socket joined to the room)?
+    const active = new Set();
+    if (io) {
+      try {
+        const sockets = await io.of(CHAT_NAMESPACE).in(roomId).fetchSockets();
+        sockets.forEach((s) => { if (s.data?.userId) active.add(String(s.data.userId)); });
+      } catch (e) { /* presence is best-effort */ }
+    }
+
+    // Resolve recipients + a display title for the notification.
+    let recipientIds = [];
+    let title;
+    if (isDM) {
+      const parts = roomId.split('-'); // dm-<a>-<b>
+      if (parts.length === 3) recipientIds = [parts[1], parts[2]];
+      title = message.senderName || 'New message';
+    } else if (/^[0-9a-fA-F]{24}$/.test(roomId)) {
+      const group = await Group.findById(roomId).select('members admin title productName');
+      if (!group) return;
+      recipientIds = (group.members || []).map(String);
+      if (group.admin) recipientIds.push(String(group.admin));
+      title = group.title || group.productName || 'Group chat';
+    } else {
+      return; // unknown room type
+    }
+
+    // Exclude the sender and anyone actively reading the chat. Dedupe.
+    const targets = [...new Set(recipientIds.map(String))].filter(
+      (id) => id && id !== senderId && !active.has(id)
+    );
+    if (targets.length === 0) return;
+
+    const preview = messagePreview(message);
+    const body = isDM ? preview : `${message.senderName || 'Someone'}: ${preview}`;
+    const link = isDM ? `/messages/${senderId}` : `/groups/${roomId}/chat`;
+    const data = {
+      type: isDM ? 'dm' : 'group',
+      roomId,
+      senderId,
+      timestamp: String(message.createdAt || Date.now()),
+    };
+
+    await Promise.all(targets.map((id) => pushService.sendToUser(id, { title, body, link, data })));
+  } catch (err) {
+    logger.error(`notifyNewMessage failed: ${err.message}`);
+  }
+};
+
 module.exports = chatSocket;
 module.exports.chatSocket = chatSocket;
 module.exports.emitNewMessage = emitNewMessage;
+module.exports.notifyNewMessage = notifyNewMessage;
 module.exports.CHAT_NAMESPACE = CHAT_NAMESPACE;

@@ -33,6 +33,8 @@ const run = async () => {
     admin.password = password; // re-hashed by pre-save hook
     admin.role = ROLES.ADMIN;
     admin.status = USER_STATUS.ACTIVE;
+    admin.isSuperAdmin = true; // the seeded account is always the super admin
+    if (phone) admin.phone = normalizedPhone;
     await admin.save();
     logger.info(`Updated existing admin: ${email}`);
   } else {
@@ -40,8 +42,10 @@ const run = async () => {
       name,
       email: email.toLowerCase(),
       password,
+      phone: normalizedPhone,
       role: ROLES.ADMIN,
       status: USER_STATUS.ACTIVE,
+      isSuperAdmin: true,
     });
     logger.info(`Created admin: ${email}`);
   }

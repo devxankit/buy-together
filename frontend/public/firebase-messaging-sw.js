@@ -30,11 +30,13 @@ self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim(
 messaging.onBackgroundMessage((payload) => {
   const n = payload.notification || {};
   const d = payload.data || {};
-  const title = n.title || 'Buy Together';
+  // title/body now travel in `data` (no top-level notification is sent); fall
+  // back to webpush.notification (surfaced as payload.notification) just in case.
+  const title = n.title || d.title || 'Buy Together';
   const options = {
-    body: n.body || '',
+    body: n.body || d.body || '',
     data: d,
-    tag: 'buy-together-push',
+    tag: (d.type || 'buy-together') + '-' + (d.timestamp || Date.now()),
     renotify: true,
     requireInteraction: false,
   };

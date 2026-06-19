@@ -31,10 +31,25 @@ const coverage = catchAsync(async (req, res) => {
   res.send(stats);
 });
 
-// Recent broadcast history.
+// Recent broadcast history (paginated).
 const campaigns = catchAsync(async (req, res) => {
-  const list = await pushService.listCampaigns(Number(req.query.limit) || 20);
-  res.send({ results: list });
+  const result = await pushService.listCampaigns({
+    page: Number(req.query.page) || 1,
+    limit: Number(req.query.limit) || 20,
+  });
+  res.send(result);
 });
 
-module.exports = { sendWeb, sendMobile, sendAll, coverage, campaigns };
+// Delete a single broadcast history record.
+const deleteCampaign = catchAsync(async (req, res) => {
+  await pushService.deleteCampaign(req.params.campaignId);
+  res.send({ success: true });
+});
+
+// Bulk-delete broadcast history records. Body: { ids: [] }
+const deleteCampaigns = catchAsync(async (req, res) => {
+  const result = await pushService.deleteCampaigns(req.body.ids);
+  res.send({ success: true, ...result });
+});
+
+module.exports = { sendWeb, sendMobile, sendAll, coverage, campaigns, deleteCampaign, deleteCampaigns };

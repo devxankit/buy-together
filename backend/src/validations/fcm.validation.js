@@ -5,6 +5,7 @@ const registerToken = {
     token: joi.string().trim().min(10).required().messages({
       'any.required': 'FCM token is required',
     }),
+    platform: joi.string().valid('web', 'mobile').default('web'),
   }),
 };
 

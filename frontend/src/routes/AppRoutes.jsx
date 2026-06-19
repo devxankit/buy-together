@@ -51,7 +51,6 @@ import {
   Groups as AdminGroups,
   Categories as AdminCategories,
   Vendors as AdminVendors,
-  Deals as AdminDeals,
   Fraud as AdminFraud,
   Revenue as AdminRevenue,
   Settings as AdminSettings,
@@ -128,7 +127,6 @@ const AppRoutes = () => {
           <Route path="/admin/home-sections" element={<AdminHomeSections />} />
           <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
           <Route path="/admin/vendors" element={<AdminVendors />} />
-          <Route path="/admin/deals" element={<AdminDeals />} />
           <Route path="/admin/fraud" element={<AdminFraud />} />
           <Route path="/admin/revenue" element={<AdminRevenue />} />
           <Route path="/admin/settings" element={<AdminSettings />} />

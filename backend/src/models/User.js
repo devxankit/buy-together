@@ -45,7 +45,13 @@ const userSchema = mongoose.Schema(
       default: false,
     },
     // Profile fields (mobile profile screen + admin table)
-    avatar: { type: String, trim: true },
+    avatar: {
+      type: String,
+      trim: true,
+      default: function () {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'User')}&background=random`;
+      },
+    },
     dob: { type: Date },
     gender: { type: String, trim: true },
     location: { type: String, trim: true },
@@ -87,6 +93,14 @@ userSchema.statics.isPhoneTaken = async function (phone, excludeUserId) {
   return !!user;
 };
 
+
+// Default a generated avatar when none is set. Mongoose 9 middleware is
+// promise-based — do NOT use a `next` callback (it is no longer passed).
+userSchema.pre('save', function () {
+  if (!this.avatar || this.avatar.trim() === '' || this.avatar.includes('ui-avatars.com/api')) {
+    this.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'User')}&background=random`;
+  }
+});
 
 const User = mongoose.model('User', userSchema);
 

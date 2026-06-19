@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Pencil, Trash2, ImageOff, X } from 'lucide-react';
+import { Pencil, Trash2, ImageOff, X, Check, Layers, FolderTree } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
-import { PageHeader, Panel, DataTable, StatusBadge, SearchInput, SegmentTabs, Button, ImageUploader } from '../components';
+import { PageHeader, Panel, DataTable, StatusBadge, SearchInput, SegmentTabs, Button, ImageUploader, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
 import {
   listCategoriesAdmin,
@@ -251,6 +251,116 @@ const CategoryModal = ({ initial, onClose, onSaved }) => {
   );
 };
 
+/**
+ * Inline sub-category manager shown in a category's expanded row.
+ * Lets the admin view, add, rename and delete the sub-categories that belong to
+ * a category. Every change is persisted immediately via updateCategory and the
+ * parent list is refreshed so counts stay in sync.
+ */
+const SubCategoryPanel = ({ category, onSaved }) => {
+  const [list, setList] = useState(category.subCategories || []);
+  const [adding, setAdding] = useState('');
+  const [editIdx, setEditIdx] = useState(-1);
+  const [editVal, setEditVal] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const persist = async (next, successMsg, emoji) => {
+    setBusy(true);
+    try {
+      await updateCategory(category._id, { subCategories: next });
+      setList(next);
+      showToast(successMsg, emoji);
+      onSaved?.();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not update sub-categories.', '❌');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const add = () => {
+    const v = adding.trim();
+    if (!v) return;
+    if (list.some((s) => s.toLowerCase() === v.toLowerCase())) {
+      showToast('That sub-category already exists.', '⚠️');
+      return;
+    }
+    setAdding('');
+    persist([...list, v], `Sub-category "${v}" added.`, '✅');
+  };
+
+  const saveEdit = () => {
+    const v = editVal.trim();
+    if (!v) return;
+    if (list.some((s, i) => i !== editIdx && s.toLowerCase() === v.toLowerCase())) {
+      showToast('That sub-category already exists.', '⚠️');
+      return;
+    }
+    const next = list.map((s, i) => (i === editIdx ? v : s));
+    setEditIdx(-1);
+    setEditVal('');
+    persist(next, 'Sub-category renamed.', '✏️');
+  };
+
+  const remove = (idx) => {
+    persist(list.filter((_, i) => i !== idx), 'Sub-category removed.', '🗑️');
+  };
+
+  const chipBtn = (color) => ({
+    background: 'none', border: 'none', color, cursor: busy ? 'default' : 'pointer',
+    padding: 2, display: 'inline-flex', alignItems: 'center', opacity: busy ? 0.5 : 1,
+  });
+
+  return (
+    <div style={{ padding: '16px 20px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 700, color: T.inkSoft, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <FolderTree size={14} />
+        Sub-categories of {category.name}
+        <span style={{ color: T.faint, fontWeight: 600 }}>({list.length})</span>
+      </div>
+
+      {list.length > 0 ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {list.map((sub, idx) => (
+            editIdx === idx ? (
+              <span key={sub} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: T.surface, border: `1px solid ${T.primary}`, borderRadius: 99, padding: '2px 4px 2px 10px' }}>
+                <input
+                  autoFocus
+                  value={editVal}
+                  onChange={(e) => setEditVal(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') { setEditIdx(-1); setEditVal(''); } }}
+                  style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 12, fontWeight: 600, color: T.ink, width: Math.max(60, editVal.length * 8), fontFamily: 'inherit' }}
+                />
+                <button type="button" onClick={saveEdit} title="Save" style={chipBtn(T.primary)}><Check size={14} /></button>
+                <button type="button" onClick={() => { setEditIdx(-1); setEditVal(''); }} title="Cancel" style={chipBtn(T.muted)}><X size={13} /></button>
+              </span>
+            ) : (
+              <span key={sub} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: T.inkSoft, background: T.surface, border: `1px solid ${T.line}`, padding: '5px 8px 5px 12px', borderRadius: 99 }}>
+                {sub}
+                <button type="button" disabled={busy} onClick={() => { setEditIdx(idx); setEditVal(sub); }} title="Rename" style={chipBtn(T.muted)}><Pencil size={12} /></button>
+                <button type="button" disabled={busy} onClick={() => remove(idx)} title="Delete" style={chipBtn(T.danger)}><Trash2 size={12} /></button>
+              </span>
+            )
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 12.5, color: T.faint, fontWeight: 500 }}>No sub-categories yet — add the first one below.</div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, maxWidth: 360 }}>
+        <input
+          style={{ ...inputStyle, flex: 1, height: 36 }}
+          value={adding}
+          onChange={(e) => setAdding(e.target.value)}
+          placeholder="Add a sub-category…"
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+        />
+        <Button type="button" variant="soft" icon="Plus" onClick={add} style={busy ? { opacity: 0.7, pointerEvents: 'none' } : undefined}>Add</Button>
+      </div>
+    </div>
+  );
+};
+
 const Categories = () => {
   const [rows, setRows] = useState([]);
   const [counts, setCounts] = useState({ all: 0, active: 0, hidden: 0 });
@@ -259,6 +369,8 @@ const Categories = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | category object
+  const [confirmTarget, setConfirmTarget] = useState(null); // category pending delete
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -283,14 +395,18 @@ const Categories = () => {
     return () => clearTimeout(t);
   }, [fetchData]);
 
-  const handleDelete = async (cat) => {
-    if (!window.confirm(`Delete "${cat.name}"? This cannot be undone.`)) return;
+  const handleDelete = async () => {
+    if (!confirmTarget) return;
+    setDeleting(true);
     try {
-      await deleteCategory(cat._id);
-      showToast(`Category "${cat.name}" deleted successfully!`, '🗑️');
+      await deleteCategory(confirmTarget._id);
+      showToast(`Category "${confirmTarget.name}" deleted successfully!`, '🗑️');
+      setConfirmTarget(null);
       fetchData();
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to delete category.', '❌');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -314,6 +430,17 @@ const Categories = () => {
       ),
     },
     {
+      key: 'subCategories', label: 'Sub-categories', align: 'center', render: (c) => {
+        const n = c.subCategories?.length || 0;
+        return (
+          <span title={n ? c.subCategories.join(', ') : 'No sub-categories'} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 99, color: n ? T.primary : T.faint, background: n ? T.primarySoft : T.surfaceAlt, border: `1px solid ${n ? 'transparent' : T.line}` }}>
+            <Layers size={13} />
+            {n}
+          </span>
+        );
+      },
+    },
+    {
       key: 'groupCount', label: 'Groups', align: 'center', mono: true, render: (c) => (
         <span style={{ fontSize: 13, fontWeight: 700, color: c.groupCount ? T.ink : T.faint }}>{c.groupCount}</span>
       ),
@@ -326,7 +453,7 @@ const Categories = () => {
           <button onClick={() => setModal(c)} className="admin-icon-btn" title="Edit" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.inkSoft, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             <Pencil size={15} />
           </button>
-          <button onClick={() => handleDelete(c)} className="admin-icon-btn" title="Delete" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.danger, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => setConfirmTarget(c)} className="admin-icon-btn" title="Delete" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.danger, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             <Trash2 size={15} />
           </button>
         </div>
@@ -339,7 +466,7 @@ const Categories = () => {
       <PageHeader
         eyebrow="Management"
         title="Categories"
-        subtitle="Create and manage the categories that demand groups are organised under."
+        subtitle="Create and manage categories and their sub-categories. Expand any row to manage its sub-categories."
       >
         <Button variant="dark" icon="Plus" onClick={() => setModal('new')}>New Category</Button>
       </PageHeader>
@@ -364,6 +491,8 @@ const Categories = () => {
             <DataTable
               columns={columns}
               rows={rows}
+              getRowId={(c) => c._id}
+              renderExpanded={(c) => <SubCategoryPanel key={(c.subCategories || []).join('|')} category={c} onSaved={fetchData} />}
               emptyText={loading ? 'Loading categories…' : 'No categories yet — create your first one.'}
             />
           )}
@@ -377,6 +506,16 @@ const Categories = () => {
           onSaved={() => { setModal(null); fetchData(); }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirmTarget}
+        title="Delete category?"
+        message={confirmTarget ? `"${confirmTarget.name}" and its ${confirmTarget.subCategories?.length || 0} sub-categor${(confirmTarget.subCategories?.length || 0) === 1 ? 'y' : 'ies'} will be permanently removed. This cannot be undone.` : ''}
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onClose={() => !deleting && setConfirmTarget(null)}
+      />
     </>
   );
 };

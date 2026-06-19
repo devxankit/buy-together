@@ -5,9 +5,6 @@ const logger = require('./utils/logger');
 const connectDB = require('./config/db');
 const setupSocket = require('./sockets/socket');
 
-// Connect to Database
-connectDB();
-
 // Wrap Express in an HTTP server so Socket.IO can share the same port.
 const server = http.createServer(app);
 
@@ -15,8 +12,12 @@ const server = http.createServer(app);
 const io = setupSocket(server);
 app.set('io', io);
 
-server.listen(config.port, () => {
-  logger.info(`Server started on port ${config.port} (${config.env})`);
+// Connect to the database first, then start accepting requests. This avoids the
+// server serving requests that just buffer and time out before Mongo is ready.
+connectDB().then(() => {
+  server.listen(config.port, () => {
+    logger.info(`Server started on port ${config.port} (${config.env})`);
+  });
 });
 
 const exitHandler = () => {

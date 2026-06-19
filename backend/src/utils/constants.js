@@ -60,6 +60,21 @@ const GROUP_TYPE = {
   VENDOR: 'vendor',
 };
 
+// Grantable admin-console permissions. Each key maps to a management section a
+// non-super admin can be allowed to access. Super admins implicitly have all of
+// them. Dashboard and Settings (own password) are always available.
+const ADMIN_PERMISSIONS = [
+  'users',
+  'groups',
+  'categories',
+  'banners',
+  'homeSections',
+  'vendors',
+  'fraud',
+  'revenue',
+  'pushNotifications',
+];
+
 module.exports = {
   ROLES,
   USER_STATUS,
@@ -70,4 +85,5 @@ module.exports = {
   BUSINESS_TYPES,
   GROUP_STATUS,
   GROUP_TYPE,
+  ADMIN_PERMISSIONS,
 };

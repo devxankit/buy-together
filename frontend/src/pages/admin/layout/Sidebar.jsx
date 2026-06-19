@@ -2,10 +2,11 @@ import { NavLink } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { ChevronsLeft, Hexagon, LogOut, Wifi } from 'lucide-react';
 import { T, dims } from '../theme/adminTheme';
-import { navSections } from './navConfig';
+import { getVisibleSections } from './navConfig';
 
 const Sidebar = ({ collapsed, onToggleCollapse, badges = {}, user, onLogout, mobile, onNavigate }) => {
   const width = collapsed && !mobile ? dims.sidebarCollapsed : dims.sidebarWidth;
+  const navSections = getVisibleSections(user);
 
   return (
     <aside

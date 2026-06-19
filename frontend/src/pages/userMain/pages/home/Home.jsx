@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
-import newAssetImg from '../../../../assets/7f4a33ac63a8121e371d2b2d1473ae55.jpg';
 import { getHomeSections } from '../../../../services/homeSection.api';
+import { getCategories } from '../../../../services/category.api';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
 import HotGroupsCarousel from './components/HotGroupsCarousel';
@@ -90,6 +91,7 @@ const WholesaleAdBanner = ({ onClick }) => (
  */
 const Home = () => {
   const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.auth.user) || {};
 
   // Search Placeholder Animation State
   const placeholders = [
@@ -115,98 +117,19 @@ const Home = () => {
     refreshUnreadMessageCount();
   }, [refreshUnreadMessageCount]);
 
-  // Popular category configurations (exactly 7 categories for single-row layout)
-  const categories = [
-    {
-      id: 'smartphones',
-      name: 'Smartphones',
-      coverImage: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <rect x="6" y="3" width="12" height="18" rx="3" />
-          <path d="M12 17.5h.01" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    },
-    {
-      id: 'laptops',
-      name: 'Laptops',
-      coverImage: newAssetImg,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <rect x="3" y="5" width="18" height="11" rx="1.5" />
-          <path d="M2 19h20M9 16h6" strokeLinecap="round" />
-        </svg>
-      )
-    },
-    {
-      id: 'appliances',
-      name: 'Appliances',
-      coverImage: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <rect x="6" y="3" width="12" height="18" rx="2" />
-          <line x1="6" y1="7.5" x2="18" y2="7.5" />
-          <circle cx="12" cy="13.5" r="3" />
-          <circle cx="9" cy="5" r="0.5" fill="currentColor" />
-          <circle cx="11.5" cy="5" r="0.5" fill="currentColor" />
-        </svg>
-      )
-    },
-    {
-      id: 'electronics',
-      name: 'Electronics',
-      coverImage: 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-        </svg>
-      )
-    },
-    {
-      id: 'furniture',
-      name: 'Furniture',
-      coverImage: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <path d="M4 10v7a2 2 0 002 2h12a2 2 0 002-2v-7M3 13h18M6 10V6a2 2 0 012-2h8a2 2 0 012 2v4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    },
-    {
-      id: 'fashion',
-      name: 'Fashion',
-      coverImage: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    },
-    {
-      id: 'groceries',
-      name: 'Groceries',
-      coverImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <circle cx="9" cy="21" r="1" />
-          <circle cx="20" cy="21" r="1" />
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-        </svg>
-      )
-    },
-    {
-      id: 'properties',
-      name: 'Property',
-      coverImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=120&q=80',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      )
-    }
-  ];
+  // Popular categories — fetched live from the admin-managed Category collection.
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    getCategories()
+      .then(({ data }) => {
+        if (!active || !Array.isArray(data)) return;
+        setCategories(data.map((c) => ({ id: c.slug, name: c.name, coverImage: c.image })));
+      })
+      .catch((err) => console.warn('Failed to load categories:', err));
+    return () => { active = false; };
+  }, []);
 
 
   // ── Dynamic, admin-curated home sections ──────────────────────────
@@ -274,7 +197,7 @@ const Home = () => {
               )}
             </button>
             <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80"
+              src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'User')}&background=random&color=fff`}
               alt="Profile Avatar"
               onClick={() => navigate('/profile')}
               className="w-[35px] h-[35px] rounded-full border border-surface/20 object-cover shadow-sm active:scale-95 transition-all cursor-pointer"
@@ -341,11 +264,7 @@ const Home = () => {
       <CategoriesGrid
         categories={categories}
         onCategoryClick={(id) => {
-          let targetId = id;
-          if (id === 'furniture') targetId = 'home-living';
-          if (id === 'groceries') targetId = 'appliances';
-          if (id === 'more') targetId = 'smartphones';
-          navigate('/categories', { state: { categoryId: targetId } });
+          navigate('/categories', { state: { categoryId: id } });
         }}
         onViewAll={() => navigate('/categories')}
       />

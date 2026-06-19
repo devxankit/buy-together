@@ -84,7 +84,13 @@ module.exports = {
   port: envVars.PORT,
   mongoose: {
     url: envVars.MONGODB_URI,
-    options: {},
+    options: {
+      // Fail fast (and clearly) if the cluster can't be reached, instead of
+      // letting each request buffer for 10s and time out one by one.
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4, // prefer IPv4 — avoids slow IPv6/DNS stalls on some Windows networks
+    },
   },
   jwt: {
     secret: envVars.JWT_SECRET,

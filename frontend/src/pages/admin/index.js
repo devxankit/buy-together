@@ -12,7 +12,6 @@ export { default as Banners }    from './pages/Banners';
 export { default as HomeSections } from './pages/HomeSections';
 export { default as PushNotifications } from './pages/PushNotifications';
 export { default as Vendors }   from './pages/Vendors';
-export { default as Deals }     from './pages/Deals';
 export { default as Fraud }     from './pages/Fraud';
 export { default as Revenue }   from './pages/Revenue';
 export { default as Settings }  from './pages/Settings';

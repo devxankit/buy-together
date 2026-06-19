@@ -63,8 +63,9 @@ export const verifyOtp = createAsyncThunk(
     try {
       const { data } = await authApi.verifyOtp(payload);
       dispatch(setAuth(data));
-      // Register this browser for push notifications (non-blocking).
-      registerWebPush();
+      // Register this browser for push notifications (non-blocking). Verbose so
+      // any failure surfaces as an on-screen toast instead of failing silently.
+      registerWebPush({ verbose: true });
       return data;
     } catch (error) {
       const message = msgFrom(error, 'OTP verification failed.');

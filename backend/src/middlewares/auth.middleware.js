@@ -57,7 +57,19 @@ const authorize = (...roles) => (req, res, next) => {
 
 const adminOnly = authorize(ROLES.ADMIN);
 
+/**
+ * Gate for super-admin-only actions (managing other admins, platform settings).
+ * Use after `auth` + `adminOnly`.
+ */
+const superAdminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== ROLES.ADMIN || !req.user.isSuperAdmin) {
+    return next(new ApiError(httpStatus.FORBIDDEN, 'Only a super admin can perform this action'));
+  }
+  return next();
+};
+
 module.exports = auth;
 module.exports.auth = auth;
 module.exports.authorize = authorize;
 module.exports.adminOnly = adminOnly;
+module.exports.superAdminOnly = superAdminOnly;

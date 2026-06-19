@@ -13,7 +13,6 @@ const ACCENT = { primary: T.primary, violet: T.violet, info: T.info, amber: T.am
 const quickActions = [
   { label: 'Approve Vendors', icon: 'Store',       to: '/admin/vendors', accent: 'amber' },
   { label: 'Review Fraud',    icon: 'ShieldAlert', to: '/admin/fraud',   accent: 'danger' },
-  { label: 'Track Deals',     icon: 'Handshake',   to: '/admin/deals',   accent: 'violet' },
   { label: 'View Revenue',    icon: 'IndianRupee', to: '/admin/revenue', accent: 'info' },
 ];
 

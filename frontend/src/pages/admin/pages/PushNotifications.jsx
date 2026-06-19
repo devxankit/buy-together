@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Globe, Smartphone, Users, ImageOff, Link2, Bell } from 'lucide-react';
+import { Globe, Smartphone, Users, ImageOff, Link2, Bell, Trash2 } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
-import { PageHeader, Panel, DataTable, SegmentTabs, Button, ImageUploader } from '../components';
+import { PageHeader, Panel, DataTable, SegmentTabs, Button, ImageUploader, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
 import {
   sendPushWeb,
@@ -9,7 +9,13 @@ import {
   sendPushAll,
   getPushCoverage,
   listPushCampaigns,
+  deletePushCampaign,
+  bulkDeletePushCampaigns,
 } from '../../../services/fcm.api';
+
+const PAGE_SIZE = 10;
+
+const checkboxStyle = { width: 16, height: 16, cursor: 'pointer', accentColor: T.primary, margin: 0, verticalAlign: 'middle' };
 
 const inputStyle = {
   width: '100%',
@@ -63,28 +69,106 @@ const PushNotifications = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // History: pagination + multi-select for delete.
+  const [page, setPage] = useState(1);
+  const [pageInfo, setPageInfo] = useState({ total: 0, totalPages: 1 });
+  const [selected, setSelected] = useState(() => new Set());
+  const [deleting, setDeleting] = useState(false);
+  // Pending delete awaiting confirmation: null | { kind: 'one', campaign } | { kind: 'bulk', count }
+  const [confirm, setConfirm] = useState(null);
+
   const set = (key) => (e) => {
     const value = e?.target ? e.target.value : e;
     setForm((f) => ({ ...f, [key]: value }));
   };
 
-  const refresh = useCallback(async () => {
+  const loadCampaigns = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const [cov, camp] = await Promise.all([getPushCoverage(), listPushCampaigns({ limit: 20 })]);
-      setCoverage(cov.data || {});
-      setCampaigns(camp.data?.results || []);
+      const { data } = await listPushCampaigns({ page: p, limit: PAGE_SIZE });
+      setCampaigns(data?.results || []);
+      setPage(data?.page || p);
+      setPageInfo({ total: data?.total || 0, totalPages: data?.totalPages || 1 });
+      setSelected(new Set());
     } catch (err) {
-      console.error('Failed to load push data:', err);
+      console.error('Failed to load campaigns:', err);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const refresh = useCallback(async () => {
+    try {
+      const cov = await getPushCoverage();
+      setCoverage(cov.data || {});
+    } catch (err) {
+      console.error('Failed to load coverage:', err);
+    }
+    loadCampaigns(1);
+  }, [loadCampaigns]);
+
   useEffect(() => {
     const t = setTimeout(refresh, 0);
     return () => clearTimeout(t);
   }, [refresh]);
+
+  // ── Selection helpers ──────────────────────────────────────────────
+  const allOnPageSelected = campaigns.length > 0 && campaigns.every((c) => selected.has(c.id));
+
+  const toggleAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (campaigns.every((c) => next.has(c.id))) {
+        campaigns.forEach((c) => next.delete(c.id));
+      } else {
+        campaigns.forEach((c) => next.add(c.id));
+      }
+      return next;
+    });
+  };
+
+  const toggleOne = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // ── Delete handlers (open a confirmation popup first) ──────────────
+  const handleDeleteOne = (c) => setConfirm({ kind: 'one', campaign: c });
+
+  const handleBulkDelete = () => {
+    if (selected.size === 0) return;
+    setConfirm({ kind: 'bulk', count: selected.size });
+  };
+
+  // Runs the actual deletion once the popup is confirmed.
+  const runConfirmedDelete = async () => {
+    if (!confirm) return;
+    setDeleting(true);
+    try {
+      if (confirm.kind === 'one') {
+        await deletePushCampaign(confirm.campaign.id);
+        showToast('Broadcast deleted 🗑️');
+        const targetPage = campaigns.length === 1 && page > 1 ? page - 1 : page;
+        await loadCampaigns(targetPage);
+      } else {
+        const count = confirm.count;
+        await bulkDeletePushCampaigns([...selected]);
+        showToast(`${count} broadcast${count > 1 ? 's' : ''} deleted 🗑️`);
+        const remaining = Math.max(0, pageInfo.total - count);
+        const newTotalPages = Math.max(1, Math.ceil(remaining / PAGE_SIZE));
+        await loadCampaigns(Math.min(page, newTotalPages));
+      }
+      setConfirm(null);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const submit = async (e) => {
     e?.preventDefault();
@@ -118,6 +202,28 @@ const PushNotifications = () => {
   const targetCount = platform === 'web' ? coverage.webUsers : platform === 'mobile' ? coverage.mobileUsers : coverage.totalUsers;
 
   const columns = [
+    {
+      key: '_select',
+      width: 44,
+      label: (
+        <input
+          type="checkbox"
+          checked={allOnPageSelected}
+          onChange={toggleAll}
+          style={checkboxStyle}
+          aria-label="Select all on this page"
+        />
+      ),
+      render: (c) => (
+        <input
+          type="checkbox"
+          checked={selected.has(c.id)}
+          onChange={() => toggleOne(c.id)}
+          style={checkboxStyle}
+          aria-label="Select broadcast"
+        />
+      ),
+    },
     {
       key: 'title', label: 'Notification', strong: true, render: (c) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -157,6 +263,20 @@ const PushNotifications = () => {
     {
       key: 'createdAt', label: 'When', align: 'right', render: (c) => (
         <span style={{ fontSize: 12, color: T.muted }}>{c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</span>
+      ),
+    },
+    {
+      key: '_delete', label: '', align: 'center', width: 56, render: (c) => (
+        <button
+          onClick={() => handleDeleteOne(c)}
+          title="Delete broadcast"
+          className="admin-icon-btn"
+          style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'transparent', color: T.muted, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = T.dangerSoft; e.currentTarget.style.color = T.danger; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.muted; }}
+        >
+          <Trash2 size={15} />
+        </button>
       ),
     },
   ];
@@ -253,7 +373,31 @@ const PushNotifications = () => {
       {/* History */}
       <div style={{ marginTop: 20 }}>
         <Panel padded={false}>
-          <div style={{ padding: 16, borderBottom: `1px solid ${T.lineSoft}`, fontSize: 14.5, fontWeight: 700, color: T.ink }}>Recent broadcasts</div>
+          <div style={{ padding: 16, borderBottom: `1px solid ${T.lineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 56 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: T.ink }}>
+              Recent broadcasts
+              {pageInfo.total > 0 && (
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: T.faint, marginLeft: 8 }}>{pageInfo.total} total</span>
+              )}
+            </div>
+
+            {selected.size > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>{selected.size} selected</span>
+                <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>Clear</Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon="Trash2"
+                  onClick={handleBulkDelete}
+                  style={deleting ? { opacity: 0.7, pointerEvents: 'none' } : undefined}
+                >
+                  {deleting ? 'Deleting…' : `Delete selected`}
+                </Button>
+              </div>
+            )}
+          </div>
+
           <div style={{ padding: 20 }}>
             <DataTable
               columns={columns}
@@ -261,8 +405,54 @@ const PushNotifications = () => {
               emptyText={loading ? 'Loading…' : 'No notifications sent yet.'}
             />
           </div>
+
+          {/* Pagination */}
+          {pageInfo.total > 0 && (
+            <div style={{ padding: '12px 16px', borderTop: `1px solid ${T.lineSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: T.muted }}>
+                Page {page} of {pageInfo.totalPages}
+              </span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  icon="ChevronLeft"
+                  onClick={() => loadCampaigns(page - 1)}
+                  style={page <= 1 || loading ? { opacity: 0.45, pointerEvents: 'none' } : undefined}
+                >
+                  Prev
+                </Button>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  iconRight="ChevronRight"
+                  onClick={() => loadCampaigns(page + 1)}
+                  style={page >= pageInfo.totalPages || loading ? { opacity: 0.45, pointerEvents: 'none' } : undefined}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </Panel>
       </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        variant="danger"
+        title={confirm?.kind === 'bulk' ? 'Delete selected broadcasts?' : 'Delete broadcast?'}
+        message={
+          confirm?.kind === 'bulk'
+            ? `This will permanently remove ${confirm.count} broadcast${confirm.count > 1 ? 's' : ''} from the history. It does not un-send anything.`
+            : confirm?.kind === 'one'
+            ? `This will permanently remove "${confirm.campaign.title}" from the history. It does not un-send the notification.`
+            : ''
+        }
+        confirmLabel={confirm?.kind === 'bulk' ? `Delete ${confirm.count}` : 'Delete'}
+        loading={deleting}
+        onConfirm={runConfirmedDelete}
+        onClose={() => { if (!deleting) setConfirm(null); }}
+      />
     </>
   );
 };

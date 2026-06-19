@@ -20,6 +20,13 @@ const unregister = catchAsync(async (req, res) => {
   res.send({ success: true, message: 'FCM token removed' });
 });
 
+// Register an FCM token for the logged-in user. Body: { token, platform }
+const register = catchAsync(async (req, res) => {
+  const { token, platform } = req.body;
+  await pushService.saveToken(req.user.id, token, platform || 'web');
+  res.send({ success: true, message: `${platform || 'web'} FCM token registered` });
+});
+
 // Send a test notification to the caller's own devices.
 const test = catchAsync(async (req, res) => {
   const result = await pushService.sendToUser(req.user.id, {
@@ -30,4 +37,4 @@ const test = catchAsync(async (req, res) => {
   res.send({ success: true, result: result || { success: 0, recipients: 0 } });
 });
 
-module.exports = { registerWeb, registerMobile, unregister, test };
+module.exports = { registerWeb, registerMobile, register, unregister, test };

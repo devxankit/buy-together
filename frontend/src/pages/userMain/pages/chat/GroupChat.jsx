@@ -6,9 +6,9 @@ import { showToast } from '../../../../utils/toast';
 import { getGroup, joinGroup, leaveGroup, kickGroupMember } from '../../../../services/group.api';
 import { votePollMessage, pinMessage, unpinMessage, reactMessage, deleteMessage } from '../../../../services/chat.api';
 import api from '../../../../services/api';
+import ContactProfile from './ContactProfile';
 
-const DEFAULT_AVATAR =
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
+const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
 // --- Dummy Data & State Init ---
 const initialMessages = [
@@ -580,7 +580,7 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike, onRepl
   );
 };
 
-const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], onRemoveMember }) => {
+const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], onRemoveMember, onViewProfile }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all'); // 'all' or 'confirmed'
 
@@ -614,7 +614,7 @@ const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], on
         {filter === 'confirmed' ? (
           confirmedMembers.map(member => (
             <div key={member.id} className="flex items-center justify-between px-4 py-3.5 border-b border-line hover:bg-surface-alt/50 transition-colors animate-fadeIn">
-              <div className="flex items-center gap-3">
+              <button onClick={() => onViewProfile && onViewProfile(member)} className="flex items-center gap-3 min-w-0 text-left active:opacity-80 transition-opacity">
                 <div className="relative">
                   <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover bg-slate-200" />
                   <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-0.5 border border-surface">
@@ -623,14 +623,14 @@ const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], on
                     </svg>
                   </div>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-ink">{member.name}</span>
-                    <span className="text-[9px] font-bold text-primary bg-primary-soft px-1.5 py-0.5 rounded uppercase tracking-wider">{member.badge}</span>
+                    <span className="text-sm font-bold text-ink truncate">{member.name}</span>
+                    <span className="text-[9px] font-bold text-primary bg-primary-soft px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">{member.badge}</span>
                   </div>
                   <span className="text-xs font-semibold text-faint mt-0.5">{member.units} Units • {member.amount}</span>
                 </div>
-              </div>
+              </button>
               <div className="flex items-center gap-2">
                 {isAdmin && member.name !== "You" && (
                   <button 
@@ -658,23 +658,23 @@ const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], on
             const statusColor = statusColors[member.buyStatus] || statusColors['Exploring'];
             return (
               <div key={member.id} className="flex items-center justify-between px-4 py-3 border-b border-line hover:bg-surface-alt/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover bg-slate-200" />
-                  <div className="flex flex-col">
+                <button onClick={() => onViewProfile && onViewProfile(member)} className="flex items-center gap-3 min-w-0 text-left active:opacity-80 transition-opacity">
+                  <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover bg-slate-200 flex-shrink-0" />
+                  <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-ink">{member.name}</span>
-                      {member.role === 'Admin' && <span className="text-[9px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">Admin</span>}
+                      <span className="text-sm font-bold text-ink truncate">{member.name}</span>
+                      {member.role === 'Admin' && <span className="text-[9px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">Admin</span>}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-medium text-faint">{member.number}</span>
+                      <span className="text-xs font-medium text-faint truncate">{member.number}</span>
                       {member.buyStatus && (
-                        <span className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide ${statusColor}`}>
+                        <span className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0 ${statusColor}`}>
                           {member.buyStatus}
                         </span>
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
                 <div className="flex items-center gap-1">
                   <button 
                     onClick={() => navigate(`/messages/${member.id}`, { state: { user: { id: member.id, name: member.name, avatar: member.avatar } } })}
@@ -1152,7 +1152,7 @@ const GroupChat = () => {
         id: m.id,
         _ts: m.createdAt,
         name: isMe ? 'You' : m.senderName,
-        avatar: isMe ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" : DEFAULT_AVATAR,
+        avatar: isMe ? (currentUser?.avatar || getPlaceholderAvatar(currentUser?.name || 'You')) : (m.senderAvatar || getPlaceholderAvatar(m.senderName)),
         time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         content: m.content,
         replyData: m.replyTo ? { name: m.replyTo.name, content: m.replyTo.content } : undefined,
@@ -1278,7 +1278,10 @@ const GroupChat = () => {
         name: isCurrentUser ? 'You' : user.name,
         role: isUserAdmin ? 'Admin' : 'Member',
         number: user.phone ? `+91 ${user.phone}` : '+91 99999 99999',
-        avatar: user.avatar || DEFAULT_AVATAR,
+        phone: user.phone || '',
+        location: user.location || '',
+        avatar: user.avatar || getPlaceholderAvatar(user.name),
+        isCurrentUser,
         buyStatus
       };
     });
@@ -1320,6 +1323,7 @@ const GroupChat = () => {
 
   const [selectedMessageForMenu, setSelectedMessageForMenu] = useState(null);
   const [replyingToMessage, setReplyingToMessage] = useState(null);
+  const [profileMember, setProfileMember] = useState(null);
 
   // File Upload states and refs
   const fileInputRef = useRef(null);
@@ -1349,7 +1353,7 @@ const GroupChat = () => {
         id: tempId,
         _ts: Date.now(),
         name: 'You',
-        avatar: currentUser?.avatar || DEFAULT_AVATAR,
+        avatar: currentUser?.avatar || getPlaceholderAvatar(currentUser?.name || 'You'),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         uploading: true,
         content: ''
@@ -1407,7 +1411,7 @@ const GroupChat = () => {
         id: tempId,
         _ts: Date.now(),
         name: 'You',
-        avatar: currentUser?.avatar || DEFAULT_AVATAR,
+        avatar: currentUser?.avatar || getPlaceholderAvatar(currentUser?.name || 'You'),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         uploading: true,
         documentData: {
@@ -1761,12 +1765,13 @@ const GroupChat = () => {
         {activeTab === 'Chat' && <ChatFeed messages={displayMessages} loading={chatLoading} typingUsers={typingUsers} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
         {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
         {activeTab === 'Members' && (
-          <MembersFeed 
-            groupId={resolvedGroupId} 
-            isAdmin={isAdmin} 
-            members={realMembers} 
-            confirmedMembers={realConfirmedMembers} 
-            onRemoveMember={handleRemoveMember} 
+          <MembersFeed
+            groupId={resolvedGroupId}
+            isAdmin={isAdmin}
+            members={realMembers}
+            confirmedMembers={realConfirmedMembers}
+            onRemoveMember={handleRemoveMember}
+            onViewProfile={setProfileMember}
           />
         )}
         {activeTab === 'Media' && <MediaFeed messages={displayMessages} />}
@@ -2137,7 +2142,7 @@ const GroupChat = () => {
             </div>
 
             {/* Cancel Button */}
-            <button 
+            <button
               onClick={() => setSelectedMessageForMenu(null)}
               className="w-full py-3.5 bg-surface border border-line rounded-2xl font-black text-xs text-ink active:scale-95 transition-all text-center shadow-sm"
             >
@@ -2146,6 +2151,24 @@ const GroupChat = () => {
           </div>
         </div>
       )}
+
+      {/* Member Contact Profile Sheet (WhatsApp-style) */}
+      <ContactProfile
+        open={!!profileMember}
+        onClose={() => setProfileMember(null)}
+        profile={profileMember}
+        onMessage={
+          profileMember && !profileMember.isCurrentUser
+            ? () => {
+                const m = profileMember;
+                setProfileMember(null);
+                navigate(`/messages/${m.id}`, {
+                  state: { user: { id: m.id, name: m.name, avatar: m.avatar, phone: m.phone, location: m.location } },
+                });
+              }
+            : undefined
+        }
+      />
     </div>
   );
 };

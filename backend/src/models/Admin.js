@@ -23,10 +23,28 @@ const adminSchema = mongoose.Schema(
       minlength: 8,
       select: false,
     },
+    // Optional contact number for the admin (shown in the team list).
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     role: {
       type: String,
       enum: [ROLES.ADMIN],
       default: ROLES.ADMIN,
+    },
+    // Super admins bypass permission checks and can manage other admins +
+    // platform settings. Regular admins are limited to `permissions`.
+    isSuperAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    // Section keys this admin may access (see ADMIN_PERMISSIONS). Ignored for
+    // super admins (who have everything).
+    permissions: {
+      type: [String],
+      default: [],
     },
     status: {
       type: String,

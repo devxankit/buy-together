@@ -18,7 +18,23 @@ const sendBroadcast = {
 const listCampaigns = {
   query: joi.object().keys({
     limit: joi.number().integer().min(1).max(100),
+    page: joi.number().integer().min(1),
   }),
 };
 
-module.exports = { sendBroadcast, listCampaigns };
+const campaignId = {
+  params: joi.object().keys({
+    campaignId: joi.string().required(),
+  }),
+};
+
+const bulkDeleteCampaigns = {
+  body: joi.object().keys({
+    ids: joi.array().items(joi.string()).min(1).required().messages({
+      'array.min': 'Select at least one broadcast to delete',
+      'any.required': 'No broadcasts selected',
+    }),
+  }),
+};
+
+module.exports = { sendBroadcast, listCampaigns, campaignId, bulkDeleteCampaigns };

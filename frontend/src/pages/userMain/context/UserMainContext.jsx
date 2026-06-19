@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { reverseGeocode } from '../../../utils/googleMaps';
 import { getNotifications } from '../../../services/notification.api';
+import { getChatSocket } from '../../../services/socket';
 import api from '../../../services/api';
 
 const UserMainContext = createContext(null);
@@ -84,6 +85,18 @@ export const UserMainProvider = ({ children }) => {
 
   useEffect(() => {
     refreshUnreadMessageCount();
+  }, [refreshUnreadMessageCount]);
+
+  // Live messages badge: when a DM arrives for this user (and they're not the
+  // one viewing it), the backend pings their personal socket room — re-pull the
+  // unread total so the icon badge updates without a page reload.
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return undefined;
+    const socket = getChatSocket();
+    const onDm = () => refreshUnreadMessageCount();
+    socket.on('dm_notification', onDm);
+    return () => { socket.off('dm_notification', onDm); };
   }, [refreshUnreadMessageCount]);
 
 

@@ -6,7 +6,7 @@ import { updateUserProfile } from '../../../../services/user.api';
 import { uploadImage } from '../../../../services/upload.api';
 import { showToast } from '../../../../utils/toast';
 
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80';
+const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ const PersonalInfo = () => {
         {/* Avatar */}
         <div className="flex flex-col items-center mb-2">
           <div className="relative cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
-            <img src={avatar || DEFAULT_AVATAR} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-surface shadow-md" style={uploading ? { opacity: 0.6 } : undefined} />
+            <img src={avatar || getPlaceholderAvatar(name)} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-surface shadow-md" style={uploading ? { opacity: 0.6 } : undefined} />
             <button className="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-md border-2 border-surface">
               {uploading ? (
                 <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />

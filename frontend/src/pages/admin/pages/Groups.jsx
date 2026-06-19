@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   X, Pencil, Trash2, Users, Check, Search, Loader2,
-  Boxes, Tag, Lock, Flag, UserPlus, UserMinus,
+  Boxes, Tag, Lock, Flag, UserPlus, UserMinus, MessageSquare,
 } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
-import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button, LocationAutocomplete, ImageUploader } from '../components';
+import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button, LocationAutocomplete, ImageUploader, ChatTranscript } from '../components';
+import { getGroupChatAdmin } from '../../../services/admin.api';
 import { showToast } from '../../../utils/toast';
 import {
   listGroupsAdmin,
@@ -785,6 +786,56 @@ const MembersModal = ({ group, onClose, onChanged }) => {
   );
 };
 
+// ── Group chat viewer (read-only) ───────────────────────────────────
+const GroupChatModal = ({ group, onClose }) => {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const { data } = await getGroupChatAdmin(group.id, 500);
+        if (active) setMessages(data || []);
+      } catch (err) {
+        if (active) setError(err.response?.data?.message || 'Failed to load chat.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [group.id]);
+
+  return (
+    <div
+      onMouseDown={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(16,16,20,0.45)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+    >
+      <div
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{ width: 560, maxWidth: '100%', height: '80vh', display: 'flex', flexDirection: 'column', background: T.surfaceAlt, borderRadius: radius['2xl'], boxShadow: T.shadowLg, border: `1px solid ${T.line}`, overflow: 'hidden' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '14px 18px', borderBottom: `1px solid ${T.line}`, background: T.surface }}>
+          <Avatar name={group.title} src={group.image} color={T.primary} size={38} square />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{group.title}</div>
+            <div style={{ fontSize: 11.5, color: T.muted }}>Group chat · {group.spotsJoined || 0} members · read-only</div>
+          </div>
+          <button type="button" onClick={onClose} className="admin-icon-btn" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: T.surfaceAlt, color: T.muted, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="admin-scroll" style={{ flex: 1, overflowY: 'auto' }}>
+          <ChatTranscript messages={messages} loading={loading} error={error} emptyText="No messages in this group yet." />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Page ────────────────────────────────────────────────────────────
 const Groups = () => {
   const [rows, setRows] = useState([]);
@@ -795,6 +846,7 @@ const Groups = () => {
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null);        // null | 'new' | group object
   const [membersOf, setMembersOf] = useState(null); // null | group object
+  const [chatOf, setChatOf] = useState(null);       // null | group object
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -881,6 +933,9 @@ const Groups = () => {
           <button onClick={() => setMembersOf(g)} className="admin-btn" title="Manage members" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', borderRadius: 8, border: 'none', background: T.primarySoft, color: T.primary, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
             <Users size={14} /> {g.spotsJoined}
           </button>
+          <button onClick={() => setChatOf(g)} className="admin-icon-btn" title="View group chat" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.info, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageSquare size={15} />
+          </button>
           {g.status !== 'flagged' ? (
             <button onClick={() => setStatus(g, 'flagged')} className="admin-icon-btn" title="Flag group" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.danger, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
               <Flag size={15} />
@@ -958,6 +1013,10 @@ const Groups = () => {
           onClose={() => setMembersOf(null)}
           onChanged={fetchData}
         />
+      )}
+
+      {chatOf && (
+        <GroupChatModal group={chatOf} onClose={() => setChatOf(null)} />
       )}
     </>
   );

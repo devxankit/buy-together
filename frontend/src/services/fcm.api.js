@@ -14,3 +14,6 @@ export const sendPushMobile = (data) => api.post('/admin/push/mobile', data);
 export const sendPushAll = (data) => api.post('/admin/push/all', data);
 export const getPushCoverage = () => api.get('/admin/push/coverage');
 export const listPushCampaigns = (params = {}) => api.get('/admin/push/campaigns', { params });
+export const deletePushCampaign = (id) => api.delete(`/admin/push/campaigns/${id}`);
+export const bulkDeletePushCampaigns = (ids) =>
+  api.post('/admin/push/campaigns/bulk-delete', { ids });

@@ -3,6 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const adminService = require('../services/admin.service');
 const vendorService = require('../services/vendor.service');
 const groupService = require('../services/group.service');
+const fraudService = require('../services/fraud.service');
 const { pick } = require('../utils/helpers');
 
 const getStats = catchAsync(async (req, res) => {
@@ -11,9 +12,14 @@ const getStats = catchAsync(async (req, res) => {
 });
 
 const listUsers = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ['search', 'status', 'role', 'page', 'limit', 'sortBy']);
+  const filter = pick(req.query, ['search', 'status', 'role', 'activity', 'page', 'limit', 'sortBy']);
   const result = await adminService.queryUsers(filter);
   res.send(result);
+});
+
+const getUserStats = catchAsync(async (req, res) => {
+  const stats = await adminService.getUserStats();
+  res.send(stats);
 });
 
 const getUser = catchAsync(async (req, res) => {
@@ -110,9 +116,54 @@ const removeGroupMember = catchAsync(async (req, res) => {
   res.send(group);
 });
 
+// ── Fraud & risk ────────────────────────────────────────────────────
+const getFraudSignals = catchAsync(async (req, res) => {
+  const result = await fraudService.getRiskSignals();
+  res.send(result);
+});
+
+// ── Admin team (super-admin only) ───────────────────────────────────
+const listAdmins = catchAsync(async (req, res) => {
+  const admins = await adminService.listAdmins();
+  res.send(admins);
+});
+
+const createAdmin = catchAsync(async (req, res) => {
+  const admin = await adminService.createAdmin(req.body);
+  res.status(httpStatus.CREATED).send(admin);
+});
+
+const updateAdmin = catchAsync(async (req, res) => {
+  const admin = await adminService.updateAdmin(req.params.adminId, req.body);
+  res.send(admin);
+});
+
+const deleteAdmin = catchAsync(async (req, res) => {
+  await adminService.deleteAdmin(req.params.adminId, req.user._id);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+// ── Own account ─────────────────────────────────────────────────────
+const changePassword = catchAsync(async (req, res) => {
+  await adminService.changeOwnPassword(req.user._id, req.body.currentPassword, req.body.newPassword);
+  res.send({ message: 'Password updated successfully' });
+});
+
+// ── Platform settings ───────────────────────────────────────────────
+const getSettings = catchAsync(async (req, res) => {
+  const settings = await adminService.getSettings();
+  res.send(settings);
+});
+
+const updateSettings = catchAsync(async (req, res) => {
+  const settings = await adminService.updateSettings(req.body);
+  res.send(settings);
+});
+
 module.exports = {
   getStats,
   listUsers,
+  getUserStats,
   getUser,
   createUser,
   updateUser,
@@ -131,4 +182,12 @@ module.exports = {
   deleteGroup,
   addGroupMember,
   removeGroupMember,
+  getFraudSignals,
+  listAdmins,
+  createAdmin,
+  updateAdmin,
+  deleteAdmin,
+  changePassword,
+  getSettings,
+  updateSettings,
 };

@@ -7,6 +7,7 @@ const {
   BUSINESS_TYPES,
   GROUP_STATUS,
   GROUP_TYPE,
+  ADMIN_PERMISSIONS,
 } = require('../utils/constants');
 
 const phone = joi
@@ -23,6 +24,7 @@ const listUsers = {
     search: joi.string().allow('', null),
     status: joi.string().valid('all', ...Object.values(USER_STATUS)),
     role: joi.string().valid('all', ...Object.values(ROLES)),
+    activity: joi.string().valid('all', 'ingroup', 'nogroup', 'chatting'),
     page: joi.number().integer().min(1),
     limit: joi.number().integer().min(1).max(100),
     sortBy: joi.string(),
@@ -215,10 +217,77 @@ const groupMember = {
   }),
 };
 
+// ── Chat moderation (read-only) ─────────────────────────────────────
+const userDmMessages = {
+  params: joi.object().keys({
+    userId: objectId.required(),
+    otherUserId: objectId.required(),
+  }),
+  query: joi.object().keys({ limit: joi.number().integer().min(1).max(1000) }),
+};
+
+// ── Admin team + settings ───────────────────────────────────────────
+const createAdminMember = {
+  body: joi.object().keys({
+    name: joi.string().trim().min(2).max(80).required(),
+    email: joi.string().email({ tlds: false }).lowercase().required(),
+    password: joi.string().min(8).max(128).required(),
+    phone: phone.allow('', null),
+    status: joi.string().valid(...Object.values(USER_STATUS)),
+    isSuperAdmin: joi.boolean(),
+    permissions: joi.array().items(joi.string().valid(...ADMIN_PERMISSIONS)),
+  }),
+};
+
+const updateAdminMember = {
+  params: joi.object().keys({ adminId: objectId.required() }),
+  body: joi
+    .object()
+    .keys({
+      name: joi.string().trim().min(2).max(80),
+      email: joi.string().email({ tlds: false }).lowercase(),
+      password: joi.string().min(8).max(128).allow('', null),
+      phone: phone.allow('', null),
+      status: joi.string().valid(...Object.values(USER_STATUS)),
+      isSuperAdmin: joi.boolean(),
+      permissions: joi.array().items(joi.string().valid(...ADMIN_PERMISSIONS)),
+    })
+    .min(1),
+};
+
+const adminMemberId = {
+  params: joi.object().keys({ adminId: objectId.required() }),
+};
+
+const changePassword = {
+  body: joi.object().keys({
+    currentPassword: joi.string().required(),
+    newPassword: joi.string().min(8).max(128).required(),
+  }),
+};
+
+const updateSettings = {
+  body: joi
+    .object()
+    .keys({
+      platformName: joi.string().trim().max(80).allow('', null),
+      supportEmail: joi.string().email({ tlds: false }).allow('', null),
+      contactNumber: joi.string().trim().max(20).allow('', null),
+      contactNumberAlt: joi.string().trim().max(20).allow('', null),
+      supportAddress: joi.string().trim().max(240).allow('', null),
+    })
+    .min(1),
+};
+
 module.exports = {
   listUsers,
   createUser,
   userId,
+  createAdminMember,
+  updateAdminMember,
+  adminMemberId,
+  changePassword,
+  updateSettings,
   updateUser,
   listVendors,
   createVendor,
@@ -231,4 +300,5 @@ module.exports = {
   updateGroup,
   addGroupMember,
   groupMember,
+  userDmMessages,
 };

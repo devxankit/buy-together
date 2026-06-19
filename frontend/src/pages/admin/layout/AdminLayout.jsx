@@ -5,7 +5,6 @@ import { logout } from '../../../redux/slices/authSlice';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { T } from '../theme/adminTheme';
-import { fraudSignals } from '../data/mockData';
 import { getAdminStats } from '../../../services/admin.api';
 import '../admin.css';
 
@@ -66,7 +65,6 @@ const AdminLayout = () => {
 
   const badges = {
     vendors: stats?.pendingVendors || 0,
-    fraud: fraudSignals.filter(f => f.severity === 'high').length,
   };
 
   return (

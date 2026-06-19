@@ -12,6 +12,9 @@ const router = express.Router();
 // Web browser token (React app / PWA).
 router.post('/web/register', auth, validate(fcmValidation.registerToken), fcmController.registerWeb);
 
+// Unified registration route (taking token and platform in body).
+router.post('/register', auth, validate(fcmValidation.registerToken), fcmController.register);
+
 // Mobile app token (Flutter / native Android-iOS wrapper).
 router.post('/mobile/register', auth, validate(fcmValidation.registerToken), fcmController.registerMobile);
 

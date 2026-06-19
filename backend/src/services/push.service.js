@@ -8,12 +8,26 @@ const logger = require('../utils/logger');
 const MAX_TOKENS_PER_USER = 10;
 const FCM_BATCH_LIMIT = 500; // FCM caps multicast at 500 tokens per call.
 
-// FCM error codes that mean the token is dead and should be pruned.
+// FCM error codes that unambiguously mean the token is dead and should be pruned.
 const DEAD_TOKEN_CODES = new Set([
   'messaging/registration-token-not-registered',
   'messaging/invalid-registration-token',
-  'messaging/invalid-argument',
 ]);
+
+/**
+ * Should this per-token send error cause the token to be pruned?
+ * `messaging/invalid-argument` is overloaded — it can mean a bad *message* OR a
+ * bad token — so we only treat it as dead when the message explicitly blames the
+ * registration token. This avoids wiping every valid token on a payload bug.
+ */
+const isDeadTokenError = (error) => {
+  const code = error?.code || '';
+  if (DEAD_TOKEN_CODES.has(code)) return true;
+  if (code === 'messaging/invalid-argument') {
+    return /registration token/i.test(error?.message || '');
+  }
+  return false;
+};
 
 const fieldFor = (platform) => (platform === 'mobile' ? 'fcmTokensMobile' : 'fcmTokens');
 
@@ -80,39 +94,52 @@ const sendToTokens = async (tokens, { title, body, image, link, data } = {}) => 
     return { recipients: 0, success: 0, failure: 0, deadTokens: [] };
   }
 
-  // Shared data payload (strings only — FCM data values must be strings).
-  const dataPayload = {
-    ...(link ? { link: String(link) } : {}),
-    ...(image ? { image: String(image) } : {}),
-    ...(data || {}),
-  };
+  // FCM requires an HTTPS URL for webpush.fcmOptions.link; a relative path
+  // (e.g. "/messages/123") triggers messaging/invalid-argument. Click
+  // navigation still works via data.link in the service worker, so we only set
+  // fcmOptions.link for absolute URLs.
+  const absoluteLink = link && /^https?:\/\//i.test(String(link)) ? String(link) : null;
 
+  // Carry the display fields in `data` and coerce EVERY value to a string — the
+  // FCM v1 API rejects non-string data values. The service worker / app reads
+  // title+body from here.
+  const dataPayload = Object.fromEntries(
+    Object.entries({
+      title: title || '',
+      body: body || '',
+      ...(link ? { link } : {}),
+      ...(image ? { image } : {}),
+      ...(data || {}),
+    }).map(([k, v]) => [k, v == null ? '' : String(v)])
+  );
+
+  // IMPORTANT: no top-level `notification` field. A top-level notification makes
+  // Android's OS auto-display the push AND fire onBackgroundMessage → TWO
+  // notifications. Putting display data in `data` + `webpush.notification` defers
+  // rendering to the service worker on every platform = exactly one notification.
+  // (See tools/PUSH_NOTIFICATION_FLOW.md §6 — the battle-tested fix.)
   const baseMessage = {
-    notification: {
-      title,
-      body,
-      ...(image ? { imageUrl: image } : {}),
-    },
     data: dataPayload,
     android: {
       priority: 'high',
-      notification: {
-        ...(image ? { imageUrl: image } : {}),
-      },
     },
     apns: {
-      payload: { aps: { 'mutable-content': 1 } },
+      headers: { 'apns-priority': '10' },
+      payload: { aps: { 'mutable-content': 1, sound: 'default' } },
       ...(image ? { fcmOptions: { imageUrl: image } } : {}),
     },
     webpush: {
+      headers: { Urgency: 'high' },
       notification: {
         title,
         body,
         ...(image ? { image } : {}),
-        icon: '/favicon.png',
+        // No `icon`: the project ships only SVG icons, and an SVG (or a missing
+        // PNG) makes Chrome/Windows SILENTLY DROP the notification. Letting the
+        // browser use its default icon is what reliably renders in the tray.
       },
       fcmOptions: {
-        ...(link ? { link: String(link) } : {}),
+        ...(absoluteLink ? { link: absoluteLink } : {}),
       },
     },
   };
@@ -130,7 +157,7 @@ const sendToTokens = async (tokens, { title, body, image, link, data } = {}) => 
       if (!r.success) {
         const code = r.error?.code || 'unknown';
         errorCounts[code] = (errorCounts[code] || 0) + 1;
-        if (DEAD_TOKEN_CODES.has(code)) deadTokens.push(batch[i]);
+        if (isDeadTokenError(r.error)) deadTokens.push(batch[i]);
       }
     });
   }
@@ -223,9 +250,37 @@ const getCoverage = async () => {
   return { webUsers, mobileUsers, totalUsers };
 };
 
-/** Recent campaign history. */
-const listCampaigns = async (limit = 20) => {
-  return PushCampaign.find({}).sort({ createdAt: -1 }).limit(Math.min(100, limit));
+/** Paginated campaign history (newest first). */
+const listCampaigns = async ({ page = 1, limit = 20 } = {}) => {
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+  const safePage = Math.max(1, Number(page) || 1);
+  const skip = (safePage - 1) * safeLimit;
+
+  const [results, total] = await Promise.all([
+    PushCampaign.find({}).sort({ createdAt: -1 }).skip(skip).limit(safeLimit),
+    PushCampaign.countDocuments({}),
+  ]);
+
+  return {
+    results,
+    page: safePage,
+    limit: safeLimit,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+  };
+};
+
+/** Delete a single campaign history record. */
+const deleteCampaign = async (id) => {
+  const campaign = await PushCampaign.findByIdAndDelete(id);
+  if (!campaign) throw new ApiError(httpStatus.NOT_FOUND, 'Broadcast not found');
+  return campaign;
+};
+
+/** Delete many campaign history records at once. */
+const deleteCampaigns = async (ids = []) => {
+  const result = await PushCampaign.deleteMany({ _id: { $in: ids } });
+  return { deletedCount: result.deletedCount || 0 };
 };
 
 module.exports = {
@@ -237,4 +292,6 @@ module.exports = {
   broadcast,
   getCoverage,
   listCampaigns,
+  deleteCampaign,
+  deleteCampaigns,
 };
