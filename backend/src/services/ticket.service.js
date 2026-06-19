@@ -56,11 +56,12 @@ const addUserReply = async (user, ticketId, replyBody) => {
  * counts breakdown for the summary tabs.
  */
 const queryTicketsAdmin = async (filter = {}) => {
-  const { search, status, priority, page = 1, limit = 20 } = filter;
+  const { search, status, priority, category, page = 1, limit = 20 } = filter;
 
   const query = {};
   if (status && status !== 'all') query.status = status;
   if (priority && priority !== 'all') query.priority = priority;
+  if (category && category !== 'all') query.category = category;
   if (search) {
     const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     query.$or = [{ subject: rx }, { name: rx }, { email: rx }, { message: rx }];

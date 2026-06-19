@@ -5,6 +5,7 @@ import { useChat } from '../../hooks/useChat';
 import { showToast } from '../../../../utils/toast';
 import { getGroup, joinGroup, leaveGroup, kickGroupMember } from '../../../../services/group.api';
 import { votePollMessage, pinMessage, unpinMessage, reactMessage, deleteMessage } from '../../../../services/chat.api';
+import { createTicket } from '../../../../services/ticket.api';
 import api from '../../../../services/api';
 import ContactProfile from './ContactProfile';
 
@@ -77,9 +78,9 @@ const initialMessages = [
 
 // --- Subcomponents ---
 
-const TopBar = ({ navigate, group, onMenuToggle }) => (
+const TopBar = ({ navigate, group, onMenuToggle, onShare }) => (
   <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-line sticky top-0 z-30 w-full gap-2">
-    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+    <div className="flex items-center gap-2.5 min-w-0 flex-1 text-left">
       <button onClick={() => navigate(-1)} className="p-1 active:scale-95 transition-all flex-shrink-0 text-ink hover:bg-surface-alt rounded-lg">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5.5 h-5.5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -106,7 +107,7 @@ const TopBar = ({ navigate, group, onMenuToggle }) => (
     </div>
 
     <div className="flex items-center gap-1 flex-shrink-0">
-      <button className="p-2 active:scale-95 transition-all text-faint hover:bg-surface-alt rounded-xl">
+      <button onClick={onShare} className="p-2 active:scale-95 transition-all text-faint hover:bg-surface-alt rounded-xl">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
         </svg>
@@ -171,19 +172,21 @@ const StatsCard = ({ group }) => {
             <span className="text-[11px] font-black text-ink">{spotsJoined}</span>
             <span className="text-[9px] font-medium text-faint">Buyers</span>
           </div>
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center text-center border-l border-line/60">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
             <span className="text-[11px] font-black text-ink">{spotsJoined}</span>
             <span className="text-[9px] font-medium text-faint">Units</span>
           </div>
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center text-center border-l border-line/60">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              <circle cx="12" cy="12" r="9" />
+              <circle cx="12" cy="12" r="5" />
+              <circle cx="12" cy="12" r="1" />
             </svg>
-            <span className="text-[11px] font-black text-ink">{group.bestOffer ? group.bestOffer.split(' ')[0] : 'TBD'}</span>
-            <span className="text-[9px] font-medium text-faint leading-tight mt-0.5">Best Offer</span>
+            <span className="text-[11px] font-black text-ink">{spotsTotal}</span>
+            <span className="text-[9px] font-medium text-faint">Target</span>
           </div>
         </div>
       </div>
@@ -628,7 +631,7 @@ const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], on
                     <span className="text-sm font-bold text-ink truncate">{member.name}</span>
                     <span className="text-[9px] font-bold text-primary bg-primary-soft px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">{member.badge}</span>
                   </div>
-                  <span className="text-xs font-semibold text-faint mt-0.5">{member.units} Units • {member.amount}</span>
+                  <span className="text-xs font-semibold text-faint mt-0.5">{member.units} {member.units > 1 ? 'Units' : 'Unit'}</span>
                 </div>
               </button>
               <div className="flex items-center gap-2">
@@ -948,6 +951,57 @@ const GroupChatSkeleton = () => (
 
 // --- Main Page Component ---
 
+const ReportModal = ({ title, onClose, onSubmit }) => {
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reason.trim()) return;
+    setSubmitting(true);
+    await onSubmit(reason.trim());
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-surface rounded-3xl w-full max-w-[340px] p-5 shadow-2xl border border-line">
+        <h2 className="text-[16px] font-black text-ink mb-2">{title}</h2>
+        <p className="text-[11px] text-muted font-bold mb-4">Please describe the reason for reporting this. Our moderation team will review it.</p>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Type your reason here..."
+            rows={3}
+            required
+            className="w-full p-3 text-[12px] font-medium text-ink placeholder:text-muted/60 bg-surface-alt border border-slate-200/90 rounded-2xl outline-none focus:border-primary transition-all resize-none"
+            maxLength={1000}
+          />
+          
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl font-bold text-xs text-faint bg-surface-alt border border-line active:scale-95 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !reason.trim()}
+              className="flex-1 py-3 rounded-xl font-bold text-xs text-white bg-primary shadow-md shadow-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+            >
+              {submitting ? 'Submitting...' : 'Submit Report'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const groupDetailsCache = {};
 
 const GroupChat = () => {
@@ -1027,12 +1081,24 @@ const GroupChat = () => {
     };
   }, [groupState, groupId]);
 
+  const resolvedGroupId = group.id || groupId || 'g-fallback';
+
   const [activeTab, setActiveTab] = useState('Chat');
+  const [isPinned, setIsPinned] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  useEffect(() => {
+    if (resolvedGroupId) {
+      setIsPinned(localStorage.getItem(`buytogether_pinned_group_${resolvedGroupId}`) === 'true');
+      setIsMuted(localStorage.getItem(`buytogether_muted_group_${resolvedGroupId}`) === 'true');
+    }
+  }, [resolvedGroupId]);
   // `messages` holds client-only items (polls, in-session file shares). Real
   // text chat comes from Firebase RTDB via the useChat hook and is merged below.
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showPollModal, setShowPollModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const typingTimeoutRef = useRef(null);
   const currentUserName = currentUser?.name || 'User';
@@ -1106,7 +1172,6 @@ const GroupChat = () => {
     }
   ];
   
-  const resolvedGroupId = group.id || groupId || 'g-fallback';
 
   // ── Realtime chat (Firebase RTDB via backend) ──────────────────────
   const { 
@@ -1303,8 +1368,6 @@ const GroupChat = () => {
         } else {
           units = (m.name.length % 2) + 1; 
         }
-
-        const amount = `₹${(units * 69999).toLocaleString()}`;
         
         let badge = 'Verified Buyer';
         if (isAdminMember) {
@@ -1318,7 +1381,6 @@ const GroupChat = () => {
         return {
           ...m,
           units,
-          amount,
           badge
         };
       });
@@ -1684,6 +1746,54 @@ const GroupChat = () => {
     }
   };
 
+  const handleShareGroup = () => {
+    const shareUrl = `${window.location.origin}/groups/${resolvedGroupId}`;
+    const shareText = `Hey! Join our co-buying group for ${group.title} on Buy Together! 🤝 Link: ${shareUrl}`;
+    navigator.clipboard.writeText(shareText)
+      .then(() => {
+        showToast('Invite link copied to clipboard! 🔗', '🚀');
+      })
+      .catch(() => {
+        showToast('Failed to copy link.', '❌');
+      });
+  };
+
+  const handleTogglePin = () => {
+    const nextState = !isPinned;
+    localStorage.setItem(`buytogether_pinned_group_${resolvedGroupId}`, String(nextState));
+    setIsPinned(nextState);
+    showToast(nextState ? 'Group pinned to your home screen! 📌' : 'Group unpinned!', '📌');
+    setIsMenuOpen(false);
+  };
+
+  const handleToggleMute = () => {
+    const nextState = !isMuted;
+    localStorage.setItem(`buytogether_muted_group_${resolvedGroupId}`, String(nextState));
+    setIsMuted(nextState);
+    showToast(nextState ? 'Group notifications muted.' : 'Group notifications unmuted.', '🔇');
+    setIsMenuOpen(false);
+  };
+
+  const handleReportGroup = () => {
+    setIsMenuOpen(false);
+    setShowReportModal(true);
+  };
+
+  const handleReportGroupSubmit = async (reason) => {
+    try {
+      await createTicket({
+        subject: `Report Group: ${group.title}`,
+        message: `Reason: ${reason}\nGroup ID: ${resolvedGroupId}`,
+        category: 'group'
+      });
+      showToast('Thank you for reporting. Our moderation team will investigate this group.', '📢');
+      setShowReportModal(false);
+    } catch (err) {
+      console.error('Failed to report group:', err);
+      showToast('Failed to submit report. Please try again.', '❌');
+    }
+  };
+
   if (loading && !groupState) {
     return <GroupChatSkeleton />;
   }
@@ -1710,33 +1820,34 @@ const GroupChat = () => {
         navigate={navigate} 
         group={group} 
         onMenuToggle={() => setIsMenuOpen(prev => !prev)} 
+        onShare={handleShareGroup}
       />
 
       {/* Floating 3-Dot Dropdown Options Panel */}
       {isMenuOpen && (
         <div className="absolute top-[56px] right-3.5 w-[180px] bg-surface rounded-2xl border border-line shadow-2xl py-2 z-50 animate-fadeIn">
           <button 
-            onClick={() => { setIsMenuOpen(false); showToast('Group pinned to your home screen!', '📌'); }}
+            onClick={handleTogglePin}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>Pin Group</span>
+            <span>{isPinned ? 'Unpin Group' : 'Pin Group'}</span>
           </button>
           <button 
-            onClick={() => { setIsMenuOpen(false); showToast('Group notifications muted.', '🔇'); }}
+            onClick={handleToggleMute}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
             </svg>
-            <span>Mute Group</span>
+            <span>{isMuted ? 'Unmute Group' : 'Mute Group'}</span>
           </button>
           <button 
-            onClick={() => { setIsMenuOpen(false); showToast('Thank you for reporting. Our moderation team will investigate this group.', '📢'); }}
+            onClick={handleReportGroup}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -2172,6 +2283,14 @@ const GroupChat = () => {
             : undefined
         }
       />
+
+      {showReportModal && (
+        <ReportModal
+          title="Report Group"
+          onClose={() => setShowReportModal(false)}
+          onSubmit={handleReportGroupSubmit}
+        />
+      )}
     </div>
   );
 };

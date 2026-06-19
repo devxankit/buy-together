@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, X, Eye } from 'lucide-react';
+import { Trash2, X, Eye, Filter } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, SearchInput, SegmentTabs, Button, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
@@ -183,6 +183,7 @@ const Support = () => {
   const [rows, setRows] = useState([]);
   const [counts, setCounts] = useState({ all: 0, open: 0, in_progress: 0, resolved: 0, closed: 0 });
   const [tab, setTab] = useState('all');
+  const [category, setCategory] = useState('all');
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -196,6 +197,7 @@ const Support = () => {
     try {
       const params = {};
       if (tab !== 'all') params.status = tab;
+      if (category !== 'all') params.category = category;
       if (q.trim()) params.search = q.trim();
       const { data } = await listTicketsAdmin(params);
       setRows(data.results || []);
@@ -206,7 +208,7 @@ const Support = () => {
     } finally {
       setLoading(false);
     }
-  }, [tab, q]);
+  }, [tab, category, q]);
 
   useEffect(() => {
     const t = setTimeout(fetchData, 250);
@@ -288,7 +290,26 @@ const Support = () => {
               { id: 'closed', label: 'Closed', count: counts.closed },
             ]}
           />
-          <SearchInput value={q} onChange={setQ} placeholder="Search subject, user, email…" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div className="admin-focusable" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 38, padding: '0 10px 0 12px', background: T.surfaceAlt, border: `1px solid ${T.line}`, borderRadius: radius.lg }}>
+              <Filter size={15} color={T.faint} strokeWidth={2.1} />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                title="Filter by topic / category"
+                style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, fontWeight: 600, color: category === 'all' ? T.inkSoft : T.primary, fontFamily: 'inherit', cursor: 'pointer' }}
+              >
+                <option value="all">All Topics</option>
+                <option value="group">Reported Groups</option>
+                <option value="account">Reported Accounts</option>
+                <option value="general">General Queries</option>
+                <option value="payment">Payments</option>
+                <option value="order">Orders</option>
+                <option value="other">Others</option>
+              </select>
+            </div>
+            <SearchInput value={q} onChange={setQ} placeholder="Search subject, user, email…" />
+          </div>
         </div>
         <div style={{ padding: 20 }}>
           {error ? (

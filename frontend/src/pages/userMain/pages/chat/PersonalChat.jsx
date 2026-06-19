@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
 import { getUserPublicProfile } from '../../../../services/user.api';
 import { showToast } from '../../../../utils/toast';
+import { createTicket } from '../../../../services/ticket.api';
 import api from '../../../../services/api';
 import { getChatSocket } from '../../../../services/socket';
 import ContactProfile from './ContactProfile';
@@ -27,7 +28,7 @@ const ChatSkeleton = () => (
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
-const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, isMenuOpen, onViewContact }) => (
+const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, isMenuOpen, onViewContact, onReportUser }) => (
   <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-line sticky top-0 z-30 w-full gap-2">
     <div className="flex items-center gap-3 min-w-0 flex-1">
       <button onClick={() => navigate(-1)} className="p-1 active:scale-95 transition-all flex-shrink-0 text-ink hover:bg-surface-alt rounded-lg">
@@ -80,7 +81,7 @@ const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, is
           </button>
           <div className="border-t border-line my-1"></div>
           <button
-            onClick={() => { onMenuToggle(); showToast('Thanks for reporting. Our team will review this user.', '📢'); }}
+            onClick={onReportUser}
             className="w-full px-4 py-2.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -296,6 +297,57 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
   );
 };
 
+const ReportModal = ({ title, onClose, onSubmit }) => {
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reason.trim()) return;
+    setSubmitting(true);
+    await onSubmit(reason.trim());
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-surface rounded-3xl w-full max-w-[340px] p-5 shadow-2xl border border-line">
+        <h2 className="text-[16px] font-black text-ink mb-2">{title}</h2>
+        <p className="text-[11px] text-muted font-bold mb-4">Please describe the reason for reporting this. Our moderation team will review it.</p>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Type your reason here..."
+            rows={3}
+            required
+            className="w-full p-3 text-[12px] font-medium text-ink placeholder:text-muted/60 bg-surface-alt border border-slate-200/90 rounded-2xl outline-none focus:border-primary transition-all resize-none"
+            maxLength={1000}
+          />
+          
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl font-bold text-xs text-faint bg-surface-alt border border-line active:scale-95 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !reason.trim()}
+              className="flex-1 py-3 rounded-xl font-bold text-xs text-white bg-primary shadow-md shadow-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+            >
+              {submitting ? 'Submitting...' : 'Submit Report'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const PersonalChat = () => {
   const navigate = useNavigate();
   const { chatId } = useParams();
@@ -379,10 +431,16 @@ const PersonalChat = () => {
       '2': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80',
       '3': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80',
     };
+    const mockPhones = {
+      '1': '9876543210',
+      '2': '9998887776',
+      '3': '9555444333',
+    };
 
     return {
       name: mockNames[chatId] || 'Chat Partner',
       avatar: mockAvatars[chatId] || getPlaceholderAvatar(mockNames[chatId] || 'Chat Partner'),
+      phone: mockPhones[chatId] || '',
     };
   }, [chatId, chatPartner]);
 
@@ -481,6 +539,7 @@ const PersonalChat = () => {
   const [activeEmojiCat, setActiveEmojiCat] = useState(0);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Images shared in this conversation, newest first, for the contact sheet.
   const sharedMedia = useMemo(
@@ -821,6 +880,26 @@ const PersonalChat = () => {
     }
   ];
 
+  const handleReportUser = () => {
+    setShowHeaderMenu(false);
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async (reason) => {
+    try {
+      await createTicket({
+        subject: `Report User: ${activePartner.name}`,
+        message: `Reason: ${reason}\nPhone Number: ${activePartner.phone || 'N/A'}`,
+        category: 'account'
+      });
+      showToast('Thank you for reporting. Our moderation team will investigate this account.', '📢');
+      setShowReportModal(false);
+    } catch (err) {
+      console.error('Failed to report user:', err);
+      showToast('Failed to submit report. Please try again.', '❌');
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] relative overflow-hidden">
       <TopBar
@@ -831,6 +910,7 @@ const PersonalChat = () => {
         onMenuToggle={() => setShowHeaderMenu((p) => !p)}
         isMenuOpen={showHeaderMenu}
         onViewContact={openProfile}
+        onReportUser={handleReportUser}
       />
       
       {/* Scrollable messages container */}
@@ -1134,6 +1214,14 @@ const PersonalChat = () => {
         profile={activePartner}
         sharedMedia={sharedMedia}
       />
+
+      {showReportModal && (
+        <ReportModal
+          title="Report Account"
+          onClose={() => setShowReportModal(false)}
+          onSubmit={handleReportSubmit}
+        />
+      )}
     </div>
   );
 };
