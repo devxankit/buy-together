@@ -3,11 +3,15 @@ const userService = require('../services/user.service');
 const catchAsync = require('../utils/catchAsync');
 
 const getProfile = async (req, res) => {
-  const user = await userService.getUserById(req.user.id);
+  // The profile doc and its stats are independent — fetch them concurrently
+  // instead of serially.
+  const [user, stats] = await Promise.all([
+    userService.getUserById(req.user.id),
+    userService.getUserStats(req.user.id),
+  ]);
   if (!user) {
     return res.status(404).send({ message: 'User not found' });
   }
-  const stats = await userService.getUserStats(req.user.id);
   const userObj = user.toJSON();
   userObj.stats = stats;
   res.send(userObj);

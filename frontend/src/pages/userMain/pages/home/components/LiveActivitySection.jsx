@@ -1,6 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getPublicSettings } from '../../../../../services/setting.api';
 
 const LiveActivitySection = () => {
+  const [statsData, setStatsData] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    getPublicSettings()
+      .then(({ data }) => {
+        if (active) setStatsData(data);
+      })
+      .catch((err) => console.warn('Failed to load live stats:', err));
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const stats = [
     {
       id: 1,
@@ -11,9 +26,9 @@ const LiveActivitySection = () => {
           </svg>
         </div>
       ),
-      value: '8,642',
+      value: statsData?.liveStatsActiveGroups || '8,642',
       label: 'Active Groups',
-      trend: '+12% today',
+      trend: statsData?.liveStatsActiveGroupsTrend || '+12% today',
       trendColor: 'text-green-500',
       bg: 'bg-surface'
     },
@@ -26,9 +41,9 @@ const LiveActivitySection = () => {
           </svg>
         </div>
       ),
-      value: '1,23,876',
+      value: statsData?.liveStatsPeopleInterested || '1,23,876',
       label: 'People Interested',
-      trend: '+18% today',
+      trend: statsData?.liveStatsPeopleInterestedTrend || '+18% today',
       trendColor: 'text-green-500',
       bg: 'bg-blue-50/30'
     },
@@ -41,9 +56,9 @@ const LiveActivitySection = () => {
           </svg>
         </div>
       ),
-      value: '312',
+      value: statsData?.liveStatsGroupsGrowing || '312',
       label: 'Groups Growing Fast',
-      trend: '+24% today',
+      trend: statsData?.liveStatsGroupsGrowingTrend || '+24% today',
       trendColor: 'text-green-500',
       bg: 'bg-orange-50/30'
     },
@@ -56,9 +71,9 @@ const LiveActivitySection = () => {
           </svg>
         </div>
       ),
-      value: 'Indore',
+      value: statsData?.liveStatsTopCity || 'Indore',
       label: 'Top City',
-      trend: 'This Week',
+      trend: statsData?.liveStatsTopCityTrend || 'This Week',
       trendColor: 'text-green-500',
       bg: 'bg-green-50/30'
     }

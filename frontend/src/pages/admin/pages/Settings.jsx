@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Building2, KeyRound, X, ShieldCheck, Lock, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Building2, KeyRound, X, ShieldCheck, Lock, Pencil, Trash2, UserPlus, TrendingUp } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, Button, Avatar, StatusBadge, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
@@ -182,7 +182,13 @@ const Settings = () => {
       const { data } = await getSettings();
       setSettings(data);
     } catch {
-      setSettings({ platformName: '', supportEmail: '', contactNumber: '', contactNumberAlt: '', supportAddress: '' });
+      setSettings({
+        platformName: '', supportEmail: '', contactNumber: '', contactNumberAlt: '', supportAddress: '',
+        liveStatsActiveGroups: '', liveStatsActiveGroupsTrend: '',
+        liveStatsPeopleInterested: '', liveStatsPeopleInterestedTrend: '',
+        liveStatsGroupsGrowing: '', liveStatsGroupsGrowingTrend: '',
+        liveStatsTopCity: '', liveStatsTopCityTrend: '',
+      });
     }
   }, []);
 
@@ -213,6 +219,16 @@ const Settings = () => {
         platformName: settings.platformName || '',
         supportEmail: settings.supportEmail || '',
         contactNumber: settings.contactNumber || '',
+        supportAddress: settings.supportAddress || '',
+        contactNumberAlt: settings.contactNumberAlt || '',
+        liveStatsActiveGroups: settings.liveStatsActiveGroups || '',
+        liveStatsActiveGroupsTrend: settings.liveStatsActiveGroupsTrend || '',
+        liveStatsPeopleInterested: settings.liveStatsPeopleInterested || '',
+        liveStatsPeopleInterestedTrend: settings.liveStatsPeopleInterestedTrend || '',
+        liveStatsGroupsGrowing: settings.liveStatsGroupsGrowing || '',
+        liveStatsGroupsGrowingTrend: settings.liveStatsGroupsGrowingTrend || '',
+        liveStatsTopCity: settings.liveStatsTopCity || '',
+        liveStatsTopCityTrend: settings.liveStatsTopCityTrend || '',
       });
       setSettings(data);
       showToast('Settings saved! 🎉');
@@ -265,44 +281,82 @@ const Settings = () => {
       <PageHeader eyebrow="System" title="Settings" subtitle="Platform-wide controls, your password, and admin team access." />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 18 }} className="admin-grid-2">
-        {/* General */}
-        <Panel title="General" subtitle={isSuper ? 'Brand & support contact' : 'Read-only — super admin can edit'}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, color: T.primary }}>
-            <Building2 size={18} /><span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>Brand & contact details</span>
-          </div>
-          {settings && (
-            <div style={{ display: 'grid', gap: 14 }}>
-              <Field label="Platform Name"><input style={inputStyle} value={settings.platformName || ''} onChange={setGen('platformName')} disabled={!isSuper} /></Field>
-              <Field label="Support Email"><input style={inputStyle} type="email" value={settings.supportEmail || ''} onChange={setGen('supportEmail')} placeholder="support@buytogether.in" disabled={!isSuper} /></Field>
-              <Field label="Contact Number"><input style={inputStyle} value={settings.contactNumber || ''} onChange={setGen('contactNumber')} placeholder="1800 000 000" disabled={!isSuper} /></Field>
-              {isSuper && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-                  <Button variant="dark" size="sm" icon="Save" onClick={saveGeneral} style={savingGen ? { opacity: 0.7, pointerEvents: 'none' } : undefined}>
-                    {savingGen ? 'Saving…' : 'Save Changes'}
-                  </Button>
-                </div>
-              )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* General */}
+          <Panel title="General" subtitle={isSuper ? 'Brand & support contact' : 'Read-only — super admin can edit'}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, color: T.primary }}>
+              <Building2 size={18} /><span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>Brand & contact details</span>
             </div>
-          )}
-        </Panel>
+            {settings && (
+              <div style={{ display: 'grid', gap: 14 }}>
+                <Field label="Platform Name"><input style={inputStyle} value={settings.platformName || ''} onChange={setGen('platformName')} disabled={!isSuper} /></Field>
+                <Field label="Support Email"><input style={inputStyle} type="email" value={settings.supportEmail || ''} onChange={setGen('supportEmail')} placeholder="support@buytogether.in" disabled={!isSuper} /></Field>
+                <Field label="Contact Number"><input style={inputStyle} value={settings.contactNumber || ''} onChange={setGen('contactNumber')} placeholder="1800 000 000" disabled={!isSuper} /></Field>
+                {isSuper && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                    <Button variant="dark" size="sm" icon="Save" onClick={saveGeneral} style={savingGen ? { opacity: 0.7, pointerEvents: 'none' } : undefined}>
+                      {savingGen ? 'Saving…' : 'Save Changes'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </Panel>
 
-        {/* Password */}
-        <Panel title="Security & Password" subtitle="Update your own console password">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, color: T.primary }}>
-            <KeyRound size={18} /><span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>{me?.email}</span>
-          </div>
-          <div style={{ display: 'grid', gap: 14 }}>
-            {pwError && <div style={{ background: T.dangerSoft, color: T.danger, fontSize: 12.5, fontWeight: 600, padding: '10px 12px', borderRadius: radius.md }}>{pwError}</div>}
-            <Field label="Current Password"><input style={inputStyle} type="password" value={pw.currentPassword} onChange={(e) => setPw((p) => ({ ...p, currentPassword: e.target.value }))} autoComplete="current-password" /></Field>
-            <Field label="New Password"><input style={inputStyle} type="password" value={pw.newPassword} onChange={(e) => setPw((p) => ({ ...p, newPassword: e.target.value }))} autoComplete="new-password" /></Field>
-            <Field label="Confirm New Password"><input style={inputStyle} type="password" value={pw.confirm} onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))} autoComplete="new-password" /></Field>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-              <Button variant="dark" size="sm" icon="KeyRound" onClick={submitPassword} style={savingPw ? { opacity: 0.7, pointerEvents: 'none' } : undefined}>
-                {savingPw ? 'Updating…' : 'Update Password'}
-              </Button>
+          {/* Live Activity Stats */}
+          <Panel title="Live Activity Stats" subtitle={isSuper ? 'Controls the stats marquee shown on the user app home page' : 'Read-only — super admin can edit'}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, color: T.primary }}>
+              <TrendingUp size={18} /><span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>Home page statistics marquee</span>
             </div>
-          </div>
-        </Panel>
+            {settings && (
+              <div style={{ display: 'grid', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Active Groups (Value)"><input style={inputStyle} value={settings.liveStatsActiveGroups || ''} onChange={setGen('liveStatsActiveGroups')} placeholder="e.g. 8,642" disabled={!isSuper} /></Field>
+                  <Field label="Active Groups (Trend)"><input style={inputStyle} value={settings.liveStatsActiveGroupsTrend || ''} onChange={setGen('liveStatsActiveGroupsTrend')} placeholder="e.g. +12% today" disabled={!isSuper} /></Field>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="People Interested (Value)"><input style={inputStyle} value={settings.liveStatsPeopleInterested || ''} onChange={setGen('liveStatsPeopleInterested')} placeholder="e.g. 1,23,876" disabled={!isSuper} /></Field>
+                  <Field label="People Interested (Trend)"><input style={inputStyle} value={settings.liveStatsPeopleInterestedTrend || ''} onChange={setGen('liveStatsPeopleInterestedTrend')} placeholder="e.g. +18% today" disabled={!isSuper} /></Field>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Groups Growing (Value)"><input style={inputStyle} value={settings.liveStatsGroupsGrowing || ''} onChange={setGen('liveStatsGroupsGrowing')} placeholder="e.g. 312" disabled={!isSuper} /></Field>
+                  <Field label="Groups Growing (Trend)"><input style={inputStyle} value={settings.liveStatsGroupsGrowingTrend || ''} onChange={setGen('liveStatsGroupsGrowingTrend')} placeholder="e.g. +24% today" disabled={!isSuper} /></Field>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Top City (Value)"><input style={inputStyle} value={settings.liveStatsTopCity || ''} onChange={setGen('liveStatsTopCity')} placeholder="e.g. Indore" disabled={!isSuper} /></Field>
+                  <Field label="Top City (Trend)"><input style={inputStyle} value={settings.liveStatsTopCityTrend || ''} onChange={setGen('liveStatsTopCityTrend')} placeholder="e.g. This Week" disabled={!isSuper} /></Field>
+                </div>
+                {isSuper && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                    <Button variant="dark" size="sm" icon="Save" onClick={saveGeneral} style={savingGen ? { opacity: 0.7, pointerEvents: 'none' } : undefined}>
+                      {savingGen ? 'Saving…' : 'Save Changes'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </Panel>
+        </div>
+
+        <div>
+          {/* Password */}
+          <Panel title="Security & Password" subtitle="Update your own console password">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, color: T.primary }}>
+              <KeyRound size={18} /><span style={{ fontSize: 12.5, fontWeight: 600, color: T.muted }}>{me?.email}</span>
+            </div>
+            <div style={{ display: 'grid', gap: 14 }}>
+              {pwError && <div style={{ background: T.dangerSoft, color: T.danger, fontSize: 12.5, fontWeight: 600, padding: '10px 12px', borderRadius: radius.md }}>{pwError}</div>}
+              <Field label="Current Password"><input style={inputStyle} type="password" value={pw.currentPassword} onChange={(e) => setPw((p) => ({ ...p, currentPassword: e.target.value }))} autoComplete="current-password" /></Field>
+              <Field label="New Password"><input style={inputStyle} type="password" value={pw.newPassword} onChange={(e) => setPw((p) => ({ ...p, newPassword: e.target.value }))} autoComplete="new-password" /></Field>
+              <Field label="Confirm New Password"><input style={inputStyle} type="password" value={pw.confirm} onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))} autoComplete="new-password" /></Field>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                <Button variant="dark" size="sm" icon="KeyRound" onClick={submitPassword} style={savingPw ? { opacity: 0.7, pointerEvents: 'none' } : undefined}>
+                  {savingPw ? 'Updating…' : 'Update Password'}
+                </Button>
+              </div>
+            </div>
+          </Panel>
+        </div>
       </div>
 
       {/* Admin team — super admin only */}

@@ -14,6 +14,7 @@ const fcmRoute = require('./fcm.routes');
 const notificationRoute = require('./notification.routes');
 const ticketRoute = require('./ticket.routes');
 const contentPageRoute = require('./contentPage.routes');
+const settingRoute = require('./setting.routes');
 
 const router = express.Router();
 
@@ -33,6 +34,7 @@ const defaultRoutes = [
   { path: '/notifications', route: notificationRoute },
   { path: '/tickets', route: ticketRoute },
   { path: '/content-pages', route: contentPageRoute },
+  { path: '/settings', route: settingRoute },
 ];
 
 defaultRoutes.forEach((route) => {

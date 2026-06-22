@@ -1,17 +1,24 @@
 const httpStatus = require('http-status').status;
 const ContentPage = require('../models/ContentPage');
 const ApiError = require('../utils/ApiError');
+const cache = require('../utils/cache');
 const { CONTENT_PAGE_SLUGS } = require('../utils/constants');
+
+// Content pages (terms, privacy, about, …) are essentially static — cache each
+// public page and bust it when an admin saves that slug.
+const publicKey = (slug) => `contentPage:public:${slug}`;
+const PUBLIC_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // ── Public (consumer app) ───────────────────────────────────────────
 
 // Active page by slug for the user app. Inactive/missing pages 404 so the app
-// can fall back gracefully.
-const getPublicPage = async (slug) => {
-  const page = await ContentPage.findOne({ slug, isActive: true });
-  if (!page) throw new ApiError(httpStatus.NOT_FOUND, 'Page not found');
-  return page;
-};
+// can fall back gracefully. Cached per slug.
+const getPublicPage = async (slug) =>
+  cache.wrap(publicKey(slug), PUBLIC_CACHE_TTL, async () => {
+    const page = await ContentPage.findOne({ slug, isActive: true });
+    if (!page) throw new ApiError(httpStatus.NOT_FOUND, 'Page not found');
+    return page;
+  });
 
 // ── Admin console ───────────────────────────────────────────────────
 
@@ -42,6 +49,7 @@ const updatePageBySlug = async (slug, body) => {
     { $set: { ...body, slug } },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
   );
+  cache.del(publicKey(slug));
   return page;
 };
 

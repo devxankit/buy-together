@@ -7,6 +7,7 @@ const Setting = require('../models/Setting');
 const firebase = require('../config/firebase');
 const ticketService = require('./ticket.service');
 const ApiError = require('../utils/ApiError');
+const cache = require('../utils/cache');
 const { normalizePhone } = require('./auth.service');
 const { ROLES, USER_STATUS, VENDOR_STATUS, GROUP_STATUS, ADMIN_PERMISSIONS } = require('../utils/constants');
 
@@ -37,6 +38,15 @@ const getChattingUserIds = async () => {
   return [...ids];
 };
 
+// These two feed the admin Users list + stats and are independently expensive:
+// `Group.distinct('members')` scans the whole groups collection and returns an
+// ever-growing id array, and `getChattingUserIds` pulls the entire Firebase
+// conversations tree. Both change slowly relative to how often the admin pages
+// poll, so cache them briefly (counts may lag real-time by up to the TTL).
+const SIGNALS_TTL = 30 * 1000; // 30 seconds
+const getMemberIdsCached = () => cache.wrap('admin:memberIds', SIGNALS_TTL, () => Group.distinct('members'));
+const getChattingUserIdsCached = () => cache.wrap('admin:chattingIds', SIGNALS_TTL, getChattingUserIds);
+
 /**
  * List users for the admin console with search + status/role filters and
  * pagination. Returns rows plus per-status counts for the summary tabs/strip.
@@ -56,8 +66,8 @@ const queryUsers = async (filter = {}) => {
   // to drive the activity-filter counts, so resolve them up front.
   const roleMatch = role && role !== 'all' ? { role } : {};
   const [memberIds, chattingIds] = await Promise.all([
-    Group.distinct('members'),
-    getChattingUserIds(),
+    getMemberIdsCached(),
+    getChattingUserIdsCached(),
   ]);
 
   if (activity === 'ingroup') query._id = { $in: memberIds };
@@ -129,8 +139,8 @@ const getUserStats = async () => {
   const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
   const [memberIds, chattingIds] = await Promise.all([
-    Group.distinct('members'),
-    getChattingUserIds(),
+    getMemberIdsCached(),
+    getChattingUserIdsCached(),
   ]);
 
   const [
@@ -361,7 +371,13 @@ const getSettings = async () => Setting.getSingleton();
 
 const updateSettings = async (body) => {
   const settings = await Setting.getSingleton();
-  ['platformName', 'supportEmail', 'contactNumber', 'contactNumberAlt', 'supportAddress'].forEach((k) => {
+  [
+    'platformName', 'supportEmail', 'contactNumber', 'contactNumberAlt', 'supportAddress',
+    'liveStatsActiveGroups', 'liveStatsActiveGroupsTrend',
+    'liveStatsPeopleInterested', 'liveStatsPeopleInterestedTrend',
+    'liveStatsGroupsGrowing', 'liveStatsGroupsGrowingTrend',
+    'liveStatsTopCity', 'liveStatsTopCityTrend'
+  ].forEach((k) => {
     if (body[k] !== undefined) settings[k] = body[k];
   });
   await settings.save();

@@ -29,9 +29,12 @@ app.use(express.json());
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
 
-// enable cors
-app.use(cors());
-app.options('*any', cors());
+// enable cors. `maxAge` lets the browser cache the preflight (OPTIONS) result
+// for 24h, so repeat cross-origin calls skip the extra preflight round trip
+// that was doubling every request.
+const corsOptions = { maxAge: 86400 };
+app.use(cors(corsOptions));
+app.options('*any', cors(corsOptions));
 
 // api routes
 app.use('/api', routes);

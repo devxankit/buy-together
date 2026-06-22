@@ -16,21 +16,14 @@ const updateUserById = async (userId, updateBody) => {
 };
 
 const getUserStats = async (userId) => {
-  const groupsJoined = await Group.countDocuments({
-    members: userId,
-    admin: { $ne: userId }
-  });
-  const groupsCreated = await Group.countDocuments({
-    admin: userId
-  });
-  const dealsBooked = await Group.countDocuments({
-    members: userId,
-    status: { $in: ['completed', 'locked'] }
-  });
-  const activePools = await Group.countDocuments({
-    members: userId,
-    status: { $in: ['active', 'closing'] }
-  });
+  // Run the four independent counts concurrently — they previously ran one
+  // after another, turning one profile load into four serial DB round trips.
+  const [groupsJoined, groupsCreated, dealsBooked, activePools] = await Promise.all([
+    Group.countDocuments({ members: userId, admin: { $ne: userId } }),
+    Group.countDocuments({ admin: userId }),
+    Group.countDocuments({ members: userId, status: { $in: ['completed', 'locked'] } }),
+    Group.countDocuments({ members: userId, status: { $in: ['active', 'closing'] } }),
+  ]);
   return {
     groupsJoined,
     groupsCreated,

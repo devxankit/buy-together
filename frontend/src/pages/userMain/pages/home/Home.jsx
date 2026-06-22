@@ -110,12 +110,10 @@ const Home = () => {
     return () => clearInterval(timer);
   }, [placeholders.length]);
 
-  // Shared Location Selection Context
-  const { selectedCity, setIsLocationPickerOpen, notificationCount, unreadMessageCount, refreshUnreadMessageCount } = useUserMainContext();
-
-  useEffect(() => {
-    refreshUnreadMessageCount();
-  }, [refreshUnreadMessageCount]);
+  // Shared Location Selection Context. The unread-message count is already
+  // hydrated (and kept live via socket) by UserMainContext on mount, so Home
+  // just reads it — no extra /chat/conversations fetch here.
+  const { selectedCity, setIsLocationPickerOpen, notificationCount, unreadMessageCount } = useUserMainContext();
 
   // Popular categories — fetched live from the admin-managed Category collection.
   const [categories, setCategories] = useState([]);

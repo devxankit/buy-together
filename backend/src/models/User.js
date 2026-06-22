@@ -96,6 +96,13 @@ userSchema.statics.isPhoneTaken = async function (phone, excludeUserId) {
 };
 
 
+// Indexes backing the admin Users console, which filters/sorts by role + status
+// and growth/activity windows (createdAt, lastLoginAt) and runs many counts over
+// these fields. Without them those queries are full collection scans.
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ role: 1, createdAt: -1 });
+userSchema.index({ role: 1, lastLoginAt: -1 });
+
 // Default a generated avatar when none is set. Mongoose 9 middleware is
 // promise-based — do NOT use a `next` callback (it is no longer passed).
 userSchema.pre('save', function () {

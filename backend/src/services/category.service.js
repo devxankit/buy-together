@@ -2,6 +2,12 @@ const httpStatus = require('http-status').status;
 const Category = require('../models/Category');
 const Group = require('../models/Group');
 const ApiError = require('../utils/ApiError');
+const cache = require('../utils/cache');
+
+// Public active-categories list is read on nearly every app screen but changes
+// only when an admin edits the taxonomy — cache it briefly and bust on writes.
+const ACTIVE_CACHE_KEY = 'categories:active';
+const ACTIVE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /** Turn "Cars & Bikes" into "cars-bikes". */
 const slugify = (name) =>
@@ -66,9 +72,11 @@ const queryCategories = async (filter = {}) => {
   return { results, counts: { all, active, hidden: all - active } };
 };
 
-/** Public listing: active categories only, ordered for display. */
+/** Public listing: active categories only, ordered for display. Cached. */
 const getActiveCategories = async () =>
-  Category.find({ isActive: true }).sort({ displayOrder: 1, name: 1 });
+  cache.wrap(ACTIVE_CACHE_KEY, ACTIVE_CACHE_TTL, () =>
+    Category.find({ isActive: true }).sort({ displayOrder: 1, name: 1 })
+  );
 
 const getCategoryById = async (id) => {
   const category = await Category.findById(id);
@@ -81,7 +89,9 @@ const createCategory = async (body) => {
     throw new ApiError(httpStatus.CONFLICT, 'A category with this name already exists');
   }
   const slug = body.slug ? slugify(body.slug) : await generateUniqueSlug(body.name);
-  return Category.create({ ...body, slug });
+  const created = await Category.create({ ...body, slug });
+  cache.del(ACTIVE_CACHE_KEY);
+  return created;
 };
 
 const updateCategoryById = async (id, body) => {
@@ -99,12 +109,14 @@ const updateCategoryById = async (id, body) => {
 
   Object.assign(category, body);
   await category.save();
+  cache.del(ACTIVE_CACHE_KEY);
   return category;
 };
 
 const deleteCategoryById = async (id) => {
   const category = await getCategoryById(id);
   await category.deleteOne();
+  cache.del(ACTIVE_CACHE_KEY);
   return category;
 };
 

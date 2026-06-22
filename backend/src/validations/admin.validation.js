@@ -279,6 +279,14 @@ const updateSettings = {
       contactNumber: joi.string().trim().max(20).allow('', null),
       contactNumberAlt: joi.string().trim().max(20).allow('', null),
       supportAddress: joi.string().trim().max(240).allow('', null),
+      liveStatsActiveGroups: joi.string().trim().max(20).allow('', null),
+      liveStatsActiveGroupsTrend: joi.string().trim().max(30).allow('', null),
+      liveStatsPeopleInterested: joi.string().trim().max(20).allow('', null),
+      liveStatsPeopleInterestedTrend: joi.string().trim().max(30).allow('', null),
+      liveStatsGroupsGrowing: joi.string().trim().max(20).allow('', null),
+      liveStatsGroupsGrowingTrend: joi.string().trim().max(30).allow('', null),
+      liveStatsTopCity: joi.string().trim().max(50).allow('', null),
+      liveStatsTopCityTrend: joi.string().trim().max(30).allow('', null),
     })
     .min(1),
 };
