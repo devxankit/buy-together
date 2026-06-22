@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Group = require('../models/Group');
 
 const getUserById = async (id) => {
   return User.findById(id);
@@ -12,6 +13,30 @@ const updateUserById = async (userId, updateBody) => {
   Object.assign(user, updateBody);
   await user.save();
   return user;
+};
+
+const getUserStats = async (userId) => {
+  const groupsJoined = await Group.countDocuments({
+    members: userId,
+    admin: { $ne: userId }
+  });
+  const groupsCreated = await Group.countDocuments({
+    admin: userId
+  });
+  const dealsBooked = await Group.countDocuments({
+    members: userId,
+    status: { $in: ['completed', 'locked'] }
+  });
+  const activePools = await Group.countDocuments({
+    members: userId,
+    status: { $in: ['active', 'closing'] }
+  });
+  return {
+    groupsJoined,
+    groupsCreated,
+    dealsBooked,
+    activePools
+  };
 };
 
 // ── Wishlist ────────────────────────────────────────────────────────
@@ -51,6 +76,7 @@ const toggleWishlist = async (userId, groupId) => {
 module.exports = {
   getUserById,
   updateUserById,
+  getUserStats,
   getWishlist,
   toggleWishlist,
 };

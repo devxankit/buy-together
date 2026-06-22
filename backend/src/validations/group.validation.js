@@ -19,6 +19,9 @@ const createGroup = {
       type: joi.string().valid(...Object.values(GROUP_TYPE)),
       image: joi.string().uri().allow('', null),
       location: joi.string().max(120).allow('', null),
+      // Exact device pinpoint captured at creation so distance sorting on the
+      // Explore page can rank each group precisely (not just by city center).
+      coordinates: joi.object({ lat: joi.number().allow(null), lng: joi.number().allow(null) }).allow(null),
       spotsTotal: joi.number().integer().min(0).max(100000),
       closesAt: joi.date().allow('', null),
     })

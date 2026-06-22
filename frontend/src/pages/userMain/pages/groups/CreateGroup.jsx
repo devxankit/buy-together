@@ -5,6 +5,7 @@ import { createGroup } from '../../../../services/group.api';
 import { uploadImage } from '../../../../services/upload.api';
 import { useUserMainContext } from '../../context';
 import { showToast } from '../../../../utils/toast';
+import LocationPicker from './components/LocationPicker';
 
 const CreateGroup = () => {
   const navigate = useNavigate();
@@ -26,8 +27,11 @@ const CreateGroup = () => {
   const [uploadErr, setUploadErr] = useState('');
   const fileInputRef = useRef(null);
 
-  // Live Location Field
+  // Live Location Field — `liveLocation` is the human label shown to the user,
+  // while `coordinates` is the exact device pinpoint used for distance sorting.
   const [liveLocation, setLiveLocation] = useState('');
+  const [coordinates, setCoordinates] = useState(null);
+  const [locating, setLocating] = useState(true);
 
   // Dynamic Categories Fields
   const [categories, setCategories] = useState([]);
@@ -42,33 +46,46 @@ const CreateGroup = () => {
   const [isSubOpen, setIsSubOpen] = useState(false);
   const [isDeadlineOpen, setIsDeadlineOpen] = useState(false);
 
-  // Geolocation lookup on mount
+  // Geolocation lookup on mount. We keep the *exact* device coordinates (this is
+  // what powers nearest-first sorting on Explore) and also build a precise human
+  // label down to the neighbourhood/road — not just the city, state.
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-            const data = await response.json();
-            if (data && data.address) {
-              const city = data.address.city || data.address.town || data.address.village || data.address.suburb || '';
-              const state = data.address.state || '';
-              const loc = city && state ? `${city}, ${state}` : city || state || '';
-              if (loc) {
-                setLiveLocation(loc);
-              }
-            }
-          } catch (err) {
-            console.error('Failed to reverse-geocode coordinates:', err);
-          }
-        },
-        (error) => {
-          console.warn('Geolocation permission denied or error:', error);
-        }
-      );
+    if (!navigator.geolocation) {
+      setLocating(false);
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        // Exact pinpoint — store it regardless of whether the label resolves.
+        setCoordinates({ lat, lng });
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+          );
+          const data = await response.json();
+          if (data && data.address) {
+            const a = data.address;
+            const area = a.neighbourhood || a.suburb || a.road || a.hamlet || '';
+            const city = a.city || a.town || a.village || a.county || '';
+            const state = a.state || '';
+            // Most specific first: "Area, City" → "City, State" → whatever exists.
+            const loc = [area, city].filter(Boolean).join(', ') || [city, state].filter(Boolean).join(', ') || state;
+            if (loc) setLiveLocation(loc);
+          }
+        } catch (err) {
+          console.error('Failed to reverse-geocode coordinates:', err);
+        } finally {
+          setLocating(false);
+        }
+      },
+      (error) => {
+        console.warn('Geolocation permission denied or error:', error);
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   }, []);
 
   // Fetch active categories on mount
@@ -120,7 +137,10 @@ const CreateGroup = () => {
       selectedMainCat !== '' &&
       selectedSubCat !== '' &&
       goal >= 2 &&
-      productName.trim().length >= 2
+      productName.trim().length >= 2 &&
+      // An exact pinpoint is required so the group can be ranked by distance on
+      // Explore. Auto-detected on mount, or set by picking a search suggestion.
+      !!(coordinates && coordinates.lat != null && coordinates.lng != null)
     );
   };
 
@@ -142,6 +162,9 @@ const CreateGroup = () => {
       spotsTotal: Number(goal),
       image: image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=260&q=80',
       location: liveLocation || selectedCity || 'Indore, MP',
+      // Exact pinpoint so Explore's nearest-first sorting differentiates this
+      // group from others in the same city. Null only if geolocation was denied.
+      coordinates: coordinates || null,
       description: productDesc.trim(),
       // Convert the "N days" picker into an absolute deadline.
       closesAt: new Date(Date.now() + parseInt(deadline, 10) * 86400000).toISOString(),
@@ -270,6 +293,42 @@ const CreateGroup = () => {
               placeholder="Or paste an image URL..."
               className="w-full text-[11px] font-bold text-ink placeholder:text-muted bg-surface-alt border border-line rounded-lg px-2.5 py-1.5 mt-2 outline-none focus:border-primary focus:bg-surface transition-all"
             />
+          </div>
+        </div>
+
+        {/* ── SECTION 1b: GROUP LOCATION (exact pinpoint) ── */}
+        <div className="flex flex-col gap-3 pb-5 border-b border-line">
+          <h3 className="text-xs font-black text-ink uppercase tracking-wider flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Group Location
+          </h3>
+
+          <div>
+            <label className="text-[10px] font-bold text-muted block mb-1">
+              Search an exact area or address <span className="text-red-400">*</span>
+            </label>
+            <LocationPicker
+              value={liveLocation}
+              onChange={setLiveLocation}
+              onCoordinates={setCoordinates}
+            />
+            {coordinates ? (
+              <p className="text-[9.5px] font-bold text-primary mt-1.5 flex items-center gap-1">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Exact pinpoint set — buyers nearby will find this group first.
+              </p>
+            ) : locating ? (
+              <p className="text-[9.5px] font-semibold text-muted mt-1.5">Detecting your location…</p>
+            ) : (
+              <p className="text-[9.5px] font-semibold text-amber-600 mt-1.5">
+                Pick a suggestion to attach an exact pinpoint so nearby buyers can find you.
+              </p>
+            )}
           </div>
         </div>
 
@@ -605,8 +664,23 @@ const CreateGroup = () => {
             </div>
             <div className="flex justify-between items-center border-b border-teal-100/50 pb-1">
               <span className="opacity-75">Location:</span>
-              <span className="text-ink font-extrabold truncate max-w-[200px]">{liveLocation || selectedCity || 'Detecting Location...'}</span>
+              <span className="flex items-center gap-1 text-ink font-extrabold truncate max-w-[210px]">
+                {coordinates && (
+                  <svg className="w-3 h-3 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                )}
+                <span className="truncate">
+                  {locating ? 'Detecting exact location…' : liveLocation || selectedCity || 'Location unavailable'}
+                </span>
+              </span>
             </div>
+            {!locating && !coordinates && (
+              <p className="text-[9.5px] font-bold text-amber-600 -mt-1">
+                ⚠ Exact pinpoint not captured — enable location access so buyers can find this group nearby.
+              </p>
+            )}
             <div className="flex justify-between items-center pt-0.5">
               <span className="opacity-75">Deal Target:</span>
               <span className="text-ink font-extrabold">{goal} Buyers • {deadline} Days Limit</span>

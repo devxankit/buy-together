@@ -4,12 +4,24 @@ const catchAsync = require('../utils/catchAsync');
 
 const getProfile = async (req, res) => {
   const user = await userService.getUserById(req.user.id);
-  res.send(user);
+  if (!user) {
+    return res.status(404).send({ message: 'User not found' });
+  }
+  const stats = await userService.getUserStats(req.user.id);
+  const userObj = user.toJSON();
+  userObj.stats = stats;
+  res.send(userObj);
 };
 
 const updateProfile = async (req, res) => {
   const user = await userService.updateUserById(req.user.id, req.body);
-  res.send(user);
+  if (!user) {
+    return res.status(404).send({ message: 'User not found' });
+  }
+  const stats = await userService.getUserStats(req.user.id);
+  const userObj = user.toJSON();
+  userObj.stats = stats;
+  res.send(userObj);
 };
 
 const getWishlist = catchAsync(async (req, res) => {

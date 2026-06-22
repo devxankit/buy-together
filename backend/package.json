@@ -10,6 +10,7 @@
     "seed:categories": "node src/scripts/seedCategories.js",
     "seed:content": "node src/scripts/seedContent.js",
     "seed:trending": "node src/scripts/seedTrending.js",
+    "backfill:coords": "node src/scripts/backfillGroupCoordinates.js",
     "verify:push": "node src/scripts/verifyPush.js",
     "check:fcm": "node src/scripts/checkFcmSave.js",
     "test": "echo \"Error: no test specified\" && exit 1"

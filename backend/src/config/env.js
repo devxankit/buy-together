@@ -136,4 +136,7 @@ module.exports = {
     apiSecret: envVars.CLOUDINARY_API_SECRET,
     folder: envVars.CLOUDINARY_UPLOAD_FOLDER,
   },
+  maps: {
+    apiKey: envVars.MAPS_API_KEY,
+  },
 };

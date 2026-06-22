@@ -33,6 +33,7 @@ const EMPTY_FORM = {
   subCategory: '',
   type: 'user',
   location: '',
+  coordinates: null,
   image: '',
   slogan: '',
   description: '',
@@ -249,6 +250,7 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
       subCategory: form.subCategory || '',
       type: form.type,
       location: form.location?.trim() || '',
+      coordinates: form.coordinates || null,
       image: form.image?.trim() || '',
       slogan: form.slogan?.trim() || '',
       description: form.description?.trim() || '',
@@ -383,6 +385,7 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
               <LocationAutocomplete
                 value={form.location}
                 onChange={(v) => setForm((f) => ({ ...f, location: v }))}
+                onCoordinates={(coords) => setForm((f) => ({ ...f, coordinates: coords }))}
                 placeholder="Search city or area…"
               />
             </Field>

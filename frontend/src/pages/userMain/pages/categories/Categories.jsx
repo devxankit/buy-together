@@ -5,6 +5,7 @@ import { useUserMainContext } from '../../context';
 import { getCategories } from '../../../../services/category.api';
 import { getGroups, joinGroup } from '../../../../services/group.api';
 import { showToast } from '../../../../utils/toast';
+import { haversineKm } from '../../../../utils/googleMaps';
 
 // Import modular sub-components
 import CategoryHeader from './components/CategoryHeader';
@@ -36,7 +37,7 @@ const Categories = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Shared Location Selection Context
-  const { selectedCity, setIsLocationPickerOpen } = useUserMainContext();
+  const { selectedCity, setIsLocationPickerOpen, currentLocation } = useUserMainContext();
   
   // Custom Co-Buying Filters
   const [discountFilter, setDiscountFilter] = useState('all'); // 'all', '10', '25', '50'
@@ -93,6 +94,12 @@ const Categories = () => {
 
   // 2. DYNAMIC GROUP MAPPING ENGINE (Aligns Mongoose object properties to visual card tags)
   const mappedGroups = useMemo(() => {
+    // The user's pinpoint (browser geolocation, falls back to a default city).
+    const userPoint =
+      currentLocation && currentLocation.latitude != null && currentLocation.longitude != null
+        ? { lat: currentLocation.latitude, lng: currentLocation.longitude }
+        : null;
+
     return groups.map(g => {
       const spotsJoined = g.spotsJoined || 0;
       const spotsTotal = g.spotsTotal || 0;
@@ -127,10 +134,14 @@ const Categories = () => {
         badgeLabel,
         daysLeft: neededText,
         category: g.category || 'all',
-        members: g.members || []
+        members: g.members || [],
+        coordinates: g.coordinates || null,
+        // Distance (km) from the user's pinpoint to this group's pinpoint.
+        // null when either side lacks coordinates — those sort to the bottom.
+        distanceKm: haversineKm(userPoint, g.coordinates),
       };
     });
-  }, [groups]);
+  }, [groups, currentLocation]);
 
   // 3. SEARCH & TABS FILTER ENGINE
   const filteredProducts = useMemo(() => {
@@ -188,7 +199,14 @@ const Categories = () => {
     if (activeSort === 'trending') {
       return [...list].sort((a, b) => b.spotsJoined - a.spotsJoined);
     } else if (activeSort === 'nearby') {
-      return list.filter(p => p.location.toLowerCase().includes(selectedCity.split(',')[0].toLowerCase()));
+      // Nearest group first, then farther out in order. Groups without
+      // coordinates (distanceKm === null) fall to the bottom of the list.
+      return [...list].sort((a, b) => {
+        if (a.distanceKm == null && b.distanceKm == null) return 0;
+        if (a.distanceKm == null) return 1;
+        if (b.distanceKm == null) return -1;
+        return a.distanceKm - b.distanceKm;
+      });
     } else if (activeSort === 'new') {
       return list.filter(p => p.badgeType === 'new' || p.badgeType === 'rising');
     } else if (activeSort === 'my-groups') {
