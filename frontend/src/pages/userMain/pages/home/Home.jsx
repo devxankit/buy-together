@@ -102,6 +102,7 @@ const Home = () => {
     "Search 'Puma Shoes'..."
   ];
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [searchVal, setSearchVal] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -218,18 +219,30 @@ const Home = () => {
             <svg className="w-3.5 h-3.5 absolute left-3.5 text-faint z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input
-              type="text"
-              className="w-full h-full text-[11.5px] font-semibold text-ink pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all border-none relative z-10 bg-transparent"
-              onFocus={(e) => e.target.parentElement.classList.add('focused')}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.parentElement.classList.remove('focused');
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchVal.trim()) {
+                  navigate('/categories', { state: { searchQuery: searchVal } });
+                }
               }}
-              onChange={(e) => {
-                if (e.target.value) e.target.parentElement.classList.add('has-value');
-                else e.target.parentElement.classList.remove('has-value');
-              }}
-            />
+              className="w-full h-full relative"
+            >
+              <input
+                type="text"
+                value={searchVal}
+                onChange={(e) => {
+                  setSearchVal(e.target.value);
+                  if (e.target.value) e.target.parentElement.parentElement.classList.add('has-value');
+                  else e.target.parentElement.parentElement.classList.remove('has-value');
+                }}
+                onFocus={(e) => e.target.parentElement.parentElement.classList.add('focused')}
+                onBlur={(e) => {
+                  if (!e.target.value) e.target.parentElement.parentElement.classList.remove('focused');
+                }}
+                className="w-full h-full text-[11.5px] font-semibold text-ink pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all border-none relative z-10 bg-transparent"
+              />
+            </form>
             {/* Animated Placeholder Wrapper */}
             <div className="absolute inset-0 pl-10 pr-3 flex flex-col justify-center pointer-events-none transition-opacity duration-200 [.focused_&]:opacity-0 [.has-value_&]:opacity-0">
               <div className="relative h-[16px] overflow-hidden">

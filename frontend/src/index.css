@@ -107,6 +107,15 @@
     font-feature-settings: 'ss01' on, 'cv11' on;
     overflow-x: hidden;
     height: 100%;
+    width: 100%;
+    position: relative;
+    touch-action: pan-y;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  html::-webkit-scrollbar, body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
   /* App shell — centered to 430px on desktop */
   #root {

@@ -80,6 +80,8 @@ const AppRoutes = () => {
         <Route path="/otp" element={<OTP />} />
         <Route path="/vendor/signup" element={<VendorSignup />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
@@ -107,8 +109,6 @@ const AppRoutes = () => {
             <Route path="/notification-preferences" element={<NotificationPreferences />} />
             <Route path="/privacy-settings" element={<PrivacySettings />} />
             <Route path="/help-center" element={<HelpCenter />} />
-            <Route path="/terms" element={<TermsConditions />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/about" element={<AboutUs />} />
           </Route>

@@ -10,8 +10,8 @@ export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved;
-    // Fallback to system preference or default light theme
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // Fallback to default light theme
+    return 'light';
   });
 
   useEffect(() => {

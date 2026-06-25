@@ -127,9 +127,9 @@ const Signup = () => {
             </div>
             <span className="text-[11.5px] text-[#475569] leading-relaxed">
               I agree to the{' '}
-              <span className="text-primary font-bold">Terms & Conditions</span>
+              <span onClick={(e) => { e.stopPropagation(); navigate('/terms'); }} className="text-primary font-bold cursor-pointer active:opacity-75">Terms & Conditions</span>
               {' '}and{' '}
-              <span className="text-primary font-bold">Privacy Policy</span>
+              <span onClick={(e) => { e.stopPropagation(); navigate('/privacy-policy'); }} className="text-primary font-bold cursor-pointer active:opacity-75">Privacy Policy</span>
             </span>
           </label>
 
@@ -189,9 +189,9 @@ const Signup = () => {
           </div>
           <p className="text-[9.5px] text-muted text-center leading-snug">
             By continuing, you agree to our{' '}
-            <span className="text-primary font-semibold">Terms & Conditions</span>
+            <span onClick={() => navigate('/terms')} className="text-primary font-semibold cursor-pointer active:opacity-75">Terms & Conditions</span>
             {' '}and{' '}
-            <span className="text-primary font-semibold">Privacy Policy</span>
+            <span onClick={() => navigate('/privacy-policy')} className="text-primary font-semibold cursor-pointer active:opacity-75">Privacy Policy</span>
           </p>
         </div>
       </div>

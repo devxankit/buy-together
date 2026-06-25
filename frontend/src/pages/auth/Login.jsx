@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendOtp } from '../../redux/asyncActions/authActions';
-import logo from '../../assets/logo1.jpeg';
+import Icon from '../../components/ui/Icon';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -46,8 +46,11 @@ const Login = () => {
       <div className="flex-1 bg-surface px-5 pt-6 pb-6 flex flex-col justify-start gap-0 overflow-y-auto rounded-t-[32px] -mt-4 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
 
         {/* Company Logo */}
-        <div className="flex justify-center mb-1">
-          <img src={logo} alt="Company Logo" className="h-16 w-auto object-contain rounded-xl" />
+        <div className="flex items-center justify-center gap-2.5 mb-2 mt-3 select-none">
+          <div className="w-[34px] h-[34px] rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+            <Icon name="users" size={17} color="#fff" stroke={2} />
+          </div>
+          <span className="text-[21px] font-black tracking-tight text-ink">buytogether</span>
         </div>
 
         <h2 className="text-[17.5px] font-black text-ink text-center mt-2">Login to your account</h2>
@@ -126,9 +129,9 @@ const Login = () => {
           </div>
           <p className="text-[9.5px] text-muted text-center leading-snug">
             By continuing, you agree to our{' '}
-            <span className="text-primary font-semibold">Terms & Conditions</span>
+            <span onClick={() => navigate('/terms')} className="text-primary font-semibold cursor-pointer active:opacity-75">Terms & Conditions</span>
             {' '}and{' '}
-            <span className="text-primary font-semibold">Privacy Policy</span>
+            <span onClick={() => navigate('/privacy-policy')} className="text-primary font-semibold cursor-pointer active:opacity-75">Privacy Policy</span>
           </p>
         </div>
       </div>

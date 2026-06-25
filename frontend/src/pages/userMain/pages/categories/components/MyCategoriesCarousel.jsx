@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 /**
  * Premium Category Carousel switcher.
@@ -7,6 +7,8 @@ import React from 'react';
  * Highlighted with signature teal border rings when active.
  */
 const MyCategoriesCarousel = ({ categories = [], selectedCategory, onChange, onViewAll }) => {
+  const scrollRef = useRef(null);
+
   const list = [
     {
       id: 'all',
@@ -20,6 +22,13 @@ const MyCategoriesCarousel = ({ categories = [], selectedCategory, onChange, onV
     }))
   ];
 
+  const handleViewAll = () => {
+    if (onViewAll) onViewAll();
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 select-none">
       {/* Header Row */}
@@ -28,15 +37,15 @@ const MyCategoriesCarousel = ({ categories = [], selectedCategory, onChange, onV
           Browse by Categories
         </h2>
         <button 
-          onClick={onViewAll}
-          className="text-[11px] font-extrabold text-primary active:scale-95 transition-all"
+          onClick={handleViewAll}
+          className="text-[11px] font-extrabold text-primary active:scale-95 transition-all cursor-pointer"
         >
           See all
         </button>
       </div>
 
       {/* Horizontal grid/carousel row */}
-      <div className="flex items-center gap-3.5 overflow-x-auto pt-1.5 pb-1.5 -mx-4 px-4 no-scrollbar">
+      <div ref={scrollRef} className="flex items-center gap-3.5 overflow-x-auto pt-1.5 pb-1.5 -mx-4 px-4 no-scrollbar">
         {list.map((cat) => {
           const isActive = selectedCategory === cat.id;
           

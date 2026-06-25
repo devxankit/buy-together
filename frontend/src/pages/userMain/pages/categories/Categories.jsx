@@ -67,10 +67,13 @@ const Categories = () => {
     return () => { active = false; };
   }, []);
 
-  // Sync category state when location.state changes (from Home page navigation)
+  // Sync category & search state when location.state changes (from Home page navigation)
   useEffect(() => {
     if (location.state?.categoryId) {
       setSelectedCategory(location.state.categoryId);
+    }
+    if (location.state?.searchQuery) {
+      setSearchQuery(location.state.searchQuery);
     }
   }, [location.state]);
 
@@ -217,6 +220,10 @@ const Categories = () => {
     return list;
   }, [selectedCategory, activeSort, searchQuery, mappedGroups, discountFilter, sizeFilter, locationFilter, selectedCity, currentUser]);
 
+  const hasActiveFilters = useMemo(() => {
+    return selectedCategory !== 'all' || searchQuery.trim() !== '' || sizeFilter !== 'all' || discountFilter !== 'all' || locationFilter !== 'all';
+  }, [selectedCategory, searchQuery, sizeFilter, discountFilter, locationFilter]);
+
   return (
     <div className="flex flex-col gap-4 select-none min-h-screen bg-surface relative overflow-hidden">
       {/* 1. Header with custom dynamic title & search */}
@@ -246,6 +253,31 @@ const Categories = () => {
           onChange={setActiveSort}
         />
 
+        {/* Active Filter indicator bar */}
+        {hasActiveFilters && (
+          <div className="flex items-center justify-between bg-primary-soft/50 border border-primary/10 rounded-xl px-4 py-2.5 my-0.5 animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10.5px] font-bold text-teal-900">Active filters are applied</span>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedCategory('all');
+                setSearchQuery('');
+                setSizeFilter('all');
+                setDiscountFilter('all');
+                setLocationFilter('all');
+              }}
+              className="text-[11px] font-black text-primary hover:text-primary-deep active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <span>Clear All</span>
+              <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* 4. Active category grid view */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -255,8 +287,22 @@ const Categories = () => {
         ) : filteredProducts.length > 0 ? (
           <CategoryProductsList products={filteredProducts} onJoin={handleJoinGroup} />
         ) : (
-          <div className="bg-surface-alt border border-line rounded-[22px] p-10 text-center text-muted text-xs font-semibold shadow-sm my-2">
-            No active group deals found under this filter. Create one below!
+          <div className="bg-surface-alt border border-line rounded-[22px] p-10 text-center text-muted text-xs font-semibold shadow-sm my-2 flex flex-col items-center gap-3">
+            <span>No active group deals found under this filter. Create one below!</span>
+            {hasActiveFilters && (
+              <button
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSearchQuery('');
+                  setSizeFilter('all');
+                  setDiscountFilter('all');
+                  setLocationFilter('all');
+                }}
+                className="mt-1 px-4 py-2 bg-primary text-white font-bold rounded-xl shadow-md shadow-primary/20 active:scale-95 transition-all cursor-pointer"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         )}
 
