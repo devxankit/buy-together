@@ -164,7 +164,19 @@ const addMember = async (groupId, userId) => {
     throw new ApiError(httpStatus.CONFLICT, 'User is already a member of this group');
   }
 
-  await Group.updateOne({ _id: groupId }, { $addToSet: { members: userId } });
+  // Enforce the group's headcount cap: once members reaches `spotsTotal` the deal
+  // is full and no one else can join. `spotsTotal` of 0 means uncapped. The add
+  // is gated atomically on the live member count (`$expr` + `$size`) so two users
+  // racing for the last spot can't both slip in and overfill the group.
+  const capFilter =
+    group.spotsTotal > 0
+      ? { _id: groupId, $expr: { $lt: [{ $size: { $ifNull: ['$members', []] } }, group.spotsTotal] } }
+      : { _id: groupId };
+
+  const result = await Group.updateOne(capFilter, { $addToSet: { members: userId } });
+  if (result.matchedCount === 0) {
+    throw new ApiError(httpStatus.CONFLICT, 'This group is full — no spots left to join');
+  }
   return getGroupByIdAdmin(groupId);
 };
 

@@ -81,6 +81,9 @@ const GroupDetails = () => {
   const spotsJoined = group.spotsJoined || 0;
   const spotsNeeded = Math.max(0, spotsTotal - spotsJoined);
   const percentage = Math.round((spotsJoined / spotsTotal) * 100) || 0;
+  // Capacity reached — uses the real cap (not the 1000 display fallback). A
+  // `spotsTotal` of 0 means uncapped, so the group is never "full".
+  const isFull = group.spotsTotal > 0 && spotsJoined >= group.spotsTotal;
   const isWishlisted = wishlistItems.some(item => item.id === group.id);
 
   const renderAvatars = () => {
@@ -267,12 +270,12 @@ const GroupDetails = () => {
       {/* Bottom Fixed Action Button */}
       <div className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-surface/85 backdrop-blur-md border-t border-line px-5 py-4 flex z-30 shadow-lg">
         {!isMember ? (
-          <button 
+          <button
             onClick={handleJoin}
-            disabled={actionLoading}
-            className="w-full py-3.5 bg-[#0D9488] hover:bg-[#0B7A70] text-white rounded-2xl font-black text-[13.5px] text-center active:scale-95 transition-all shadow-md shadow-[#0D9488]/20"
+            disabled={actionLoading || isFull}
+            className={`w-full py-3.5 text-white rounded-2xl font-black text-[13.5px] text-center transition-all shadow-md shadow-[#0D9488]/20 ${isFull ? 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-80' : 'bg-[#0D9488] hover:bg-[#0B7A70] active:scale-95'}`}
           >
-            {actionLoading ? 'Joining...' : 'Join Group To Interact'}
+            {isFull ? 'Group Full' : actionLoading ? 'Joining...' : 'Join Group To Interact'}
           </button>
         ) : (
           <button 
