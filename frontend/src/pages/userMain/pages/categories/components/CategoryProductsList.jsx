@@ -127,7 +127,7 @@ const CategoryProductsList = ({ products, onJoin }) => {
 
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <WishlistButton
-                    isWishlisted={wishlistItems.some(item => item.id === prod.id)}
+                    isWishlisted={wishlistItems.some(item => String(item.id || item._id) === String(prod.id || prod._id))}
                     onClick={() => dispatch(toggleWishlist(prod))}
                   />
                   <button

@@ -44,7 +44,7 @@ const AllGroupsList = ({ groups, onSortChange }) => {
         {groups.map((group) => {
           const percentage = (group.spotsJoined / group.spotsTotal) * 100;
           const isClosingSoon = group.status === 'closing';
-          const isWishlisted = wishlistItems.some(item => item.id === group.id);
+          const isWishlisted = wishlistItems.some(item => String(item.id || item._id) === String(group.id || group._id));
 
           return (
             <div

@@ -24,35 +24,37 @@ const CategoriesGrid = ({ categories, onCategoryClick, onViewAll }) => {
         </button>
       </div>
 
-      {/* Grid of exactly 8 categories in a clean 2x4 grid */}
-      <div className="grid grid-cols-4 gap-x-4 gap-y-3.5 px-0.5">
-        {categories.map((cat) => (
-          <div
-            key={cat.id}
-            onClick={() => onCategoryClick(cat.id)}
-            className="flex flex-col items-center cursor-pointer group select-none"
-          >
-            {/* Independent Circular Image */}
-            <div className="w-[64px] h-[64px] rounded-full flex items-center justify-center group-active:scale-95 transition-all overflow-hidden bg-surface-alt">
-              {cat.coverImage ? (
-                <img
-                  src={cat.coverImage}
-                  alt={cat.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-primary scale-125">
-                  {cat.icon}
-                </span>
-              )}
+      {/* Grid/Flex of categories in exactly 2 rows, horizontally scrollable */}
+      <div className="flex overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 select-none">
+        <div className="grid grid-rows-2 grid-flow-col gap-x-5 gap-y-3.5">
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              onClick={() => onCategoryClick(cat.id)}
+              className="flex flex-col items-center cursor-pointer group select-none w-[70px] flex-shrink-0"
+            >
+              {/* Independent Circular Image */}
+              <div className="w-[64px] h-[64px] rounded-full flex items-center justify-center group-active:scale-95 transition-all overflow-hidden bg-surface-alt flex-shrink-0">
+                {cat.coverImage ? (
+                  <img
+                    src={cat.coverImage}
+                    alt={cat.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-primary scale-125">
+                    {cat.icon}
+                  </span>
+                )}
+              </div>
+              
+              {/* Text Label Below (Outside the card) */}
+              <span className="text-[10px] font-bold text-ink mt-1.5 text-center tracking-tight leading-none truncate w-full">
+                {cat.name}
+              </span>
             </div>
-            
-            {/* Text Label Below (Outside the card) */}
-            <span className="text-[10px] font-bold text-ink mt-1.5 text-center tracking-tight leading-none truncate w-full">
-              {cat.name}
-            </span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

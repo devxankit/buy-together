@@ -25,6 +25,7 @@ const Deals = lazy(() => import('../pages/userMain/pages/deals/Deals'));
 const Profile = lazy(() => import('../pages/userMain/pages/profile/Profile'));
 const Notifications = lazy(() => import('../pages/userMain/pages/notifications/Notifications'));
 const Categories = lazy(() => import('../pages/userMain/pages/categories/Categories'));
+const AllCategories = lazy(() => import('../pages/userMain/pages/categories/AllCategories'));
 const GroupChat = lazy(() => import('../pages/userMain/pages/chat/GroupChat'));
 const DealConfirm = lazy(() => import('../pages/userMain/pages/groups/DealConfirm'));
 const Wishlist = lazy(() => import('../pages/userMain/pages/wishlist/Wishlist'));
@@ -102,6 +103,7 @@ const AppRoutes = () => {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/messages" element={<PersonalChatList />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/all-categories" element={<AllCategories />} />
             <Route path="/wishlist" element={<Wishlist />} />
             {/* <Route path="/addresses" element={<SavedAddresses />} /> */}
             <Route path="/personal-info" element={<PersonalInfo />} />

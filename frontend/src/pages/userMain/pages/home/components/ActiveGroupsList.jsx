@@ -27,38 +27,41 @@ const ActiveGroupsList = ({ title = 'Active Groups You Might Like', groups = [],
         </button>
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {visibleGroups.map((group) => {
           const progressPercent = Math.min((group.joined / group.spotsTotal) * 100, 100);
           return (
             <div 
               key={group.id} 
               onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
-              className="flex items-center p-3 gap-3 bg-surface border border-line rounded-2xl shadow-sm cursor-pointer active:scale-[0.98] transition-all hover:border-primary/30"
+              className="relative flex p-3.5 gap-3.5 bg-surface border border-line rounded-[20px] shadow-sm hover:shadow-md cursor-pointer active:scale-[0.985] transition-all hover:border-primary/30 min-h-[110px]"
             >
-              {/* Logo/Image */}
-              <div className={`w-[50px] h-[50px] rounded-full flex-shrink-0 overflow-hidden ${group.bgColor}`}>
-                <img src={group.image} alt={group.title} className="w-full h-full object-cover opacity-90" />
+              {/* Product Image on the left (Rounded rectangle) */}
+              <div className="w-[75px] h-[75px] rounded-xl overflow-hidden flex-shrink-0 bg-[#F6F6F8] border border-line/40">
+                <img src={group.image} alt={group.title} className="w-full h-full object-cover" />
               </div>
 
-              {/* Content */}
-              <div className="flex-1 flex flex-col justify-center overflow-hidden min-w-0">
-                <h3 className="text-xs font-bold text-ink truncate">{group.title}</h3>
-                <p className="text-[9.5px] text-faint truncate mt-0.5">{group.subtitle}</p>
+              {/* Content Column */}
+              <div className="flex-1 flex flex-col justify-between min-w-0 pr-14">
+                {/* Title & Subtitle */}
+                <div>
+                  <h3 className="text-[13.5px] font-black text-ink truncate leading-tight tracking-tight">{group.title}</h3>
+                  <p className="text-[10px] text-faint truncate mt-0.5 font-medium">{group.subtitle}</p>
+                </div>
                 
                 {/* Progress bar */}
                 <div className="mt-1.5 flex flex-col gap-0.5">
-                  <div className="w-full h-[3px] bg-surface-deep rounded-full overflow-hidden">
+                  <div className="w-full h-[3.5px] bg-surface-deep rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full transition-all"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[8px] font-bold text-muted leading-none">
+                  <div className="flex justify-between items-center mt-0.5">
+                    <span className="text-[9px] font-bold text-muted leading-none">
                       <span className="text-ink font-semibold">{group.joined}</span>/{group.spotsTotal} members
                     </span>
-                    <span className="text-[8px] font-bold text-muted leading-none">{group.needed} more needed</span>
+                    <span className="text-[9px] font-bold text-muted leading-none">{group.needed} needed</span>
                   </div>
                 </div>
 
@@ -66,27 +69,30 @@ const ActiveGroupsList = ({ title = 'Active Groups You Might Like', groups = [],
                 <div className="flex items-center gap-3 mt-1.5 pt-1 border-t border-line/40">
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                    <span className="text-[8.5px] font-black text-ink leading-none">{group.seriousCount}</span>
-                    <span className="text-[7.5px] font-medium text-muted leading-none">serious</span>
+                    <span className="text-[9.5px] font-black text-ink leading-none">{group.seriousCount}</span>
+                    <span className="text-[8px] font-bold text-muted leading-none">serious</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                    <span className="text-[8.5px] font-black text-ink leading-none">{group.readyCount}</span>
-                    <span className="text-[7.5px] font-medium text-muted leading-none">ready to buy</span>
+                    <span className="text-[9.5px] font-black text-ink leading-none">{group.readyCount}</span>
+                    <span className="text-[8px] font-bold text-muted leading-none">ready</span>
                   </div>
                 </div>
               </div>
 
-              {/* Action */}
-              <div className="flex flex-col items-center gap-2 flex-shrink-0">
+              {/* Action Column on the Right (Absolute positioned) */}
+              <div className="absolute right-3.5 top-3.5 bottom-3.5 flex flex-col justify-between items-end pointer-events-auto">
                 <WishlistButton
-                  isWishlisted={wishlistItems.some(item => item.id === group.id)}
+                  isWishlisted={wishlistItems.some(item => String(item.id || item._id) === String(group.id || group._id))}
                   onClick={() => dispatch(toggleWishlist(group))}
-                  className="scale-[1.05]"
+                  className="scale-[0.95]"
                 />
                 <button 
-                  onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } })}
-                  className="px-3.5 py-1.5 border border-primary text-primary text-[10px] font-bold rounded-lg active:scale-95 transition-all bg-surface hover:bg-primary/5 whitespace-nowrap"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: false } });
+                  }}
+                  className="px-3.5 py-1.5 border border-primary text-primary text-[10px] font-black rounded-lg active:scale-95 transition-all bg-surface hover:bg-primary/5 whitespace-nowrap"
                 >
                   Join
                 </button>

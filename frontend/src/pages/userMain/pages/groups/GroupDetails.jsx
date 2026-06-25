@@ -81,7 +81,7 @@ const GroupDetails = () => {
   const spotsJoined = group.spotsJoined || 0;
   const spotsNeeded = Math.max(0, spotsTotal - spotsJoined);
   const percentage = Math.round((spotsJoined / spotsTotal) * 100) || 0;
-  const isWishlisted = wishlistItems.some(item => item.id === group.id);
+  const isWishlisted = wishlistItems.some(item => String(item.id || item._id) === String(group.id || group._id));
 
   const renderAvatars = () => {
     const list = group.members || [];

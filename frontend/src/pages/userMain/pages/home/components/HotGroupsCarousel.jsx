@@ -31,7 +31,7 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
       <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar -mx-5 px-5 select-none">
         {groups.map((group) => {
           const progressPercent = (group.spotsJoined / group.spotsTotal) * 100;
-          const isWishlisted = wishlistItems.some(item => item.id === group.id);
+          const isWishlisted = wishlistItems.some(item => String(item.id || item._id) === String(group.id || group._id));
           // Mock interest counts (derive from spotsJoined if not explicitly provided)
           const seriousCount = group.seriousCount ?? Math.floor(group.spotsJoined * 0.35);
           const readyCount = group.readyCount ?? Math.floor(group.spotsJoined * 0.18);

@@ -5,6 +5,7 @@ export { default as CreateGroup } from './groups/CreateGroup';
 export { default as Deals } from './deals/Deals';
 export { default as Profile } from './profile/Profile';
 export { default as Categories } from './categories/Categories';
+export { default as AllCategories } from './categories/AllCategories';
 export { default as Notifications } from './notifications/Notifications';
 export { default as GroupChat } from './chat/GroupChat';
 export { default as DealConfirm } from './groups/DealConfirm';

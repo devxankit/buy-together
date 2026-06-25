@@ -244,7 +244,7 @@ const Categories = () => {
           categories={categories}
           selectedCategory={selectedCategory}
           onChange={setSelectedCategory}
-          onViewAll={() => setSelectedCategory('all')}
+          onViewAll={() => navigate('/all-categories')}
         />
 
         {/* 3. Sort options pills switcher */}
