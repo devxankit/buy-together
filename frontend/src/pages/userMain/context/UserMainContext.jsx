@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { reverseGeocode } from '../../../utils/googleMaps';
 import { getNotifications } from '../../../services/notification.api';
 import { getChatSocket } from '../../../services/socket';
+import { getCategories } from '../../../services/category.api';
 import api from '../../../services/api';
 
 const UserMainContext = createContext(null);
@@ -20,10 +21,23 @@ export const UserMainProvider = ({ children }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [headerTitle, setHeaderTitle] = useState('');
+  const [categories, setCategories] = useState([]);
 
   // Global Location Selection States
   const [selectedCity, setSelectedCity] = useState('Detecting Location...');
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+
+  // Fetch categories once on mount for global caching
+  useEffect(() => {
+    let active = true;
+    getCategories()
+      .then(({ data }) => {
+        if (!active || !Array.isArray(data)) return;
+        setCategories(data.map((c) => ({ id: c.slug, name: c.name, coverImage: c.image })));
+      })
+      .catch((err) => console.warn('Failed to load categories globally:', err));
+    return () => { active = false; };
+  }, []);
 
   // Auto-detect location on mount
   useEffect(() => {
@@ -127,7 +141,8 @@ export const UserMainProvider = ({ children }) => {
         selectedCity,
         setSelectedCity,
         isLocationPickerOpen,
-        setIsLocationPickerOpen
+        setIsLocationPickerOpen,
+        categories
       }}
     >
       {children}

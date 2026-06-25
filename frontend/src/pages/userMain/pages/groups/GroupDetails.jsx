@@ -122,19 +122,18 @@ const GroupDetails = () => {
           <button onClick={() => navigate(-1)} className="w-8 h-8 flex-shrink-0 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all">
             <svg className="w-4 h-4 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           </button>
-          
-          <img 
-            src={group.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=80&q=80'} 
-            alt={group.title} 
+
+          <img
+            src={group.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=80&q=80'}
+            alt={group.title}
             className="w-9 h-9 rounded-lg object-cover border border-line flex-shrink-0"
           />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h2 className="text-[13px] font-black text-ink truncate max-w-[175px] leading-none">{group.title}</h2>
-              <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded-[4px] leading-none uppercase tracking-wide ${
-                group.status === 'closing' ? 'bg-[#FEF3C7] text-[#D97706]' : 'bg-[#DCFCE7] text-[#15803D]'
-              }`}>
+              <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded-[4px] leading-none uppercase tracking-wide ${group.status === 'closing' ? 'bg-[#FEF3C7] text-[#D97706]' : 'bg-[#DCFCE7] text-[#15803D]'
+                }`}>
                 {group.status === 'closing' ? 'Closing Soon' : 'Active'}
               </span>
             </div>
@@ -145,19 +144,19 @@ const GroupDetails = () => {
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button 
+          <button
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
               showToast('Link copied to clipboard! 🔗');
-            }} 
+            }}
             className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all text-ink"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 10.742l4.57 2.286M15.316 11.258l-4.57-2.286M21 12a3 3 0 11-6 0 3 3 0 016 0zm-9-6a3 3 0 11-6 0 3 3 0 016 0zm-9 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
-          <button 
-            onClick={() => showToast('Options coming soon!', 'ℹ️')} 
+          <button
+            onClick={() => showToast('Options coming soon!', 'ℹ️')}
             className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all text-ink"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -194,7 +193,7 @@ const GroupDetails = () => {
 
           <div className="flex items-center justify-between">
             <div className="flex-1 h-[7px] bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/10">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-[#0B7A70] to-[#0D9488] rounded-full transition-all duration-500"
                 style={{ width: `${percentage}%` }}
               />
@@ -212,7 +211,7 @@ const GroupDetails = () => {
               <p className="text-[11.5px] font-black text-ink leading-tight">{spotsJoined}</p>
               <p className="text-[8.5px] font-bold text-muted mt-0.5 leading-none">Buyers</p>
             </div>
-            
+
             <div className="border-l border-line/60">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -242,14 +241,14 @@ const GroupDetails = () => {
           </h3>
 
           <p className="text-[11.5px] font-semibold text-muted leading-relaxed max-w-[280px]">
-            {isMember 
+            {isMember
               ? 'You can now coordinate deal payments, vote on options, and chat with other members.'
               : `Join ${spotsJoined} others and get access to exclusive group chat, polls, and discussions.`
             }
           </p>
 
           {!isMember ? (
-            <button 
+            <button
               onClick={handleJoin}
               disabled={actionLoading}
               className="bg-[#0D9488] hover:bg-[#0B7A70] text-white font-extrabold text-[12.5px] px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95"
@@ -257,7 +256,7 @@ const GroupDetails = () => {
               <span>+</span> {actionLoading ? 'Joining...' : 'Join Group Now'}
             </button>
           ) : (
-            <button 
+            <button
               onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true } })}
               className="bg-[#0D9488] hover:bg-[#0B7A70] text-white font-extrabold text-[12.5px] px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95"
             >
@@ -278,7 +277,7 @@ const GroupDetails = () => {
             {isFull ? 'Group Full' : actionLoading ? 'Joining...' : 'Join Group To Interact'}
           </button>
         ) : (
-          <button 
+          <button
             onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true } })}
             className="w-full py-3.5 bg-[#0D9488] hover:bg-[#0B7A70] text-white rounded-2xl font-black text-[13.5px] text-center active:scale-95 transition-all shadow-md shadow-[#0D9488]/20"
           >

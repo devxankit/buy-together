@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
 import { getHomeSections } from '../../../../services/homeSection.api';
-import { getCategories } from '../../../../services/category.api';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
 import HotGroupsCarousel from './components/HotGroupsCarousel';
@@ -114,21 +113,7 @@ const Home = () => {
   // Shared Location Selection Context. The unread-message count is already
   // hydrated (and kept live via socket) by UserMainContext on mount, so Home
   // just reads it — no extra /chat/conversations fetch here.
-  const { selectedCity, setIsLocationPickerOpen, notificationCount, unreadMessageCount } = useUserMainContext();
-
-  // Popular categories — fetched live from the admin-managed Category collection.
-  const [categories, setCategories] = useState([]);
-
-  useEffect(() => {
-    let active = true;
-    getCategories()
-      .then(({ data }) => {
-        if (!active || !Array.isArray(data)) return;
-        setCategories(data.map((c) => ({ id: c.slug, name: c.name, coverImage: c.image })));
-      })
-      .catch((err) => console.warn('Failed to load categories:', err));
-    return () => { active = false; };
-  }, []);
+  const { selectedCity, setIsLocationPickerOpen, notificationCount, unreadMessageCount, categories } = useUserMainContext();
 
 
   // ── Dynamic, admin-curated home sections ──────────────────────────
@@ -277,7 +262,7 @@ const Home = () => {
         onCategoryClick={(id) => {
           navigate('/categories', { state: { categoryId: id } });
         }}
-        onViewAll={() => navigate('/categories')}
+        onViewAll={() => navigate('/all-categories')}
       />
 
       {/* ── 5b. JOIN / CREATE GROUP ACTION BOX ── */}
