@@ -49,15 +49,37 @@ messaging.onBackgroundMessage((payload) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const link = (event.notification.data && event.notification.data.link) || '/';
+  // Resolve to an absolute same-origin URL so URL comparison + navigate() are
+  // unambiguous (data.link is a relative path like "/groups/123/chat").
+  const targetUrl = new URL(link, self.location.origin).href;
+
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    (async () => {
+      const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+      // 1) A window already on the exact target → just focus it (no reload).
+      for (const client of list) {
+        if (client.url === targetUrl && 'focus' in client) return client.focus();
+      }
+
+      // 2) Any open app window → navigate it to the target, then focus. Await
+      //    navigate() and fall back to a plain focus if it rejects mid-load.
       for (const client of list) {
         if ('focus' in client) {
-          if ('navigate' in client) client.navigate(link);
+          if ('navigate' in client) {
+            try {
+              const navigated = await client.navigate(targetUrl);
+              return (navigated || client).focus();
+            } catch (e) {
+              /* navigate can reject — fall through to a plain focus */
+            }
+          }
           return client.focus();
         }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(link);
-    })
+
+      // 3) No window open (app fully closed) → open a fresh one at the target.
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })()
   );
 });

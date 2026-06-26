@@ -1,10 +1,11 @@
 const express = require('express');
 const Setting = require('../models/Setting');
 const catchAsync = require('../utils/catchAsync');
+const { publicCache } = require('../middlewares/cacheControl.middleware');
 
 const router = express.Router();
 
-router.get('/public', catchAsync(async (req, res) => {
+router.get('/public', publicCache(), catchAsync(async (req, res) => {
   const settings = await Setting.getSingleton();
   res.send({
     platformName: settings.platformName,

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
 import WishlistButton from '../../../../../components/ui/WishlistButton';
+import { cldImg } from '../../../../../utils/imageUrl';
 
 const ActiveGroupsList = ({ title = 'Active Groups You Might Like', groups = [], onViewAll }) => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const ActiveGroupsList = ({ title = 'Active Groups You Might Like', groups = [],
             >
               {/* Product Image on the left (Rounded rectangle) */}
               <div className="w-[75px] h-[75px] rounded-xl overflow-hidden flex-shrink-0 bg-[#F6F6F8] border border-line/40">
-                <img src={group.image} alt={group.title} className="w-full h-full object-cover" />
+                <img src={cldImg(group.image, { w: 160, h: 160 })} alt={group.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               </div>
 
               {/* Content Column */}

@@ -3,6 +3,7 @@ import { reverseGeocode } from '../../../utils/googleMaps';
 import { getNotifications } from '../../../services/notification.api';
 import { getChatSocket } from '../../../services/socket';
 import { getCategories } from '../../../services/category.api';
+import { swr } from '../../../services/swr';
 import api from '../../../services/api';
 
 const UserMainContext = createContext(null);
@@ -27,15 +28,20 @@ export const UserMainProvider = ({ children }) => {
   const [selectedCity, setSelectedCity] = useState('Detecting Location...');
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
-  // Fetch categories once on mount for global caching
+  // Fetch categories once on mount. Stale-while-revalidate: paints instantly
+  // from the cached copy on repeat visits, then refreshes in the background.
   useEffect(() => {
     let active = true;
-    getCategories()
-      .then(({ data }) => {
-        if (!active || !Array.isArray(data)) return;
-        setCategories(data.map((c) => ({ id: c.slug, name: c.name, coverImage: c.image })));
-      })
-      .catch((err) => console.warn('Failed to load categories globally:', err));
+    swr(
+      'categories',
+      async () => {
+        const { data } = await getCategories();
+        return Array.isArray(data)
+          ? data.map((c) => ({ id: c.slug, name: c.name, coverImage: c.image }))
+          : [];
+      },
+      { onData: (cats) => { if (active) setCategories(cats); } }
+    ).catch((err) => console.warn('Failed to load categories globally:', err));
     return () => { active = false; };
   }, []);
 

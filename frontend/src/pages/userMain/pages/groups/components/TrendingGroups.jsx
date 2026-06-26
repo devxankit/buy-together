@@ -65,13 +65,13 @@ const TrendingGroups = ({ groups }) => {
               </div>
 
               {/* Title, Discount, Progress stack */}
-              <div className="flex flex-col gap-1 flex-1">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
                 <h3 className="text-[11px] font-extrabold text-ink truncate leading-tight">
                   {group.title}
                 </h3>
                 
                 {/* Green OFF Badge */}
-                <div className="bg-[#DCFCE7] text-[#15803D] text-[9.5px] font-black px-1.5 py-0.5 rounded-[5px] self-start leading-none tracking-tight">
+                <div className="bg-[#DCFCE7] text-[#15803D] text-[9.5px] font-black px-1.5 py-0.5 rounded-[5px] self-start leading-none tracking-tight truncate max-w-full">
                   {group.subtitle}
                 </div>
 

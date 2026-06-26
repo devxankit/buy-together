@@ -1,4 +1,5 @@
 import React from 'react';
+import { cldImg } from '../../../../../utils/imageUrl';
 
 /**
  * Pixel-perfect replica of the Popular Categories section in the mockup.
@@ -37,9 +38,11 @@ const CategoriesGrid = ({ categories, onCategoryClick, onViewAll }) => {
               <div className="w-[64px] h-[64px] rounded-full flex items-center justify-center group-active:scale-95 transition-all overflow-hidden bg-surface-alt flex-shrink-0">
                 {cat.coverImage ? (
                   <img
-                    src={cat.coverImage}
+                    src={cldImg(cat.coverImage, { w: 128, h: 128 })}
                     alt={cat.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <span className="text-primary scale-125">

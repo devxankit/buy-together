@@ -4,12 +4,13 @@ const auth = require('../middlewares/auth.middleware');
 const { adminOnly } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const categoryValidation = require('../validations/category.validation');
+const { publicCache } = require('../middlewares/cacheControl.middleware');
 
 const router = express.Router();
 
 // ── Public ──────────────────────────────────────────────────────────
 // Active categories for the user app.
-router.get('/', categoryController.listPublic);
+router.get('/', publicCache(), categoryController.listPublic);
 
 // ── Admin (auth + admin role) ───────────────────────────────────────
 router.get(

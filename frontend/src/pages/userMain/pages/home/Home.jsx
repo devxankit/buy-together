@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
 import { getHomeSections } from '../../../../services/homeSection.api';
+import { swr } from '../../../../services/swr';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
 import HotGroupsCarousel from './components/HotGroupsCarousel';
@@ -123,15 +124,15 @@ const Home = () => {
 
   useEffect(() => {
     let active = true;
-    const fetchSections = async () => {
-      try {
+    // Stale-while-revalidate: render cached sections instantly, refresh silently.
+    swr(
+      'home-sections',
+      async () => {
         const { data } = await getHomeSections();
-        if (active && Array.isArray(data)) setSections(data);
-      } catch (err) {
-        console.warn('Failed to load home sections:', err);
-      }
-    };
-    fetchSections();
+        return Array.isArray(data) ? data : [];
+      },
+      { onData: (data) => { if (active) setSections(data); } }
+    ).catch((err) => console.warn('Failed to load home sections:', err));
     return () => { active = false; };
   }, []);
 

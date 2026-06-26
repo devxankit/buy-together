@@ -4,12 +4,13 @@ const auth = require('../middlewares/auth.middleware');
 const { adminOnly } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const homeSectionValidation = require('../validations/homeSection.validation');
+const { publicCache } = require('../middlewares/cacheControl.middleware');
 
 const router = express.Router();
 
 // ── Public ──────────────────────────────────────────────────────────
 // Active, curated sections for the user app home page.
-router.get('/', homeSectionController.listPublic);
+router.get('/', publicCache(), homeSectionController.listPublic);
 
 // ── Admin (auth + admin role required) ────────────────────────────────
 router.get(

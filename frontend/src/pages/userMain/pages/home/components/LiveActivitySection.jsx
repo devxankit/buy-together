@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { getPublicSettings } from '../../../../../services/setting.api';
+import { swr } from '../../../../../services/swr';
 
 const LiveActivitySection = () => {
   const [statsData, setStatsData] = useState(null);
 
   useEffect(() => {
     let active = true;
-    getPublicSettings()
-      .then(({ data }) => {
-        if (active) setStatsData(data);
-      })
-      .catch((err) => console.warn('Failed to load live stats:', err));
+    // Stale-while-revalidate: show cached stats instantly, refresh silently.
+    swr(
+      'public-settings',
+      async () => {
+        const { data } = await getPublicSettings();
+        return data;
+      },
+      { onData: (data) => { if (active) setStatsData(data); } }
+    ).catch((err) => console.warn('Failed to load live stats:', err));
     return () => {
       active = false;
     };

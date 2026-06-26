@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Card } from '../../../components';
 import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
 import WishlistButton from '../../../../../components/ui/WishlistButton';
+import { cldImg } from '../../../../../utils/imageUrl';
 
 /**
  * Modular component for active group purchasing pools in a scrollable horizontal carousel.
@@ -46,9 +47,11 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
               {/* Product Image Panel with Floating Status tag */}
               <div className="w-full h-[95px] bg-[#F6F6F8] relative overflow-hidden flex-shrink-0">
                 <img
-                  src={group.image}
+                  src={cldImg(group.image, { w: 320, h: 190 })}
                   alt={group.title}
                   className="absolute inset-0 w-full h-full object-cover block"
+                  loading="lazy"
+                  decoding="async"
                 />
                 
                 {/* Wishlist Button */}
@@ -68,12 +71,12 @@ const HotGroupsCarousel = ({ title = 'Hot Buying Groups', groups, onGroupClick, 
               </div>
 
               {/* Info Text & Progress wrapped in padding */}
-              <div className="p-2.5 pt-2 flex flex-col gap-1.5 flex-1 justify-between">
-                <div className="flex flex-col">
+              <div className="p-2.5 pt-2 flex flex-col gap-1.5 flex-1 justify-between min-w-0">
+                <div className="flex flex-col min-w-0">
                   <h4 className="text-[12.5px] font-extrabold text-ink leading-tight tracking-tight truncate">
                     {group.title}
                   </h4>
-                  <span className="text-[9.5px] font-bold text-primary mt-0.5 leading-none">
+                  <span className="text-[9.5px] font-bold text-primary mt-0.5 leading-none truncate max-w-full block">
                     {group.subtitle}
                   </span>
                 </div>

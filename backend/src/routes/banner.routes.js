@@ -4,12 +4,13 @@ const auth = require('../middlewares/auth.middleware');
 const { adminOnly } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const bannerValidation = require('../validations/banner.validation');
+const { publicCache } = require('../middlewares/cacheControl.middleware');
 
 const router = express.Router();
 
 // ── Public ──────────────────────────────────────────────────────────
 // Active banners for the user app home page slider.
-router.get('/', bannerController.listPublic);
+router.get('/', publicCache(), bannerController.listPublic);
 
 // ── Admin (auth + admin role required) ────────────────────────────────
 router.get(

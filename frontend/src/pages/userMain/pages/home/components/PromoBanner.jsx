@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBanners } from '../../../../../services/banner.api';
+import { swr } from '../../../../../services/swr';
+import { cldImg } from '../../../../../utils/imageUrl';
 
 const DEFAULT_SLIDES = [
   {
@@ -25,17 +27,16 @@ const PromoBanner = ({ onExplore }) => {
 
   useEffect(() => {
     let active = true;
-    const fetchBanners = async () => {
-      try {
+    // Stale-while-revalidate: show cached banners instantly, refresh silently.
+    // Keep the default slides if the API returns nothing.
+    swr(
+      'banners',
+      async () => {
         const { data } = await getBanners();
-        if (active && data && data.length > 0) {
-          setSlides(data);
-        }
-      } catch (err) {
-        console.warn('Failed to load active promo banners, using fallbacks:', err);
-      }
-    };
-    fetchBanners();
+        return Array.isArray(data) ? data : [];
+      },
+      { onData: (data) => { if (active && data.length > 0) setSlides(data); } }
+    ).catch((err) => console.warn('Failed to load active promo banners, using fallbacks:', err));
     return () => { active = false; };
   }, []);
 
@@ -73,11 +74,15 @@ const PromoBanner = ({ onExplore }) => {
                 isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
               } cursor-pointer`}
             >
-              {/* Full-width Banner Image */}
+              {/* Full-width Banner Image. The first slide is the home-page LCP,
+                  so load it eagerly with high priority; the rest can lazy-load. */}
               <img
-                src={slide.image}
+                src={cldImg(slide.image, { w: 800 })}
                 alt="Promo Banner"
                 className="w-full h-full object-cover"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+                decoding="async"
               />
             </div>
           );
