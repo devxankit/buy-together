@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-import { ChevronsLeft, Hexagon, LogOut, Wifi } from 'lucide-react';
+import { ChevronsLeft, Hexagon, LogOut } from 'lucide-react';
 import { T, dims } from '../theme/adminTheme';
 import { getVisibleSections } from './navConfig';
 
@@ -10,24 +10,27 @@ const Sidebar = ({ collapsed, onToggleCollapse, badges = {}, user, onLogout, mob
 
   return (
     <aside
-      className="admin-scroll-dark"
       style={{
         width, flexShrink: 0, height: '100%',
         background: T.sidebar,
         borderRight: `1px solid ${T.sidebarLine}`,
         display: 'flex', flexDirection: 'column',
         transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
-        overflowY: 'auto', overflowX: 'hidden',
+        overflow: 'hidden',
         ['--ad-side-text']: T.sidebarText,
       }}
     >
       {/* Brand */}
-      <div style={{
-        height: dims.topbarHeight, display: 'flex', alignItems: 'center',
-        gap: 11, padding: collapsed && !mobile ? '0' : '0 18px',
-        justifyContent: collapsed && !mobile ? 'center' : 'flex-start',
-        borderBottom: `1px solid ${T.sidebarLine}`, flexShrink: 0,
-      }}>
+      <div
+        onClick={() => { window.location.href = '/admin'; }}
+        style={{
+          height: dims.topbarHeight, display: 'flex', alignItems: 'center',
+          gap: 11, padding: collapsed && !mobile ? '0' : '0 18px',
+          justifyContent: collapsed && !mobile ? 'center' : 'flex-start',
+          borderBottom: `1px solid ${T.sidebarLine}`, flexShrink: 0,
+          cursor: 'pointer',
+        }}
+      >
         <div style={{
           width: 34, height: 34, borderRadius: 10, flexShrink: 0,
           background: `linear-gradient(135deg, ${T.primary}, ${T.primaryDeep})`,
@@ -45,7 +48,13 @@ const Sidebar = ({ collapsed, onToggleCollapse, badges = {}, user, onLogout, mob
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <nav
+        className="admin-scroll-dark"
+        style={{
+          flex: 1, padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6,
+          overflowY: 'auto', overflowX: 'hidden',
+        }}
+      >
         {navSections.map((sec) => (
           <div key={sec.title} style={{ marginBottom: 6 }}>
             {(!collapsed || mobile) && (
@@ -85,22 +94,7 @@ const Sidebar = ({ collapsed, onToggleCollapse, badges = {}, user, onLogout, mob
         ))}
       </nav>
 
-      {/* System status */}
-      {(!collapsed || mobile) && (
-        <div style={{ padding: '0 16px 12px' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px',
-            background: T.sidebarAlt, borderRadius: 11, border: `1px solid ${T.sidebarLine}`,
-          }}>
-            <Wifi size={15} color={T.primary} strokeWidth={2.4} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: '#E8E8EC' }}>All systems normal</div>
-              <div style={{ fontSize: 10, color: T.sidebarMuted }}>API · 42ms · 99.98% uptime</div>
-            </div>
-            <span className="admin-live-dot" style={{ width: 7, height: 7, borderRadius: 99, background: T.primary, boxShadow: `0 0 0 3px ${T.primary}33` }} />
-          </div>
-        </div>
-      )}
+
 
       {/* Account footer */}
       <div style={{ borderTop: `1px solid ${T.sidebarLine}`, padding: 12, display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -88,6 +88,12 @@ const createCategory = async (body) => {
   if (await Category.isNameTaken(body.name)) {
     throw new ApiError(httpStatus.CONFLICT, 'A category with this name already exists');
   }
+  if (body.displayOrder !== undefined && body.displayOrder !== null) {
+    const existingOrder = await Category.findOne({ displayOrder: body.displayOrder });
+    if (existingOrder) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'This display order is already assigned to another category. Please choose a unique display order.');
+    }
+  }
   const slug = body.slug ? slugify(body.slug) : await generateUniqueSlug(body.name);
   const created = await Category.create({ ...body, slug });
   cache.del(ACTIVE_CACHE_KEY);
@@ -99,6 +105,12 @@ const updateCategoryById = async (id, body) => {
 
   if (body.name && (await Category.isNameTaken(body.name, category._id))) {
     throw new ApiError(httpStatus.CONFLICT, 'A category with this name already exists');
+  }
+  if (body.displayOrder !== undefined && body.displayOrder !== null && body.displayOrder !== category.displayOrder) {
+    const existingOrder = await Category.findOne({ displayOrder: body.displayOrder, _id: { $ne: category._id } });
+    if (existingOrder) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'This display order is already assigned to another category. Please choose a unique display order.');
+    }
   }
   // Keep the slug in sync if the name changes and no explicit slug was given.
   if (body.name && !body.slug && body.name !== category.name) {

@@ -374,10 +374,32 @@ const Users = () => {
   const [activityCounts, setActivityCounts] = useState({ all: 0, ingroup: 0, nogroup: 0, chatting: 0 });
   const [tab, setTab] = useState('all');
   const [activity, setActivity] = useState('all'); // all | ingroup | nogroup | chatting
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() => {
+    const saved = sessionStorage.getItem('admin_search_query');
+    if (saved) {
+      sessionStorage.removeItem('admin_search_query');
+      return saved;
+    }
+    return '';
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | user object
+
+  // Listen for real-time global search events
+  useEffect(() => {
+    const handleGlobalSearch = (e) => {
+      if (e.detail !== undefined) setQ(e.detail);
+    };
+    window.addEventListener('admin:search', handleGlobalSearch);
+    return () => window.removeEventListener('admin:search', handleGlobalSearch);
+  }, []);
+
+  // Dispatch search query to sync other search inputs (like the topbar)
+  const handleLocalSearch = (newVal) => {
+    setQ(newVal);
+    window.dispatchEvent(new CustomEvent('admin:search', { detail: newVal }));
+  };
   const [chatOf, setChatOf] = useState(null); // null | user object
   const [stats, setStats] = useState(null);
   const [statsOpen, setStatsOpen] = useState(false); // expanded detailed stats sheet
@@ -571,7 +593,7 @@ const Users = () => {
                   <option value="chatting">Actively chatting ({activityCounts.chatting})</option>
                 </select>
               </div>
-              <SearchInput value={q} onChange={setQ} placeholder="Search by name, phone, location…" />
+              <SearchInput value={q} onChange={handleLocalSearch} placeholder="Search by name, phone, location…" />
             </div>
           </div>
           <div style={{ padding: 20 }}>

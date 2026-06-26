@@ -119,7 +119,6 @@ const AdminLogin = () => {
                 <input type="checkbox" defaultChecked style={{ accentColor: T.primary, width: 15, height: 15 }} />
                 Keep me signed in
               </label>
-              <span style={{ fontSize: 12.5, color: T.primary, fontWeight: 600, cursor: 'pointer' }}>Forgot password?</span>
             </div>
 
             <button

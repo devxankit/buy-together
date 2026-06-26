@@ -184,12 +184,34 @@ const Support = () => {
   const [counts, setCounts] = useState({ all: 0, open: 0, in_progress: 0, resolved: 0, closed: 0 });
   const [tab, setTab] = useState('all');
   const [category, setCategory] = useState('all');
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() => {
+    const saved = sessionStorage.getItem('admin_search_query');
+    if (saved) {
+      sessionStorage.removeItem('admin_search_query');
+      return saved;
+    }
+    return '';
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Listen for real-time global search events
+  useEffect(() => {
+    const handleGlobalSearch = (e) => {
+      if (e.detail !== undefined) setQ(e.detail);
+    };
+    window.addEventListener('admin:search', handleGlobalSearch);
+    return () => window.removeEventListener('admin:search', handleGlobalSearch);
+  }, []);
+
+  // Dispatch search query to sync other search inputs (like the topbar)
+  const handleLocalSearch = (newVal) => {
+    setQ(newVal);
+    window.dispatchEvent(new CustomEvent('admin:search', { detail: newVal }));
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -308,7 +330,7 @@ const Support = () => {
                 <option value="other">Others</option>
               </select>
             </div>
-            <SearchInput value={q} onChange={setQ} placeholder="Search subject, user, email…" />
+            <SearchInput value={q} onChange={handleLocalSearch} placeholder="Search subject, user, email…" />
           </div>
         </div>
         <div style={{ padding: 20 }}>

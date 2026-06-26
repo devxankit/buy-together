@@ -29,7 +29,7 @@ export const navSections = [
   {
     title: 'Support & Content',
     items: [
-      { label: 'Support Tickets', icon: 'LifeBuoy', path: '/admin/support', badge: 'support', permission: 'support' },
+      { label: 'Support Tickets', icon: 'LifeBuoy', path: '/admin/support', permission: 'support' },
       { label: 'Content Pages',   icon: 'FileText', path: '/admin/content-pages', permission: 'content' },
     ],
   },

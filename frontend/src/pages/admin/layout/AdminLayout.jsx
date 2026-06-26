@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../../redux/slices/authSlice';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { T } from '../theme/adminTheme';
 import { getAdminStats } from '../../../services/admin.api';
 import '../admin.css';
@@ -25,6 +26,7 @@ const AdminLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [stats, setStats] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,6 +61,11 @@ const AdminLayout = () => {
   }, [refreshStats]);
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
     dispatch(logout());
     navigate('/login');
   };
@@ -113,6 +120,17 @@ const AdminLayout = () => {
           </div>
         </main>
       </div>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Logout Confirmation"
+        message="Are you sure you want to log out from the Admin console?"
+        confirmLabel="Logout"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={handleConfirmLogout}
+        onClose={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 };

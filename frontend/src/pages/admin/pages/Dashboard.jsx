@@ -41,6 +41,79 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const pendingVendors = vendors.filter(v => v.status === 'pending');
 
+  const handleExport = () => {
+    const rows = [];
+    rows.push(['BUY TOGETHER - PLATFORM DASHBOARD DATA EXPORT']);
+    rows.push([`Exported on: ${new Date().toLocaleString()}`]);
+    rows.push([]);
+
+    // 1. KPIs
+    rows.push(['--- KEY PERFORMANCE INDICATORS ---']);
+    rows.push(['Metric', 'Value', 'Change']);
+    kpis.forEach(k => {
+      const prefix = k.prefix || '';
+      const suffix = k.suffix || '';
+      rows.push([k.label, `${prefix}${k.value}${suffix}`, `${k.delta}%`]);
+    });
+    rows.push([]);
+
+    // 2. Monthly Revenue
+    rows.push(['--- MONTHLY REVENUE (LAST 12 MONTHS) ---']);
+    rows.push(['Month', 'GMV (₹ lakhs)']);
+    revenueSeries.forEach(r => {
+      rows.push([r.m, r.value]);
+    });
+    rows.push([]);
+
+    // 3. Category Demand
+    rows.push(['--- CATEGORY DEMAND ---']);
+    rows.push(['Category', 'Share (%)']);
+    categoryDemand.forEach(c => {
+      rows.push([c.label, `${c.value}%`]);
+    });
+    rows.push([]);
+
+    // 4. Demand Metrics
+    rows.push(['--- DEMAND METRICS ---']);
+    rows.push(['Metric', 'Value', 'Growth']);
+    demandMetrics.forEach(m => {
+      rows.push([m.label, m.value, m.delta]);
+    });
+    rows.push([]);
+
+    // 5. Top Regions
+    rows.push(['--- TOP REGIONS ---']);
+    rows.push(['Region', 'Demand Score', 'Growth']);
+    topRegions.forEach(r => {
+      rows.push([r.region, r.demand, r.growth]);
+    });
+
+    // Convert rows to CSV format
+    const csvContent = rows
+      .map(row => 
+        row.map(val => {
+          if (val === undefined || val === null) return '';
+          const str = String(val);
+          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+          }
+          return str;
+        }).join(',')
+      )
+      .join('\n');
+
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
       <PageHeader
@@ -48,8 +121,8 @@ const Dashboard = () => {
         title="Platform Overview"
         subtitle="Live pulse of demand, groups, deals and revenue across Buy Together."
       >
-        <Button variant="soft" icon="Download">Export</Button>
-        <Button variant="dark" icon="Plus" onClick={() => navigate('/admin/groups')}>New Campaign</Button>
+        <Button variant="soft" icon="Download" onClick={handleExport}>Export</Button>
+        <Button variant="dark" icon="Plus" onClick={() => navigate('/admin/groups')}>Make Group</Button>
       </PageHeader>
 
       {/* KPI row */}

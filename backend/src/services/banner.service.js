@@ -68,6 +68,12 @@ const getBannerById = async (id) => {
  * Create new banner.
  */
 const createBanner = async (body) => {
+  if (body.displayOrder !== undefined && body.displayOrder !== null) {
+    const existingOrder = await Banner.findOne({ displayOrder: body.displayOrder });
+    if (existingOrder) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'This display order is already assigned to another banner. Please choose a unique display order.');
+    }
+  }
   const banner = await Banner.create(body);
   cache.del(ACTIVE_CACHE_KEY);
   return banner;
@@ -78,6 +84,12 @@ const createBanner = async (body) => {
  */
 const updateBannerById = async (id, body) => {
   const banner = await getBannerById(id);
+  if (body.displayOrder !== undefined && body.displayOrder !== null && body.displayOrder !== banner.displayOrder) {
+    const existingOrder = await Banner.findOne({ displayOrder: body.displayOrder, _id: { $ne: banner._id } });
+    if (existingOrder) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'This display order is already assigned to another banner. Please choose a unique display order.');
+    }
+  }
   Object.assign(banner, body);
   await banner.save();
   cache.del(ACTIVE_CACHE_KEY);
