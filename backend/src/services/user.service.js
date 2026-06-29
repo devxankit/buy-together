@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Group = require('../models/Group');
+const authCache = require('../utils/authCache');
 
 const getUserById = async (id) => {
   return User.findById(id);
@@ -12,6 +13,7 @@ const updateUserById = async (userId, updateBody) => {
   }
   Object.assign(user, updateBody);
   await user.save();
+  authCache.bustUser(userId); // keep the auth-middleware cache fresh
   return user;
 };
 

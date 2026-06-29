@@ -9,6 +9,20 @@ const envVarsSchema = joi.object({
   PORT: joi.number().default(5000),
   MONGODB_URI: joi.string().required().description('MongoDB connection URI'),
 
+  // Redis (optional L2 cache). When REDIS_URL is empty the app runs fine using
+  // the in-process memory cache only — Redis is a performance/scaling add-on,
+  // never a hard dependency.
+  REDIS_URL: joi
+    .string()
+    .allow('')
+    .default('')
+    .description('Redis connection URL, e.g. redis://localhost:6379 or rediss://… for TLS'),
+  REDIS_KEY_PREFIX: joi
+    .string()
+    .allow('')
+    .default('bt:')
+    .description('Namespace prepended to every cache key in Redis'),
+
   // Auth
   JWT_SECRET: joi.string().required().description('JWT secret key'),
   JWT_EXPIRE: joi.string().default('30d').description('JWT expiry (e.g. 30d, 24h)'),
@@ -85,6 +99,11 @@ if (error) {
 module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
+  redis: {
+    url: envVars.REDIS_URL,
+    keyPrefix: envVars.REDIS_KEY_PREFIX,
+    enabled: Boolean(envVars.REDIS_URL),
+  },
   mongoose: {
     url: envVars.MONGODB_URI,
     options: {

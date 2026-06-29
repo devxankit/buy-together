@@ -2,6 +2,7 @@ const httpStatus = require('http-status').status;
 const Vendor = require('../models/Vendor');
 const ApiError = require('../utils/ApiError');
 const { normalizePhone } = require('./auth.service');
+const { bustDealsCache } = require('./deal.service');
 const { VENDOR_STATUS, KYC_STATUS } = require('../utils/constants');
 
 /** Self-service / legacy vendor creation. Currently unused by the admin flow. */
@@ -127,12 +128,14 @@ const updateVendorByIdAdmin = async (id, body) => {
 
   Object.assign(vendor, body);
   await vendor.save();
+  bustDealsCache(); // deals embed vendor data via populate
   return vendor;
 };
 
 const deleteVendorByIdAdmin = async (id) => {
   const v = await getVendorByIdAdmin(id);
   await v.deleteOne();
+  bustDealsCache();
   return v;
 };
 

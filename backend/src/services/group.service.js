@@ -2,7 +2,22 @@ const httpStatus = require('http-status').status;
 const Group = require('../models/Group');
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
+const cache = require('../utils/cache');
 const { GROUP_STATUS } = require('../utils/constants');
+
+// Consumer-facing read caches. Short TTLs because membership counts move; every
+// write that affects a group busts the relevant key immediately (below).
+const DETAIL_TTL = 60 * 1000; // group detail view
+const TRENDING_TTL = 120 * 1000; // "Trending Right Now" carousel
+const detailKey = (id) => `group:detail:${id}`;
+const TRENDING_KEY = 'groups:trending';
+
+// Bust everything a group write can affect: its own detail page + the trending
+// list (membership counts / trending flag may have changed).
+const bustGroup = (id) => {
+  cache.del(detailKey(id));
+  cache.del(TRENDING_KEY);
+};
 
 // ── User-facing (consumer app) ──────────────────────────────────────
 
@@ -37,11 +52,15 @@ const queryGroups = async (userId, filter = {}) => {
     .populate('admin', 'name');
 };
 
-const getGroupById = async (id) => {
-  return Group.findById(id)
-    .populate('members', 'name phone email avatar status')
-    .populate('admin', 'name phone');
-};
+const getGroupById = async (id) =>
+  cache.wrap(detailKey(id), DETAIL_TTL, async () => {
+    const group = await Group.findById(id)
+      .populate('members', 'name phone email avatar status')
+      .populate('admin', 'name phone');
+    // Cache the serialised (API-shaped) object so L1 and L2 hold an identical
+    // value; `undefined` keeps a missing group out of the cache.
+    return group ? group.toJSON() : undefined;
+  });
 
 /**
  * Admin-curated "Trending Right Now" list for the consumer app's Groups page.
@@ -49,11 +68,13 @@ const getGroupById = async (id) => {
  * moderation), newest first. Members aren't populated — the cards only need the
  * derived `spotsJoined` count.
  */
-const getTrendingGroups = async () => {
-  return Group.find({ trending: true, status: { $ne: GROUP_STATUS.FLAGGED } })
-    .sort({ updatedAt: -1 })
-    .limit(20);
-};
+const getTrendingGroups = async () =>
+  cache.wrap(TRENDING_KEY, TRENDING_TTL, async () => {
+    const groups = await Group.find({ trending: true, status: { $ne: GROUP_STATUS.FLAGGED } })
+      .sort({ updatedAt: -1 })
+      .limit(20);
+    return groups.map((g) => g.toJSON());
+  });
 
 // ── Admin console ───────────────────────────────────────────────────
 
@@ -120,7 +141,7 @@ const getGroupByIdAdmin = async (id) => {
 };
 
 const createGroupAdmin = async (body) => {
-  return Group.create({
+  const group = await Group.create({
     title: body.title,
     productName: body.productName,
     description: body.description,
@@ -138,18 +159,23 @@ const createGroupAdmin = async (body) => {
     closesAt: body.closesAt,
     members: body.members || [],
   });
+  // A new group may be flagged trending on create.
+  cache.del(TRENDING_KEY);
+  return group;
 };
 
 const updateGroupByIdAdmin = async (id, body) => {
   const group = await getGroupByIdAdmin(id);
   Object.assign(group, body);
   await group.save();
+  bustGroup(id);
   return getGroupByIdAdmin(id);
 };
 
 const deleteGroupByIdAdmin = async (id) => {
   const group = await getGroupByIdAdmin(id);
   await group.deleteOne();
+  bustGroup(id);
   return group;
 };
 
@@ -177,6 +203,7 @@ const addMember = async (groupId, userId) => {
   if (result.matchedCount === 0) {
     throw new ApiError(httpStatus.CONFLICT, 'This group is full — no spots left to join');
   }
+  bustGroup(groupId);
   return getGroupByIdAdmin(groupId);
 };
 
@@ -184,6 +211,7 @@ const addMember = async (groupId, userId) => {
 const removeMember = async (groupId, userId) => {
   await getGroupByIdAdmin(groupId);
   await Group.updateOne({ _id: groupId }, { $pull: { members: userId } });
+  bustGroup(groupId);
   return getGroupByIdAdmin(groupId);
 };
 

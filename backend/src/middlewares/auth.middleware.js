@@ -1,9 +1,8 @@
 const jwt = require('jsonwebtoken');
 const httpStatus = require('http-status').status;
 const config = require('../config/env');
-const User = require('../models/User');
-const Admin = require('../models/Admin');
 const ApiError = require('../utils/ApiError');
+const authCache = require('../utils/authCache');
 const { ROLES, USER_STATUS } = require('../utils/constants');
 
 /**
@@ -18,11 +17,13 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, config.jwt.secret);
+    // Cached lookup (returns a hydrated Mongoose doc) — avoids a DB findById on
+    // every authenticated request. Busted on profile/status/delete changes.
     let user;
     if (decoded.role === ROLES.ADMIN) {
-      user = await Admin.findById(decoded.sub);
+      user = await authCache.getAdmin(decoded.sub);
     } else {
-      user = await User.findById(decoded.sub);
+      user = await authCache.getUser(decoded.sub);
     }
 
     if (!user) {

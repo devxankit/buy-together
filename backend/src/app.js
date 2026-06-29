@@ -10,6 +10,11 @@ const { errorConverter, errorHandler } = require('./middlewares/error.middleware
 
 const app = express();
 
+// Behind Hostinger's nginx reverse proxy, the client IP is in X-Forwarded-For.
+// Trust the first proxy hop so `req.ip` (used for rate limiting) is the real
+// client address, not the proxy's. `1` = trust exactly one upstream proxy.
+app.set('trust proxy', 1);
+
 // Request logging only in development — morgan on every request adds avoidable
 // overhead (and log noise) in production.
 if (config.env === 'development') {

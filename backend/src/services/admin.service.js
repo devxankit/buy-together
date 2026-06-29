@@ -8,6 +8,7 @@ const firebase = require('../config/firebase');
 const ticketService = require('./ticket.service');
 const ApiError = require('../utils/ApiError');
 const cache = require('../utils/cache');
+const authCache = require('../utils/authCache');
 const { normalizePhone } = require('./auth.service');
 const { ROLES, USER_STATUS, VENDOR_STATUS, GROUP_STATUS, ADMIN_PERMISSIONS } = require('../utils/constants');
 
@@ -244,12 +245,14 @@ const updateUserById = async (id, body) => {
 
   Object.assign(user, body);
   await user.save();
+  authCache.bustUser(id); // suspend/status/profile change must not be served stale
   return user;
 };
 
 const deleteUserById = async (id) => {
   const user = await getUserById(id);
   await user.deleteOne();
+  authCache.bustUser(id);
   return user;
 };
 
@@ -339,6 +342,7 @@ const updateAdmin = async (id, body) => {
   if (admin.isSuperAdmin) admin.permissions = []; // super => everything, no explicit list
 
   await admin.save();
+  authCache.bustAdmin(id); // role/status/permission change must not be served stale
   return admin;
 };
 
@@ -352,6 +356,7 @@ const deleteAdmin = async (id, requesterId) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'At least one super admin is required');
   }
   await admin.deleteOne();
+  authCache.bustAdmin(id);
   return admin;
 };
 

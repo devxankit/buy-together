@@ -43,7 +43,8 @@
       "Bash(ls vite.config.*)",
       "Bash(ls *.config.*)",
       "Bash(find . -maxdepth 2 -name \"vite.config.*\" -not -path \"*/node_modules/*\")",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(node \"C:\\\\Users\\\\AnkitAhirwar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-AnkitAhirwar-OneDrive-Desktop-Buy-Together\\\\d5fbc653-bcfe-46f6-9a79-334a55db8caf\\\\scratchpad\\\\cache.smoke.js\")"
     ]
   }
 }
