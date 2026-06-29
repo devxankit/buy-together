@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './Header';
 import BottomNav from './BottomNav';
+import OfflineBanner from './OfflineBanner';
 import { UserMainProvider, useUserMainContext } from '../../context';
 import { LocationSelectorPage } from '../common';
 import { fetchWishlist } from '../../../../redux/slices/wishlistSlice';
@@ -40,6 +41,7 @@ const UserMainLayoutInner = ({
 
   return (
     <div className="flex flex-col min-h-screen min-h-dvh bg-surface-alt pb-[76px] relative" {...props}>
+      <OfflineBanner />
       {shouldShowHeader && (
         <Header
           title={title}

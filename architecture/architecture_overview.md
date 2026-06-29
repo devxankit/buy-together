@@ -65,6 +65,8 @@ graph TD
     Express -- "Sends OTP SMS" --> SMSGateway
 ```
 
+![System Architecture](./system_architecture.svg)
+
 ---
 
 ## 2. Core Operational Workflows
@@ -96,6 +98,8 @@ sequenceDiagram
     Express-->>Client: HTTP 200 OK (token, user details)
 ```
 
+![Auth Onboarding Flow](./auth_onboarding_flow.svg)
+
 ### B. Real-Time Chat System
 Chat messages bypass MongoDB for high-write performance and are written to Firebase Realtime Database (RTDB), then broadcasted to online room members via Socket.IO.
 
@@ -118,6 +122,8 @@ sequenceDiagram
     Express-->>MemberA: HTTP 201 Response (returns saved message payload)
 ```
 
+![Realtime Chat Flow](./realtime_chat_flow.svg)
+
 ### C. Demand-Group Lifecycle
 Joint-buying groups progress through various stages as demand is pooled and verified.
 
@@ -135,6 +141,8 @@ stateDiagram-v2
     Flagged --> [*] : Terminated / Suspended
     Locked --> [*] : Fulfilled & Archiving
 ```
+
+![Group Lifecycle](./group_lifecycle.svg)
 
 ### D. Push Notification Pipeline
 Push notifications are broadcasted to Web (Service Worker) and Mobile (Flutter wrapper) pools.
@@ -164,6 +172,8 @@ sequenceDiagram
     Express-->>Admin: HTTP 200 OK (summary statistics)
 ```
 
+![Push Notification Pipeline](./push_notification_pipeline.svg)
+
 ### E. Fraud & Risk Analytics
 The fraud engine runs queries against the MongoDB database and calculates risk scores (0–100) based on signals like group duplication, signup velocity, and unverified membership ratios.
 
@@ -185,6 +195,8 @@ graph LR
     
     High --> UI[Surfaced in Admin Fraud Console]
 ```
+
+![Fraud Risk Analytics](./fraud_risk_analytics.svg)
 
 ---
 

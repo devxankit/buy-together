@@ -16,10 +16,30 @@ const VAPID_CACHE_KEY = 'fcm_vapid_web';
 // The SW has its Firebase config hard-coded (a worker can't read Vite env), so
 // we register it by plain path and wait until it's actually active before
 // minting a token — an inactive worker means notifications never display.
+// Register the FCM worker at its OWN scope (not '/') so it coexists with the
+// PWA/offline service worker, which owns '/'. Two registrations at the same
+// scope replace each other — keeping the messaging worker on a dedicated scope
+// lets push and offline run side by side. A worker served from the site root
+// may register any narrower (deeper) scope, and push events reach it regardless
+// of which worker controls the page.
+const FCM_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
+
 const registerServiceWorker = async () => {
   if (!('serviceWorker' in navigator)) return null;
-  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-  await navigator.serviceWorker.ready; // resolves once a worker controls the scope
+  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+    scope: FCM_SW_SCOPE,
+  });
+  // Wait until this specific registration has an active worker (don't use
+  // navigator.serviceWorker.ready — that resolves for the PWA worker on '/').
+  if (!registration.active) {
+    await new Promise((resolve) => {
+      const sw = registration.installing || registration.waiting;
+      if (!sw) return resolve();
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'activated') resolve();
+      });
+    });
+  }
   return registration;
 };
 
@@ -165,18 +185,19 @@ export const resetWebPush = async () => {
     }
     localStorage.removeItem(TOKEN_CACHE_KEY);
 
-    // Tear down any existing push subscription + service workers so the next
-    // getToken creates a fresh subscription bound to the current VAPID key.
+    // Tear down ONLY the FCM push subscription + its worker so the next getToken
+    // creates a fresh subscription bound to the current VAPID key. We must not
+    // touch the PWA/offline worker (scope '/'), or we'd wipe offline support.
     if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const reg of regs) {
+      const reg = await navigator.serviceWorker.getRegistration(FCM_SW_SCOPE);
+      if (reg) {
         try {
           const sub = await reg.pushManager?.getSubscription?.();
           if (sub) await sub.unsubscribe();
         } catch { /* ignore */ }
         try { await reg.unregister(); } catch { /* ignore */ }
       }
-      console.info('[push] Service workers + subscriptions cleared.');
+      console.info('[push] FCM service worker + subscription cleared (offline worker left intact).');
     }
   } catch (err) {
     console.warn('[push] reset cleanup error:', err?.message || err);
@@ -290,7 +311,7 @@ export const debugWebPush = async () => {
     }
 
     try {
-      const reg = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+      const reg = await navigator.serviceWorker.getRegistration(FCM_SW_SCOPE);
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
         serviceWorkerRegistration: reg || undefined,
