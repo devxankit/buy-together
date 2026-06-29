@@ -28,7 +28,7 @@ const OfflineBanner = () => {
       className="fixed top-0 inset-x-0 z-[60] flex items-center justify-center gap-2 bg-amber-500 px-4 py-1.5 text-center text-xs font-medium text-white shadow-md"
     >
       <WifiOff size={14} />
-      <span>You're offline — showing saved content. Some actions need a connection.</span>
+      <span>You are offline</span>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCategories } from '../../../../services/category.api';
+import { swr, swrPeek } from '../../../../services/swr';
 
 /**
 2. * Premium, gorgeous All Categories list page.
@@ -8,21 +9,25 @@ import { getCategories } from '../../../../services/category.api';
 4. */
 const AllCategories = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Cached paint on revisit, then silent background revalidation.
+  const cached = swrPeek('categories:all');
+  const [categories, setCategories] = useState(cached || []);
+  const [loading, setLoading] = useState(cached === undefined);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let active = true;
-    getCategories()
-      .then(({ data }) => {
-        if (!active) return;
-        setCategories(data || []);
-      })
-      .catch((err) => console.warn('Failed to load categories:', err))
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    swr(
+      'categories:all',
+      async () => {
+        const { data } = await getCategories();
+        return data || [];
+      },
+      { ttl: 0, onData: (d) => { if (active) { setCategories(d); setLoading(false); } } }
+    ).catch((err) => {
+      console.warn('Failed to load categories:', err);
+      if (active) setLoading(false);
+    });
     return () => { active = false; };
   }, []);
 

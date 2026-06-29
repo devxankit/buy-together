@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBanners } from '../../../../../services/banner.api';
-import { swr } from '../../../../../services/swr';
+import { swr, swrPeek } from '../../../../../services/swr';
 import { cldImg } from '../../../../../utils/imageUrl';
 
 const DEFAULT_SLIDES = [
@@ -17,36 +17,54 @@ const DEFAULT_SLIDES = [
 
 /**
  * Dynamic Promo Banner carousel displaying only the banner image.
- * Fetches banners from database on mount, falling back to mock banner slides.
- * Clicking a slide redirects to its attached link (internal or external).
+ *
+ * First paint: if we have cached banners, show them instantly; otherwise show a
+ * SKELETON (not the stock fallback) so the user never sees a dummy banner flash
+ * before the real ones load. The mock slides are used only if the API genuinely
+ * returns no banners. Clicking a slide redirects to its attached link.
  */
 const PromoBanner = ({ onExplore }) => {
   const navigate = useNavigate();
-  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+  // undefined = nothing cached yet (show skeleton); [] = loaded but empty;
+  // [...] = real banners. Seed from cache so revisits are instant & flash-free.
+  const cached = swrPeek('banners');
+  const [slides, setSlides] = useState(() =>
+    cached === undefined ? null : (cached.length ? cached : DEFAULT_SLIDES)
+  );
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     let active = true;
-    // Stale-while-revalidate: show cached banners instantly, refresh silently.
-    // Keep the default slides if the API returns nothing.
     swr(
       'banners',
       async () => {
         const { data } = await getBanners();
         return Array.isArray(data) ? data : [];
       },
-      { onData: (data) => { if (active && data.length > 0) setSlides(data); } }
-    ).catch((err) => console.warn('Failed to load active promo banners, using fallbacks:', err));
+      { onData: (data) => { if (active) setSlides(data.length ? data : DEFAULT_SLIDES); } }
+    ).catch((err) => {
+      console.warn('Failed to load active promo banners, using fallbacks:', err);
+      if (active) setSlides((s) => s || DEFAULT_SLIDES); // never get stuck on the skeleton
+    });
     return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (!slides || slides.length <= 1) return;
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
     }, 4000); // 4 seconds transition for better readability
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides]);
+
+  // Skeleton placeholder on the first-ever load (same size → no layout shift).
+  if (!slides) {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="rounded-[24px] h-[142px] bg-line/30 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">

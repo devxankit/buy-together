@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
 import { getGroups, getTrendingGroups } from '../../../../services/group.api';
+import { swr, swrPeek } from '../../../../services/swr';
 
 // My Groups sub-components
 import GroupsHeader from './components/GroupsHeader';
@@ -33,42 +35,58 @@ const GroupsList = () => {
   // Shared Location Selection Context
   const { selectedCity, setIsLocationPickerOpen } = useUserMainContext();
 
-  // API Data States
-  const [createdGroups, setCreatedGroups] = useState([]);
-  const [joinedGroups, setJoinedGroups] = useState([]);
-  const [trendingGroups, setTrendingGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Cache is keyed per user so one account never sees another's groups.
+  const userId = useSelector((s) => s.auth.user?.id) || 'me';
+  const myGroupsKey = `my-groups:${userId}`;
 
-  // Fetch real data on tab change or mount
+  // API Data States — seeded from the SWR cache so revisiting paints instantly
+  // (no spinner) and is then revalidated silently in the background.
+  const cachedMine = swrPeek(myGroupsKey);
+  const [createdGroups, setCreatedGroups] = useState(cachedMine?.created || []);
+  const [joinedGroups, setJoinedGroups] = useState(cachedMine?.joined || []);
+  const [trendingGroups, setTrendingGroups] = useState(() => swrPeek('groups:trending') || []);
+  const [loading, setLoading] = useState(cachedMine === undefined);
+
+  // My created/joined groups (ttl: 0 → always revalidate, but cached copy shows
+  // first so a newly created/joined group appears without a reload/flash).
   useEffect(() => {
     let active = true;
-    const fetchUserGroups = async () => {
-      try {
-        setLoading(true);
+    swr(
+      myGroupsKey,
+      async () => {
         const [createdRes, joinedRes] = await Promise.all([
           getGroups({ created: 'true' }),
-          getGroups({ joined: 'true' })
+          getGroups({ joined: 'true' }),
         ]);
-        if (active) {
-          setCreatedGroups(createdRes.data || []);
-          setJoinedGroups(joinedRes.data || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch user groups:', err);
-      } finally {
-        if (active) setLoading(false);
+        return { created: createdRes.data || [], joined: joinedRes.data || [] };
+      },
+      {
+        ttl: 0,
+        onData: (d) => {
+          if (!active) return;
+          setCreatedGroups(d.created || []);
+          setJoinedGroups(d.joined || []);
+          setLoading(false);
+        },
       }
-    };
-    fetchUserGroups();
+    ).catch((err) => {
+      console.error('Failed to fetch user groups:', err);
+      if (active) setLoading(false);
+    });
     return () => { active = false; };
-  }, []);
+  }, [myGroupsKey]);
 
   // Trending list — admin-curated via the admin Groups console (trending flag).
   useEffect(() => {
     let active = true;
-    getTrendingGroups()
-      .then(({ data }) => { if (active && Array.isArray(data)) setTrendingGroups(data); })
-      .catch((err) => console.warn('Failed to load trending groups:', err));
+    swr(
+      'groups:trending',
+      async () => {
+        const { data } = await getTrendingGroups();
+        return Array.isArray(data) ? data : [];
+      },
+      { ttl: 0, onData: (d) => { if (active) setTrendingGroups(d); } }
+    ).catch((err) => console.warn('Failed to load trending groups:', err));
     return () => { active = false; };
   }, []);
 

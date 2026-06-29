@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
 import { getHomeSections } from '../../../../services/homeSection.api';
-import { swr } from '../../../../services/swr';
+import { swr, swrPeek } from '../../../../services/swr';
 import PromoBanner from './components/PromoBanner';
 import CategoriesGrid from './components/CategoriesGrid';
 import HotGroupsCarousel from './components/HotGroupsCarousel';
@@ -86,6 +86,36 @@ const WholesaleAdBanner = ({ onClick }) => (
 );
 
 /**
+ * Skeleton shown while the home sections load for the first time (no cache yet).
+ * Mirrors the rough shape of a section heading + a row of group cards, so the
+ * layout doesn't jump when the real content arrives.
+ */
+const HomeSectionsSkeleton = () => (
+  <div className="flex flex-col gap-6 animate-pulse" aria-hidden="true">
+    {[0, 1].map((row) => (
+      <div key={row} className="flex flex-col gap-3">
+        {/* Heading + "view all" */}
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-36 bg-line/40 rounded-md" />
+          <div className="h-3 w-14 bg-line/30 rounded-md" />
+        </div>
+        {/* Horizontal card row */}
+        <div className="flex gap-3 overflow-hidden">
+          {[0, 1, 2].map((card) => (
+            <div key={card} className="flex-shrink-0 w-[150px] rounded-2xl bg-line/20 border border-line/20 p-3 flex flex-col gap-2.5">
+              <div className="h-20 w-full bg-line/40 rounded-xl" />
+              <div className="h-3 w-3/4 bg-line/40 rounded-md" />
+              <div className="h-2.5 w-1/2 bg-line/30 rounded-md" />
+              <div className="h-2 w-full bg-line/30 rounded-full mt-1" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/**
  * High-performance, clean Homepage controller component.
  * Delegates actual view segments to individual optimized component files.
  */
@@ -120,7 +150,11 @@ const Home = () => {
   // ── Dynamic, admin-curated home sections ──────────────────────────
   // Sections (heading + chosen groups + layout) are managed from the admin
   // console (Home Sections page) and fetched live here.
-  const [sections, setSections] = useState([]);
+  // Seed from cache so revisits paint instantly; `sectionsLoaded` lets us show a
+  // skeleton on the first-ever load instead of flashing the empty-state blocks.
+  const cachedSections = swrPeek('home-sections');
+  const [sections, setSections] = useState(cachedSections || []);
+  const [sectionsLoaded, setSectionsLoaded] = useState(cachedSections !== undefined);
 
   useEffect(() => {
     let active = true;
@@ -131,8 +165,11 @@ const Home = () => {
         const { data } = await getHomeSections();
         return Array.isArray(data) ? data : [];
       },
-      { onData: (data) => { if (active) setSections(data); } }
-    ).catch((err) => console.warn('Failed to load home sections:', err));
+      { onData: (data) => { if (active) { setSections(data); setSectionsLoaded(true); } } }
+    ).catch((err) => {
+      console.warn('Failed to load home sections:', err);
+      if (active) setSectionsLoaded(true);
+    });
     return () => { active = false; };
   }, []);
 
@@ -300,7 +337,10 @@ const Home = () => {
           Each section's heading, layout, and groups are managed from the admin
           console. Decorative blocks are interleaved at the original positions
           to preserve the home-page rhythm. */}
-      {sections.length === 0 ? (
+      {!sectionsLoaded && sections.length === 0 ? (
+        // First-ever load with no cache: show skeletons, not the empty-state blocks.
+        <HomeSectionsSkeleton />
+      ) : sections.length === 0 ? (
         <>
           <LiveActivitySection />
           <CreateGroupBanner />

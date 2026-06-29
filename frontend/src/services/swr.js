@@ -29,6 +29,20 @@ const readPersisted = (key) => {
 const DEFAULT_TTL = 5 * 60 * 1000; // 5 min: how long the in-memory copy is "fresh"
 
 /**
+ * Synchronously return the cached value for a key (memory → localStorage), or
+ * undefined if there's no cache. Lets a component initialise state from cache on
+ * the very first render so it never flashes a loading spinner on repeat visits.
+ */
+export const swrPeek = (key) => {
+  let cached = memCache.get(key);
+  if (cached === undefined) {
+    cached = readPersisted(key);
+    if (cached !== undefined) memCache.set(key, cached);
+  }
+  return cached;
+};
+
+/**
  * @param {string} key       Stable cache key (also the localStorage slot).
  * @param {() => Promise<any>} fetcher  Returns the FINAL shape to cache + emit.
  * @param {object} opts

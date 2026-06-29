@@ -1,42 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
-import { 
-  getNotifications, 
-  markNotificationAsRead, 
-  markAllNotificationsAsRead, 
-  deleteNotification 
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification
 } from '../../../../services/notification.api';
+import { swr, swrPeek } from '../../../../services/swr';
 import { showToast } from '../../../../utils/toast';
 
 const Notifications = () => {
   const navigate = useNavigate();
   const { setNotificationCount } = useUserMainContext();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch notifications on mount
+  // Per-user cache: paints instantly on revisit, revalidates in the background.
+  const userId = useSelector((s) => s.auth.user?.id) || 'me';
+  const notifKey = `notifications:${userId}`;
+  const cached = swrPeek(notifKey);
+  const [notifications, setNotifications] = useState(cached || []);
+  const [loading, setLoading] = useState(cached === undefined);
+
+  // Fetch notifications on mount (instant from cache, then silent refresh)
   useEffect(() => {
     let active = true;
-    const fetchNotifications = async () => {
-      try {
+    swr(
+      notifKey,
+      async () => {
         const { data } = await getNotifications();
-        if (active) {
+        return Array.isArray(data) ? data : [];
+      },
+      {
+        ttl: 0,
+        onData: (data) => {
+          if (!active) return;
           setNotifications(data);
-          const unreadCount = data.filter(n => !n.read).length;
-          setNotificationCount(unreadCount);
-        }
-      } catch (err) {
-        console.error('Failed to fetch notifications:', err);
-        showToast('Failed to load notifications');
-      } finally {
-        if (active) setLoading(false);
+          setNotificationCount(data.filter((n) => !n.read).length);
+          setLoading(false);
+        },
       }
-    };
-
-    fetchNotifications();
+    ).catch((err) => {
+      console.error('Failed to fetch notifications:', err);
+      showToast('Failed to load notifications');
+      if (active) setLoading(false);
+    });
     return () => { active = false; };
-  }, [setNotificationCount]);
+  }, [notifKey, setNotificationCount]);
 
   const handleMarkAsRead = async (id, isAlreadyRead) => {
     if (isAlreadyRead) return;

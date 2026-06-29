@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getGroup, joinGroup, leaveGroup } from '../../../../services/group.api';
+import { swr, swrPeek } from '../../../../services/swr';
 import { toggleWishlist } from '../../../../redux/slices/wishlistSlice';
 import WishlistButton from '../../../../components/ui/WishlistButton';
 import { showToast } from '../../../../utils/toast';
@@ -14,25 +15,32 @@ const GroupDetails = () => {
   const currentUser = useSelector((state) => state.auth.user) || {};
   const wishlistItems = useSelector((state) => state.wishlist.items);
 
-  const [group, setGroup] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const detailKey = `group:detail:${groupId}`;
+  const [group, setGroup] = useState(() => swrPeek(detailKey) || null);
+  const [loading, setLoading] = useState(() => swrPeek(detailKey) === undefined);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const loadGroupDetails = async () => {
-    try {
-      setLoading(true);
-      const { data } = await getGroup(groupId);
-      setGroup(data);
-    } catch (err) {
+  useEffect(() => {
+    let active = true;
+    // Re-seed for the current id (the component stays mounted when only the
+    // route param changes), so switching between groups paints instantly.
+    const key = `group:detail:${groupId}`;
+    const seeded = swrPeek(key);
+    if (seeded) { setGroup(seeded); setLoading(false); } else { setLoading(true); }
+
+    swr(
+      key,
+      async () => {
+        const { data } = await getGroup(groupId);
+        return data;
+      },
+      { ttl: 0, onData: (d) => { if (active) { setGroup(d); setLoading(false); } } }
+    ).catch((err) => {
       console.error('Failed to load group details:', err);
       showToast('Failed to load group details.', '❌');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadGroupDetails();
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, [groupId]);
 
   const handleJoin = async () => {

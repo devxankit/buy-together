@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useUserMainContext } from '../../context';
 import { getCategories } from '../../../../services/category.api';
 import { getGroups, joinGroup } from '../../../../services/group.api';
+import { swr, swrPeek } from '../../../../services/swr';
 import { showToast } from '../../../../utils/toast';
 import { haversineKm } from '../../../../utils/googleMaps';
 
@@ -27,9 +28,12 @@ const Categories = () => {
   const currentUser = useSelector((state) => state.auth.user) || {};
 
   // 1. STATE MANAGEMENT
-  const [categories, setCategories] = useState([]);
-  const [groups, setGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Seed from the SWR cache so revisiting Explore paints instantly (no spinner
+  // flash) — the data is then revalidated silently in the background below.
+  const cachedExplore = swrPeek('explore:data');
+  const [categories, setCategories] = useState(cachedExplore?.categories || []);
+  const [groups, setGroups] = useState(cachedExplore?.groups || []);
+  const [loading, setLoading] = useState(cachedExplore === undefined);
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeSort, setActiveSort] = useState('trending');
@@ -44,26 +48,30 @@ const Categories = () => {
   const [sizeFilter, setSizeFilter] = useState('all'); // 'all', 'small', 'medium', 'large'
   const [locationFilter, setLocationFilter] = useState('all'); // 'all', 'indore', 'delhi', 'mumbai', 'goa'
 
-  // Fetch live groups and categories
+  // Fetch live groups and categories — served instantly from the SWR cache on
+  // repeat visits, then revalidated in the background (ttl: 0 = always refresh,
+  // but the cached copy paints first so there's no reload/flash).
   useEffect(() => {
     let active = true;
-    const loadData = async () => {
-      try {
-        const [catsRes, groupsRes] = await Promise.all([
-          getCategories(),
-          getGroups()
-        ]);
-        if (active) {
-          setCategories(catsRes.data || []);
-          setGroups(groupsRes.data || []);
-        }
-      } catch (err) {
-        console.error('Failed to load categories/groups:', err);
-      } finally {
-        if (active) setLoading(false);
+    swr(
+      'explore:data',
+      async () => {
+        const [catsRes, groupsRes] = await Promise.all([getCategories(), getGroups()]);
+        return { categories: catsRes.data || [], groups: groupsRes.data || [] };
+      },
+      {
+        ttl: 0,
+        onData: (d) => {
+          if (!active) return;
+          setCategories(d.categories || []);
+          setGroups(d.groups || []);
+          setLoading(false);
+        },
       }
-    };
-    loadData();
+    ).catch((err) => {
+      console.error('Failed to load categories/groups:', err);
+      if (active) setLoading(false);
+    });
     return () => { active = false; };
   }, []);
 
