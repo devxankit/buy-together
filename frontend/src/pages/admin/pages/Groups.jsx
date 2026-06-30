@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   X, Pencil, Trash2, Users, Check, Search, Loader2,
-  Boxes, Tag, Lock, Flag, UserPlus, UserMinus, MessageSquare, Star,
+  Boxes, Tag, Lock, Unlock, Flag, UserPlus, UserMinus, MessageSquare, Star,
 } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button, LocationAutocomplete, ImageUploader, ChatTranscript } from '../components';
@@ -240,8 +240,12 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
     setError('');
 
     if (!form.title.trim()) return setError('Group title is required.');
+    if (!form.productName.trim()) return setError('A target product / model is required.');
     const total = parseInt(form.spotsTotal, 10);
     if (Number.isNaN(total) || total < 0) return setError('Target spots must be a non-negative number.');
+    if (!isEdit && form.closesAt && form.closesAt < new Date().toISOString().slice(0, 10)) {
+      return setError('“Closes on” date cannot be in the past.');
+    }
 
     const payload = {
       title: form.title.trim(),
@@ -313,7 +317,7 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
             <Field label="Group title" required>
               <input style={inputStyle} value={form.title} onChange={set('title')} placeholder="e.g. Indore iPhone 16 Buyers" autoFocus />
             </Field>
-            <Field label="Product / model" hint="The specific item being pooled.">
+            <Field label="Product / model" required hint="The specific item being pooled.">
               <input style={inputStyle} value={form.productName} onChange={set('productName')} placeholder="e.g. iPhone 16 Pro 256GB" maxLength={120} />
             </Field>
           </div>
@@ -390,7 +394,7 @@ const GroupModal = ({ initial, onClose, onSaved }) => {
               />
             </Field>
             <Field label="Closes on" hint="Deadline for the group to fill.">
-              <input style={inputStyle} type="date" value={form.closesAt} onChange={set('closesAt')} />
+              <input style={inputStyle} type="date" min={new Date().toISOString().slice(0, 10)} value={form.closesAt} onChange={set('closesAt')} />
             </Field>
           </div>
 
@@ -976,7 +980,7 @@ const Groups = () => {
     )},
     { key: 'status', label: 'Status', render: (g) => <StatusBadge status={g.status} /> },
     {
-      key: 'actions', label: '', align: 'right', render: (g) => (
+      key: 'actions', label: 'Actions', align: 'right', render: (g) => (
         <div style={{ display: 'inline-flex', gap: 6 }}>
           <button onClick={() => setMembersOf(g)} className="admin-btn" title="Manage members" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', borderRadius: 8, border: 'none', background: T.primarySoft, color: T.primary, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
             <Users size={14} /> {g.spotsJoined}
@@ -996,7 +1000,11 @@ const Groups = () => {
               <Check size={15} />
             </button>
           )}
-          {g.status !== 'locked' && g.status !== 'completed' && (
+          {g.status === 'locked' ? (
+            <button onClick={() => setStatus(g, 'active')} className="admin-icon-btn" title="Unlock deal" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.violet}`, background: T.violetSoft || T.surfaceAlt, color: T.violet, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Unlock size={15} />
+            </button>
+          ) : g.status !== 'completed' && (
             <button onClick={() => setStatus(g, 'locked')} className="admin-icon-btn" title="Lock deal" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.line}`, background: T.surface, color: T.violet, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
               <Lock size={15} />
             </button>

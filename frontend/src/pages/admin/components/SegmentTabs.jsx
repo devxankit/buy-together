@@ -11,6 +11,7 @@ const SegmentTabs = ({ tabs = [], value, onChange }) => (
       return (
         <button
           key={t.id}
+          type="button"
           onClick={() => onChange?.(t.id)}
           className="admin-btn"
           style={{

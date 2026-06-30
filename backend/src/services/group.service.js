@@ -179,12 +179,23 @@ const deleteGroupByIdAdmin = async (id) => {
   return group;
 };
 
+// Group lifecycle states that are closed to new buyer joins. Admins can still
+// add members manually (e.g. to correct a roster), so this is only enforced on
+// the consumer join path via the `enforceOpen` flag.
+const CLOSED_TO_JOIN = [GROUP_STATUS.LOCKED, GROUP_STATUS.COMPLETED, GROUP_STATUS.FLAGGED];
+
 /** Add a user to the group's members (idempotent). */
-const addMember = async (groupId, userId) => {
+const addMember = async (groupId, userId, { enforceOpen = false } = {}) => {
   const group = await getGroupByIdAdmin(groupId);
 
   const user = await User.findById(userId);
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+
+  // A locked/completed/flagged group has stopped accepting buyers — block the
+  // consumer join until an admin re-opens it (sets the status back to active).
+  if (enforceOpen && CLOSED_TO_JOIN.includes(group.status)) {
+    throw new ApiError(httpStatus.CONFLICT, 'This group is closed and not accepting new members right now.');
+  }
 
   if (group.members.some((m) => String(m._id || m) === String(userId))) {
     throw new ApiError(httpStatus.CONFLICT, 'User is already a member of this group');

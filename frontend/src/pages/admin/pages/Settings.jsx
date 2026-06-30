@@ -4,6 +4,7 @@ import { Building2, KeyRound, X, ShieldCheck, Lock, Pencil, Trash2, UserPlus, Tr
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, Button, Avatar, StatusBadge, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
+import { isValidName, isValidEmail, isValidIndianPhone } from '../../../utils/validators';
 import {
   getSettings,
   updateSettings,
@@ -61,7 +62,10 @@ const AdminMemberModal = ({ initial, onClose, onSaved }) => {
     e?.preventDefault();
     setError('');
     if (!form.name.trim()) return setError('Name is required.');
+    if (!isValidName(form.name)) return setError('Name should contain only letters.');
     if (!form.email.trim()) return setError('Email is required.');
+    if (!isValidEmail(form.email)) return setError('Enter a valid email address.');
+    if (form.phone.trim() && !isValidIndianPhone(form.phone)) return setError('Enter a valid 10-digit contact number.');
     if (!isEdit && form.password.length < 8) return setError('Password must be at least 8 characters.');
     if (isEdit && form.password && form.password.length < 8) return setError('New password must be at least 8 characters.');
 
@@ -213,6 +217,27 @@ const Settings = () => {
   const setGen = (key) => (e) => setSettings((s) => ({ ...s, [key]: e.target.value }));
 
   const saveGeneral = async () => {
+    // Validate before hitting the API.
+    if (settings.contactNumber?.trim() && !isValidIndianPhone(settings.contactNumber)) {
+      return showToast('Enter a valid 10-digit phone number.', '⚠️');
+    }
+    if (settings.supportEmail?.trim() && !isValidEmail(settings.supportEmail)) {
+      return showToast('Enter a valid support email.', '⚠️');
+    }
+    if (settings.liveStatsTopCity?.trim() && !/[A-Za-z]/.test(settings.liveStatsTopCity)) {
+      return showToast('Top city should be a place name, not a number.', '⚠️');
+    }
+    const countFields = [
+      ['liveStatsActiveGroups', 'Active groups'],
+      ['liveStatsPeopleInterested', 'People interested'],
+      ['liveStatsGroupsGrowing', 'Groups growing'],
+    ];
+    for (const [key, label] of countFields) {
+      const val = settings[key];
+      if (val != null && String(val).trim() && !/\d/.test(String(val))) {
+        return showToast(`${label} should be a number.`, '⚠️');
+      }
+    }
     setSavingGen(true);
     try {
       const { data } = await updateSettings({

@@ -16,6 +16,14 @@ const Profile = () => {
 
   const currentUser = useSelector((state) => state.auth.user) || {};
   const [uploading, setUploading] = React.useState(false);
+  const [showBenefits, setShowBenefits] = React.useState(false);
+
+  const MEMBER_BENEFITS = [
+    { icon: '🎯', title: 'Priority access', desc: 'Jump the queue on closing-soon groups before spots run out.' },
+    { icon: '💸', title: 'Exclusive deals', desc: 'Member-only group prices and early access to new launches.' },
+    { icon: '⚡', title: 'Faster support', desc: 'Your support tickets are prioritised by our team.' },
+    { icon: '🛡️', title: 'Trusted badge', desc: 'Your verified badge builds trust with other buyers in groups.' },
+  ];
 
   const fileInputRef = React.useRef(null);
 
@@ -65,17 +73,18 @@ const Profile = () => {
 
   const userStats = currentUser.stats || {};
   const stats = [
-    { label: 'Groups Joined', value: String(userStats.groupsJoined ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg> },
-    { label: 'Groups Created', value: String(userStats.groupsCreated ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
-    { label: 'Deals Booked', value: String(userStats.dealsBooked ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg> },
-    { label: 'Active Pools', value: String(userStats.activePools ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.047 8.287 8.287 0 009 9.601a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" /></svg> },
+    { label: 'Groups Joined', route: '/groups', value: String(userStats.groupsJoined ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg> },
+    { label: 'Groups Created', route: '/groups', value: String(userStats.groupsCreated ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
+    { label: 'Deals Booked', route: '/deals', value: String(userStats.dealsBooked ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg> },
+    { label: 'Active Pools', route: '/groups', value: String(userStats.activePools ?? 0), icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.047 8.287 8.287 0 009 9.601a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" /></svg> },
   ];
 
   const shortcuts = [
     { label: 'Wishlist', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /> },
     { label: 'My Deals', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /> },
     { label: 'My Groups', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /> },
-    { label: 'Help & Support', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 12V8.928a6.5 6.5 0 00-12.728 0V12m12.728 0A2.5 2.5 0 0121 14.5V17a2.5 2.5 0 01-2.5 2.5h-1.5v-7h1.364zm-12.728 0A2.5 2.5 0 003 14.5V17a2.5 2.5 0 002.5 2.5h1.5v-7H5.636z" /> },
+    // 'Help & Support' tile removed — it duplicated 'Help Center' in the
+    // Support & Legal section below (both opened /help-center).
   ];
 
   const orders = [
@@ -169,8 +178,8 @@ const Profile = () => {
         <div className="bg-surface rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-line p-4 flex justify-between">
           {stats.map((item, idx) => (
             <React.Fragment key={idx}>
-              <div 
-                onClick={() => handleRoute('/groups')}
+              <div
+                onClick={() => handleRoute(item.route)}
                 className="flex flex-col items-center flex-1 cursor-pointer active:scale-95 transition-transform"
               >
                 <div className="text-primary mb-1.5">
@@ -203,11 +212,55 @@ const Profile = () => {
               <p className="text-[9.5px] font-medium text-white/90 leading-tight pr-2">Enjoy exclusive deals, priority access to closing soon groups and more benefits.</p>
             </div>
           </div>
-          <button className="flex-shrink-0 bg-surface text-primary text-[9.5px] font-bold rounded-full px-3 py-2 flex items-center gap-1 active:scale-95 transition-all shadow-sm">
+          <button
+            onClick={() => setShowBenefits(true)}
+            className="flex-shrink-0 bg-surface text-primary text-[9.5px] font-bold rounded-full px-3 py-2 flex items-center gap-1 active:scale-95 transition-all shadow-sm"
+          >
             View Benefits
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
           </button>
         </div>
+
+        {/* Member benefits sheet (opened from "View Benefits") */}
+        {showBenefits && (
+          <div
+            onClick={() => setShowBenefits(false)}
+            className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center animate-fadeIn"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-[430px] bg-surface rounded-t-[24px] sm:rounded-[24px] p-5 pb-7 flex flex-col gap-4 animate-slideUp"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-[15px] font-black text-ink">Verified Member Benefits</h3>
+                <button
+                  onClick={() => setShowBenefits(false)}
+                  className="w-8 h-8 rounded-full bg-surface-alt flex items-center justify-center active:scale-90 transition-all"
+                  aria-label="Close"
+                >
+                  <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {MEMBER_BENEFITS.map((b) => (
+                  <div key={b.title} className="flex items-start gap-3 bg-surface-alt rounded-2xl p-3">
+                    <span className="text-xl leading-none mt-0.5">{b.icon}</span>
+                    <div>
+                      <p className="text-[12.5px] font-extrabold text-ink">{b.title}</p>
+                      <p className="text-[10.5px] font-medium text-muted leading-tight mt-0.5">{b.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowBenefits(false)}
+                className="h-[44px] bg-primary text-white text-[13px] font-black rounded-xl active:scale-95 transition-all"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* My Shortcuts */}
         <div>

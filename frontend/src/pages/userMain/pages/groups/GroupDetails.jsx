@@ -254,23 +254,8 @@ const GroupDetails = () => {
               : `Join ${spotsJoined} others and get access to exclusive group chat, polls, and discussions.`
             }
           </p>
-
-          {!isMember ? (
-            <button
-              onClick={handleJoin}
-              disabled={actionLoading}
-              className="bg-[#0D9488] hover:bg-[#0B7A70] text-white font-extrabold text-[12.5px] px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95"
-            >
-              <span>+</span> {actionLoading ? 'Joining...' : 'Join Group Now'}
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true } })}
-              className="bg-[#0D9488] hover:bg-[#0B7A70] text-white font-extrabold text-[12.5px] px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95"
-            >
-              Enter Group Chat 💬
-            </button>
-          )}
+          {/* Primary join / enter-chat action lives in the fixed bottom bar below
+              to avoid a duplicate button on the same screen. */}
         </div>
       </div>
 

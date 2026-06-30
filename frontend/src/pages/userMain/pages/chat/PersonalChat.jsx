@@ -28,7 +28,7 @@ const ChatSkeleton = () => (
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
-const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, isMenuOpen, onViewContact, onReportUser }) => (
+const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, isMenuOpen, onViewContact, onReportUser, isSelfChat }) => (
   <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-line sticky top-0 z-30 w-full gap-2">
     <div className="flex items-center gap-3 min-w-0 flex-1">
       <button onClick={() => navigate(-1)} className="p-1 active:scale-95 transition-all flex-shrink-0 text-ink hover:bg-surface-alt rounded-lg">
@@ -79,16 +79,20 @@ const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, is
             </svg>
             <span>Mute Notifications</span>
           </button>
-          <div className="border-t border-line my-1"></div>
-          <button
-            onClick={onReportUser}
-            className="w-full px-4 py-2.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>Report User</span>
-          </button>
+          {!isSelfChat && (
+            <>
+              <div className="border-t border-line my-1"></div>
+              <button
+                onClick={onReportUser}
+                className="w-full px-4 py-2.5 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Report User</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -911,6 +915,7 @@ const PersonalChat = () => {
         isMenuOpen={showHeaderMenu}
         onViewContact={openProfile}
         onReportUser={handleReportUser}
+        isSelfChat={!!currentUserId && String(chatId) === String(currentUserId)}
       />
       
       {/* Scrollable messages container */}

@@ -4,6 +4,7 @@ import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, SearchInput, SegmentTabs, Button, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
 import { ADMIN_STATS_REFRESH_EVENT } from '../layout/AdminLayout';
+import { getChatSocket } from '../../../services/socket';
 import {
   listTicketsAdmin,
   getTicketAdmin,
@@ -69,6 +70,32 @@ const TicketModal = ({ ticketId, onClose, onChanged }) => {
   }, [ticketId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Live thread: join this ticket's room and merge user replies / changes as
+  // they arrive, so support sees responses without re-opening the modal.
+  useEffect(() => {
+    if (!ticketId) return undefined;
+    let socket;
+    try { socket = getChatSocket(); } catch { return undefined; }
+    if (!socket) return undefined;
+
+    const onUpdate = (payload) => {
+      if (!payload || String(payload.id) !== String(ticketId)) return;
+      // Preserve the populated `user` (not included in the socket payload).
+      setTicket((prev) => (prev ? { ...prev, ...payload } : payload));
+    };
+
+    const join = () => socket.emit('join_ticket', ticketId);
+    join();
+    socket.on('connect', join);
+    socket.on('ticket_update', onUpdate);
+
+    return () => {
+      socket.emit('leave_ticket', ticketId);
+      socket.off('ticket_update', onUpdate);
+      socket.off('connect', join);
+    };
+  }, [ticketId]);
 
   const sendReply = async () => {
     if (!reply.trim()) return;
@@ -151,7 +178,7 @@ const TicketModal = ({ ticketId, onClose, onChanged }) => {
                     background: isAdmin ? T.primary : T.surfaceAlt,
                     color: isAdmin ? '#fff' : T.ink,
                     border: isAdmin ? 'none' : `1px solid ${T.line}`,
-                    borderRadius: radius.lg, padding: '10px 13px', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-line',
+                    borderRadius: radius.lg, padding: '10px 13px', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-line', wordBreak: 'break-word', overflowWrap: 'anywhere',
                   }}>
                     {m.body}
                   </div>
@@ -235,6 +262,29 @@ const Support = () => {
   useEffect(() => {
     const t = setTimeout(fetchData, 250);
     return () => clearTimeout(t);
+  }, [fetchData]);
+
+  // Live queue: any ticket created/replied/updated anywhere pings the shared
+  // `admins` room — refresh the list + counts (debounced) so the console stays
+  // current without a manual reload.
+  useEffect(() => {
+    let socket;
+    try { socket = getChatSocket(); } catch { return undefined; }
+    if (!socket) return undefined;
+
+    let timer;
+    const onChanged = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { fetchData(); refreshBadges(); }, 400);
+    };
+    socket.on('ticket_changed', onChanged);
+    socket.on('ticket_update', onChanged);
+
+    return () => {
+      clearTimeout(timer);
+      socket.off('ticket_changed', onChanged);
+      socket.off('ticket_update', onChanged);
+    };
   }, [fetchData]);
 
   // Keep the sidebar "open tickets" badge fresh after any change.

@@ -162,7 +162,7 @@ const listGroups = {
 const createGroup = {
   body: joi.object().keys({
     title: joi.string().trim().min(2).max(120).required(),
-    productName: joi.string().trim().max(120).allow('', null),
+    productName: joi.string().trim().min(2).max(120).required(),
     description: joi.string().max(1000).allow('', null),
     slogan: joi.string().max(240).allow('', null),
     category: joi.string().trim().max(60).allow('', null),

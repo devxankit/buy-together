@@ -7,21 +7,31 @@ import { useUserMainContext } from '../../context';
 import { showToast } from '../../../../utils/toast';
 import LocationPicker from './components/LocationPicker';
 
+// Persist the in-progress form so an accidental refresh (or navigating away and
+// back) doesn't wipe everything the user typed. Cleared on a successful create.
+const DRAFT_KEY = 'create_group_draft';
+const readDraft = () => {
+  try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY)) || {}; }
+  catch { return {}; }
+};
+
 const CreateGroup = () => {
   const navigate = useNavigate();
   const { selectedCity } = useUserMainContext();
 
+  const [draft] = useState(readDraft); // one-time read of any saved draft
+
   // Form Fields
-  const [groupName, setGroupName] = useState('');
-  const [goal, setGoal] = useState(10);
-  const [deadline, setDeadline] = useState('7');
-  const [selectedMainCat, setSelectedMainCat] = useState('');
-  const [selectedSubCat, setSelectedSubCat] = useState('');
-  const [productName, setProductName] = useState('');
-  const [productDesc, setProductDesc] = useState('');
+  const [groupName, setGroupName] = useState(draft.groupName || '');
+  const [goal, setGoal] = useState(draft.goal || 10);
+  const [deadline, setDeadline] = useState(draft.deadline || '7');
+  const [selectedMainCat, setSelectedMainCat] = useState(draft.selectedMainCat || '');
+  const [selectedSubCat, setSelectedSubCat] = useState(draft.selectedSubCat || '');
+  const [productName, setProductName] = useState(draft.productName || '');
+  const [productDesc, setProductDesc] = useState(draft.productDesc || '');
 
   // Image Upload Fields
-  const [image, setImage] = useState('');
+  const [image, setImage] = useState(draft.image || '');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadErr, setUploadErr] = useState('');
@@ -87,6 +97,16 @@ const CreateGroup = () => {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }, []);
+
+  // Keep the draft in sync as the user fills the form (location/coordinates are
+  // re-derived from the device on mount, so they aren't persisted).
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        groupName, goal, deadline, selectedMainCat, selectedSubCat, productName, productDesc, image,
+      }));
+    } catch { /* storage full / unavailable — ignore */ }
+  }, [groupName, goal, deadline, selectedMainCat, selectedSubCat, productName, productDesc, image]);
 
   // Fetch active categories on mount
   useEffect(() => {
@@ -172,6 +192,7 @@ const CreateGroup = () => {
 
     try {
       await createGroup(payload);
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       showToast('Group created successfully! 🎉');
       navigate('/groups');
     } catch (err) {

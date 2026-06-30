@@ -39,6 +39,12 @@ const ImageUploader = ({ value, onChange, folder = 'categories', maxSizeMb = MAX
 
   useEffect(() => () => clearLocal(), []); // revoke object URL on unmount
 
+  // When the parent clears `value` (e.g. the form is reset after submitting),
+  // drop any lingering local blob preview so the uploader returns to empty.
+  useEffect(() => {
+    if (!value && !uploading) clearLocal();
+  }, [value, uploading]);
+
   const handleFile = async (file) => {
     if (!file) return;
     setErr('');

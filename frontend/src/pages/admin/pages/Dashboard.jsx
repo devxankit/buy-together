@@ -1,12 +1,28 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-import { TrendingUp, MapPin, Activity, Users } from 'lucide-react';
+import { TrendingUp, TrendingDown, MapPin, Activity, Users } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { StatCard, Panel, PageHeader, BarChart, DonutChart, Button, Avatar, Sparkline } from '../components';
+import { getAdminDashboard } from '../../../services/admin.api';
 import {
-  kpis, revenueSeries, categoryDemand, activityFeed, vendors, topContributors,
+  kpis as mockKpis, revenueSeries as mockRevenueSeries, categoryDemand as mockCategoryDemand,
+  activityFeed as mockActivityFeed, vendors, topContributors,
   heatmap, heatmapRegions, heatmapCategories,
 } from '../data/mockData';
+
+// Relative "time ago" for the live activity feed (events carry an ISO `at`).
+const timeAgo = (iso) => {
+  if (!iso) return '';
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+};
 
 const ACCENT = { primary: T.primary, violet: T.violet, info: T.info, amber: T.amber, danger: T.danger };
 
@@ -40,6 +56,36 @@ const topRegions = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const pendingVendors = vendors.filter(v => v.status === 'pending');
+
+  // Live platform data (KPIs, chart, category demand, regions, activity). Falls
+  // back to illustrative mock data while loading or if the request fails.
+  const [live, setLive] = useState(null);
+  useEffect(() => {
+    let active = true;
+    const load = () => getAdminDashboard()
+      .then(({ data }) => { if (active) setLive(data); })
+      .catch(() => { /* keep showing fallback */ });
+    load();
+    const timer = setInterval(load, 30000); // keep the dashboard fresh
+    return () => { active = false; clearInterval(timer); };
+  }, []);
+
+  const isLive = !!live;
+  const kpis = live?.kpis?.length ? live.kpis : mockKpis;
+  const revenueSeries = live?.revenueSeries?.length ? live.revenueSeries : mockRevenueSeries;
+  const categoryDemand = live?.categoryDemand?.length ? live.categoryDemand : mockCategoryDemand;
+  const topRegionsData = live?.topRegions?.length ? live.topRegions : topRegions;
+  const activityFeed = live?.activityFeed?.length ? live.activityFeed : mockActivityFeed;
+
+  // Growth badge for the groups chart — derived from its last two months.
+  const chartDelta = (() => {
+    if (revenueSeries.length < 2) return null;
+    const cur = revenueSeries[revenueSeries.length - 1].value;
+    const prev = revenueSeries[revenueSeries.length - 2].value;
+    if (!prev) return cur > 0 ? 100 : 0;
+    return Math.round(((cur - prev) / prev) * 1000) / 10;
+  })();
+  const chartUp = chartDelta == null || chartDelta >= 0;
 
   const handleExport = () => {
     const rows = [];
@@ -84,7 +130,7 @@ const Dashboard = () => {
     // 5. Top Regions
     rows.push(['--- TOP REGIONS ---']);
     rows.push(['Region', 'Demand Score', 'Growth']);
-    topRegions.forEach(r => {
+    topRegionsData.forEach(r => {
       rows.push([r.region, r.demand, r.growth]);
     });
 
@@ -133,11 +179,16 @@ const Dashboard = () => {
       {/* Charts row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.7fr) minmax(0, 1fr)', gap: 18, marginBottom: 18 }} className="admin-grid-2">
         <Panel
-          title="Gross Deal Value"
-          subtitle="Monthly GMV in ₹ lakhs · last 12 months"
-          action={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: T.success, background: T.successSoft, padding: '5px 10px', borderRadius: 999 }}><TrendingUp size={14} />+18.7%</span>}
+          title={isLive ? 'Groups Created' : 'Gross Deal Value'}
+          subtitle={isLive ? 'New groups per month · last 12 months' : 'Monthly GDV in ₹ lakhs · last 12 months'}
+          action={
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: chartUp ? T.success : T.danger, background: chartUp ? T.successSoft : (T.dangerSoft || `${T.danger}14`), padding: '5px 10px', borderRadius: 999 }}>
+              {chartUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              {chartDelta == null ? '+18.7%' : `${chartDelta >= 0 ? '+' : ''}${chartDelta}%`}
+            </span>
+          }
         >
-          <BarChart data={revenueSeries} color={T.primary} height={236} unit="₹" />
+          <BarChart data={revenueSeries} color={T.primary} height={236} unit={isLive ? '' : '₹'} />
         </Panel>
 
         <Panel title="Category Demand" subtitle="Share of active group interest">
@@ -204,9 +255,9 @@ const Dashboard = () => {
           </div>
         </Panel>
 
-        <Panel title="Top Regions" subtitle="By demand index">
+        <Panel title="Top Regions" subtitle={isLive ? 'By active group count' : 'By demand index'}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {topRegions.map((r, i) => (
+            {topRegionsData.map((r, i) => (
               <div key={r.region}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -215,7 +266,7 @@ const Dashboard = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: T.success }}>{r.growth}</span>
-                    <span className="font-mono-num" style={{ fontSize: 13, fontWeight: 700, color: T.ink, width: 26, textAlign: 'right' }}>{r.demand}</span>
+                    <span className="font-mono-num" style={{ fontSize: 13, fontWeight: 700, color: T.ink, width: 36, textAlign: 'right' }}>{isLive ? r.count : r.demand}</span>
                   </div>
                 </div>
                 <div style={{ height: 7, borderRadius: 99, background: T.lineSoft, overflow: 'hidden' }}>
@@ -246,7 +297,7 @@ const Dashboard = () => {
                     <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink }}>{a.title}</div>
                     <div style={{ fontSize: 12.5, color: T.muted, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.detail}</div>
                   </div>
-                  <span style={{ fontSize: 11.5, color: T.faint, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>{a.time}</span>
+                  <span style={{ fontSize: 11.5, color: T.faint, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>{a.time || timeAgo(a.at)}</span>
                 </div>
               );
             })}
@@ -291,7 +342,14 @@ const Dashboard = () => {
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.name}</div>
                     <div style={{ fontSize: 11.5, color: T.muted }}>{v.category} · {v.city}</div>
                   </div>
-                  <button className="admin-btn" style={{ height: 30, padding: '0 11px', borderRadius: 8, border: 'none', background: T.primary, color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>Review</button>
+                  <button
+                    onClick={() => {
+                      sessionStorage.setItem('admin_search_query', v.name);
+                      navigate('/admin/vendors');
+                    }}
+                    className="admin-btn"
+                    style={{ height: 30, padding: '0 11px', borderRadius: 8, border: 'none', background: T.primary, color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}
+                  >Review</button>
                 </div>
               ))}
             </div>

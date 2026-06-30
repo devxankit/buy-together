@@ -3,6 +3,7 @@ const config = require('../config/env');
 const logger = require('../utils/logger');
 const pushService = require('../services/push.service');
 const Group = require('../models/Group');
+const { ROLES } = require('../utils/constants');
 
 const CHAT_NAMESPACE = '/chat';
 
@@ -39,13 +40,20 @@ const chatSocket = (io) => {
   chatNamespace.on('connection', (socket) => {
     const userIdStr = socket.user?.id ? String(socket.user.id) : null;
     if (userIdStr) {
-      // Personal room for user-targeted events (e.g. DM unread-badge updates)
-      // even when the user isn't viewing any specific chat.
+      // Personal room for user-targeted events (e.g. DM unread-badge updates,
+      // realtime support-ticket replies) even when the user isn't viewing any
+      // specific chat or ticket.
       socket.join(`user:${userIdStr}`);
       onlineUsers[userIdStr] = (onlineUsers[userIdStr] || 0) + 1;
       if (onlineUsers[userIdStr] === 1) {
         chatNamespace.emit('user_status', { userId: userIdStr, status: 'online' });
       }
+    }
+
+    // Admins share a room so the support queue updates live for everyone on it
+    // whenever a ticket is created, replied to, or has its status changed.
+    if (socket.user?.role === ROLES.ADMIN) {
+      socket.join('admins');
     }
 
     logger.info(`Chat socket connected: ${socket.id} (user ${socket.user?.id})`);
@@ -59,6 +67,18 @@ const chatSocket = (io) => {
     socket.on('leave_group', (groupId) => {
       if (!groupId) return;
       socket.leave(String(groupId));
+    });
+
+    // Whoever is viewing a support-ticket thread (its owner or an admin) joins
+    // the ticket's room so new replies / status changes arrive live.
+    socket.on('join_ticket', (ticketId) => {
+      if (!ticketId) return;
+      socket.join(`ticket:${ticketId}`);
+    });
+
+    socket.on('leave_ticket', (ticketId) => {
+      if (!ticketId) return;
+      socket.leave(`ticket:${ticketId}`);
     });
 
     socket.on('get_user_status', (targetUserId, callback) => {

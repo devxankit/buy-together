@@ -1,13 +1,33 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { showToast } from '../../../../utils/toast';
+
+const STORAGE_KEY = 'privacySettings';
+const DEFAULT_PREFS = {
+  profileVisible: true, showGroups: true, showActivity: false,
+  shareLocation: true, showOnline: true, allowInvites: true,
+};
 
 const PrivacySettings = () => {
   const navigate = useNavigate();
-  const [prefs, setPrefs] = useState({
-    profileVisible: true, showGroups: true, showActivity: false,
-    shareLocation: true, showOnline: true, allowInvites: true,
+  // Hydrate from the last saved settings so toggles survive navigation/reload.
+  const [prefs, setPrefs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? { ...DEFAULT_PREFS, ...JSON.parse(saved) } : DEFAULT_PREFS;
+    } catch {
+      return DEFAULT_PREFS;
+    }
   });
+  const [saving, setSaving] = useState(false);
   const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
+
+  const handleSave = () => {
+    setSaving(true);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    showToast('Privacy settings saved! 🔒');
+    setTimeout(() => setSaving(false), 400);
+  };
 
   const items = [
     { key: 'profileVisible', label: 'Public Profile', desc: 'Allow others to see your profile' },
@@ -46,6 +66,14 @@ const PrivacySettings = () => {
           <p className="text-[12px] font-bold text-amber-700">🔒 Data Protection</p>
           <p className="text-[11px] text-amber-600 mt-1 leading-snug">Your data is encrypted and never shared with third parties. We comply with all Indian data protection regulations.</p>
         </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="mt-5 w-full h-[50px] bg-primary rounded-2xl text-white text-[14px] font-black flex items-center justify-center gap-2 shadow-lg shadow-teal-500/25 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+        >
+          {saving ? 'Saving…' : 'Save Changes'}
+        </button>
       </div>
     </div>
   );

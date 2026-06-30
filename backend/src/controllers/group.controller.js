@@ -25,7 +25,7 @@ const getGroup = catchAsync(async (req, res) => {
 });
 
 const joinGroup = catchAsync(async (req, res) => {
-  const group = await groupService.addMember(req.params.groupId, req.user.id);
+  const group = await groupService.addMember(req.params.groupId, req.user.id, { enforceOpen: true });
   res.send(group);
 });
 

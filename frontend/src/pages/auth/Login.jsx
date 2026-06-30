@@ -125,7 +125,7 @@ const Login = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <span>Need help?</span>
-            <span className="text-primary font-bold">Contact Support</span>
+            <a href="mailto:support@buytogether.in?subject=Login%20help" className="text-primary font-bold cursor-pointer active:opacity-75">Contact Support</a>
           </div>
           <p className="text-[9.5px] text-muted text-center leading-snug">
             By continuing, you agree to our{' '}

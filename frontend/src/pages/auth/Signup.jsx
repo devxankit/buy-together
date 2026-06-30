@@ -1,21 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register } from '../../redux/asyncActions/authActions';
+import { isValidName } from '../../utils/validators';
+import { showToast } from '../../utils/toast';
+
+// Draft is kept so that visiting Terms / Privacy Policy and pressing back
+// doesn't wipe what the user already typed.
+const DRAFT_KEY = 'signup_draft';
+const readDraft = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem(DRAFT_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
 
 const Signup = () => {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [agreed, setAgreed] = useState(false);
+  const draft = readDraft();
+  const [name, setName] = useState(draft.name || '');
+  const [phone, setPhone] = useState(draft.phone || '');
+  const [agreed, setAgreed] = useState(draft.agreed || false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
 
+  // Persist the in-progress draft on every change.
+  useEffect(() => {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ name, phone, agreed }));
+  }, [name, phone, agreed]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!agreed || phone.length !== 10) return;
+    if (!isValidName(name)) {
+      showToast('Please enter a valid full name (letters only).', '⚠️');
+      return;
+    }
     try {
       const res = await dispatch(register({ name, phone })).unwrap();
+      sessionStorage.removeItem(DRAFT_KEY); // clear once signup proceeds
       navigate('/otp', { state: { flow: 'signup', phone, name, devOtp: res.devOtp } });
     } catch {
       // error is surfaced via redux state below
@@ -185,7 +209,7 @@ const Signup = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <span>Need help?</span>
-            <span className="text-primary font-bold">Contact Support</span>
+            <a href="mailto:support@buytogether.in?subject=Signup%20help" className="text-primary font-bold cursor-pointer active:opacity-75">Contact Support</a>
           </div>
           <p className="text-[9.5px] text-muted text-center leading-snug">
             By continuing, you agree to our{' '}

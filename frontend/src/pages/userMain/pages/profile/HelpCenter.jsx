@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentPage } from './useContentPage';
 import { showToast } from '../../../../utils/toast';
+import { getChatSocket } from '../../../../services/socket';
 import {
   createTicket,
   getMyTickets,
@@ -135,7 +136,7 @@ const TicketForm = ({ onSubmitted }) => {
 };
 
 // ── Single ticket thread (detail view) ──────────────────────────────
-const TicketThread = ({ ticketId, onBack }) => {
+const TicketThread = ({ ticketId }) => {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
@@ -154,6 +155,31 @@ const TicketThread = ({ ticketId, onBack }) => {
 
   useEffect(() => { load(); }, [load]);
 
+  // Live updates: join this ticket's room and merge in admin replies / status
+  // changes as they happen, so the user never has to refresh.
+  useEffect(() => {
+    if (!ticketId) return undefined;
+    let socket;
+    try { socket = getChatSocket(); } catch { return undefined; }
+    if (!socket) return undefined;
+
+    const onUpdate = (payload) => {
+      if (!payload || String(payload.id) !== String(ticketId)) return;
+      setTicket((prev) => (prev ? { ...prev, ...payload } : payload));
+    };
+
+    const join = () => socket.emit('join_ticket', ticketId);
+    join();
+    socket.on('connect', join); // re-join after a reconnect
+    socket.on('ticket_update', onUpdate);
+
+    return () => {
+      socket.emit('leave_ticket', ticketId);
+      socket.off('ticket_update', onUpdate);
+      socket.off('connect', join);
+    };
+  }, [ticketId]);
+
   const send = async () => {
     if (!reply.trim()) return;
     setSending(true);
@@ -170,11 +196,7 @@ const TicketThread = ({ ticketId, onBack }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <button onClick={onBack} className="flex items-center gap-1.5 text-[12px] font-bold text-primary w-fit">
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-        Back to my tickets
-      </button>
-
+      {/* Back navigation is handled by the single context-aware header button. */}
       {loading ? (
         <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
       ) : ticket ? (
@@ -193,7 +215,7 @@ const TicketThread = ({ ticketId, onBack }) => {
                 <p className={`text-[9px] font-black mb-0.5 ${m.sender === 'admin' ? 'text-teal-700' : 'text-white/70'}`}>
                   {m.sender === 'admin' ? (m.senderName || 'Support') : 'You'} · {fmtDate(m.createdAt)}
                 </p>
-                <p className={`text-[12px] leading-relaxed whitespace-pre-line ${m.sender === 'admin' ? 'text-ink' : 'text-white'}`}>{m.body}</p>
+                <p className={`text-[12px] leading-relaxed whitespace-pre-line break-words [overflow-wrap:anywhere] ${m.sender === 'admin' ? 'text-ink' : 'text-white'}`}>{m.body}</p>
               </div>
             ))}
           </div>
@@ -263,7 +285,15 @@ const HelpCenter = () => {
   return (
     <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans">
       <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-surface border-b border-line sticky top-0 z-20">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all">
+        <button
+          onClick={() => {
+            // When viewing a ticket, the single back button returns to the
+            // ticket list; otherwise it leaves the Help Center.
+            if (openTicketId) { setOpenTicketId(null); setRefreshKey((k) => k + 1); }
+            else navigate(-1);
+          }}
+          className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all"
+        >
           <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <h1 className="text-[15px] font-black text-ink">{page?.title || 'Help Center'}</h1>
@@ -302,7 +332,7 @@ const HelpCenter = () => {
             </div>
           </>
         ) : openTicketId ? (
-          <TicketThread ticketId={openTicketId} onBack={() => { setOpenTicketId(null); setRefreshKey((k) => k + 1); }} />
+          <TicketThread ticketId={openTicketId} />
         ) : (
           <MyTickets onOpen={setOpenTicketId} refreshKey={refreshKey} />
         )}

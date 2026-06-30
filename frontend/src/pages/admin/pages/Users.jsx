@@ -3,6 +3,7 @@ import { Pencil, Trash2, X, Phone, User as UserIcon, MapPin, MessageSquare, Sear
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button, ChatTranscript, StatCard } from '../components';
 import { showToast } from '../../../utils/toast';
+import { isValidName, isValidIndianPhone, hasLetters } from '../../../utils/validators';
 import {
   listUsersAdmin,
   createUserAdmin,
@@ -97,9 +98,13 @@ const UserModal = ({ initial, onClose, onSaved }) => {
     e?.preventDefault();
     setError('');
     if (!form.name.trim()) return setError('Full name is required.');
+    if (!isValidName(form.name)) return setError('Full name should contain only letters.');
     const phoneDigits = String(form.phone).replace(/\D/g, '').slice(-10);
-    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+    if (!isValidIndianPhone(phoneDigits)) {
       return setError('Enter a valid 10-digit Indian mobile number.');
+    }
+    if (form.location.trim() && !hasLetters(form.location)) {
+      return setError('Enter a valid location.');
     }
 
     const payload = {

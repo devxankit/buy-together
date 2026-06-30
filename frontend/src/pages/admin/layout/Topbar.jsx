@@ -362,7 +362,7 @@ const Topbar = ({ onOpenMobileNav }) => {
                 )}
               </div>
               <button
-                onClick={() => { setBellOpen(false); navigate('/admin/fraud'); }}
+                onClick={() => { setBellOpen(false); navigate('/admin'); }}
                 className="admin-btn"
                 style={{ width: '100%', padding: '11px', border: 'none', background: T.surfaceAlt, color: T.primary, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
               >

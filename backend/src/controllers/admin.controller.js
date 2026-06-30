@@ -11,6 +11,11 @@ const getStats = catchAsync(async (req, res) => {
   res.send(stats);
 });
 
+const getDashboard = catchAsync(async (req, res) => {
+  const data = await adminService.getDashboard();
+  res.send(data);
+});
+
 const listUsers = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['search', 'status', 'role', 'activity', 'page', 'limit', 'sortBy']);
   const result = await adminService.queryUsers(filter);
@@ -162,6 +167,7 @@ const updateSettings = catchAsync(async (req, res) => {
 
 module.exports = {
   getStats,
+  getDashboard,
   listUsers,
   getUserStats,
   getUser,

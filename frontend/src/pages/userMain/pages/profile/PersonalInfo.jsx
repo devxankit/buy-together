@@ -5,6 +5,7 @@ import { updateUser } from '../../../../redux/slices/authSlice';
 import { updateUserProfile } from '../../../../services/user.api';
 import { uploadImage } from '../../../../services/upload.api';
 import { showToast } from '../../../../utils/toast';
+import { isValidEmail, isNotFutureDate, hasLetters } from '../../../../utils/validators';
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
@@ -51,6 +52,18 @@ const PersonalInfo = () => {
   const handleSave = async () => {
     if (!name.trim()) {
       showToast('Full name is required.', '⚠️');
+      return;
+    }
+    if (email.trim() && !isValidEmail(email)) {
+      showToast('Enter a valid email address.', '⚠️');
+      return;
+    }
+    if (!isNotFutureDate(dob)) {
+      showToast('Date of birth cannot be in the future.', '⚠️');
+      return;
+    }
+    if (location.trim() && !hasLetters(location)) {
+      showToast('Enter a valid city / location.', '⚠️');
       return;
     }
     if (saving) return;
@@ -116,11 +129,11 @@ const PersonalInfo = () => {
           { label: 'Email Address', val: email, set: setEmail, type: 'email' },
           { label: 'Phone Number (Read-only)', val: phone, set: () => {}, type: 'tel', disabled: true },
           { label: 'Location (City, State)', val: location, set: setLocation, type: 'text' },
-          { label: 'Date of Birth', val: dob, set: setDob, type: 'date' },
+          { label: 'Date of Birth', val: dob, set: setDob, type: 'date', max: new Date().toISOString().slice(0, 10) },
         ].map(f => (
           <div key={f.label} className={`border-2 border-line rounded-2xl px-4 py-3 bg-surface transition-all ${f.disabled ? 'opacity-60' : 'focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(13,148,136,0.08)]'}`}>
             <p className="text-[10px] font-bold text-muted mb-1">{f.label}</p>
-            <input type={f.type} value={f.val} onChange={e => f.set(e.target.value)} disabled={f.disabled} className="w-full text-[14px] font-bold text-ink bg-transparent outline-none" />
+            <input type={f.type} max={f.max} value={f.val} onChange={e => f.set(e.target.value)} disabled={f.disabled} className="w-full text-[14px] font-bold text-ink bg-transparent outline-none" />
           </div>
         ))}
 

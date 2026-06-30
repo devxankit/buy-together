@@ -278,12 +278,8 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
     }
   };
 
-  const handleDoubleClick = () => {
-    if (onReply) onReply({ id, content, name });
-  };
-
   return (
-    <div 
+    <div
       className="flex gap-2.5 mb-5 px-4 w-full select-none cursor-pointer active:opacity-95 transition-opacity"
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
@@ -291,7 +287,6 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
       onMouseDown={handleStart}
       onMouseUp={handleEnd}
       onMouseLeave={handleEnd}
-      onDoubleClick={handleDoubleClick}
     >
       <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1" />
       <div className="flex-1 flex flex-col min-w-0">
@@ -317,7 +312,12 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
           {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap">{content}</p>}
 
           {image && (
-            <div className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all relative">
+            <div
+              onClick={(e) => { e.stopPropagation(); if (!uploading) window.open(image, '_blank', 'noopener'); }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all relative"
+            >
               <img src={image} alt="Attachment" className={`w-full h-auto object-cover max-h-[200px] transition-all ${uploading ? 'opacity-60 blur-[2px]' : ''}`} />
               {uploading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -463,12 +463,18 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
             <div className="mt-2 border border-line rounded-xl p-3 bg-[#FDFDFD]">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-[11px] font-bold text-ink pr-2">{quoteData.question}</span>
-                <span className="text-[10px] font-bold text-primary whitespace-nowrap cursor-pointer active:scale-95">View Poll</span>
+                <span onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} className="text-[10px] font-bold text-primary whitespace-nowrap cursor-pointer active:scale-95">View Poll</span>
               </div>
               
               <div className="flex flex-col gap-2">
                 {quoteData.options.map((opt, idx) => (
-                  <div key={idx} onClick={() => onVote && onVote(id, idx)} className="flex flex-col gap-1 cursor-pointer group">
+                  <div
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); onVote && onVote(id, idx); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    className="flex flex-col gap-1 cursor-pointer group"
+                  >
                     <div className={`flex items-center gap-2 text-[10.5px] ${opt.selected ? 'font-bold text-ink' : 'font-semibold text-faint'}`}>
                       {opt.selected ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
@@ -509,9 +515,18 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
 
 const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, onLike, onReply }) => {
   const endRef = useRef(null);
+  const prevLenRef = useRef(0);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const firstLoad = prevLenRef.current === 0;
+    const grew = messages.length > prevLenRef.current;
+    // Only auto-scroll when a NEW message arrives (not when an existing one is
+    // edited, e.g. a like/reaction). First load jumps instantly to the bottom
+    // instead of animating a long smooth scroll.
+    if (grew || typingUsers.length > 0) {
+      endRef.current?.scrollIntoView({ behavior: firstLoad ? 'auto' : 'smooth' });
+    }
+    prevLenRef.current = messages.length;
   }, [messages, typingUsers]);
 
   return (
@@ -749,6 +764,12 @@ const CreatePollModal = ({ onClose, onSubmit }) => {
 
   const handleSubmit = () => {
     if(!question.trim() || options.some(o => !o.trim())) return;
+    // Reject duplicate options (case-insensitive).
+    const normalized = options.map(o => o.trim().toLowerCase());
+    if (new Set(normalized).size !== normalized.length) {
+      showToast('Poll options must be unique.', '⚠️');
+      return;
+    }
     onSubmit(question, options);
   };
 
@@ -1746,16 +1767,25 @@ const GroupChat = () => {
     }
   };
 
-  const handleShareGroup = () => {
+  const handleShareGroup = async () => {
     const shareUrl = `${window.location.origin}/groups/${resolvedGroupId}`;
-    const shareText = `Hey! Join our co-buying group for ${group.title} on Buy Together! 🤝 Link: ${shareUrl}`;
-    navigator.clipboard.writeText(shareText)
-      .then(() => {
-        showToast('Invite link copied to clipboard! 🔗', '🚀');
-      })
-      .catch(() => {
-        showToast('Failed to copy link.', '❌');
-      });
+    const shareText = `Hey! Join our co-buying group for ${group.title} on Buy Together! 🤝`;
+    // Prefer the native share sheet so users can pick WhatsApp/SMS/etc; fall
+    // back to copying the link when the Web Share API isn't available.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: group.title, text: shareText, url: shareUrl });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return; // user dismissed the sheet
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText} Link: ${shareUrl}`);
+      showToast('Invite link copied to clipboard! 🔗', '🚀');
+    } catch {
+      showToast('Failed to share.', '❌');
+    }
   };
 
   const handleTogglePin = () => {
@@ -2033,7 +2063,8 @@ const GroupChat = () => {
             </div>
           )}
 
-          {/* Chat Input */}
+          {/* Chat Input — only on the Chat tab; Polls/Members/Media have no composer */}
+          {activeTab === 'Chat' && (
           <div className="px-4 py-2 bg-transparent">
             <div className="flex items-center gap-2">
               {/* Main Input Box */}
@@ -2085,6 +2116,7 @@ const GroupChat = () => {
               </button>
             </div>
           </div>
+          )}
 
           {/* Action Panel - shows buy status picker then confirm */}
           {!isInterestConfirmed && (

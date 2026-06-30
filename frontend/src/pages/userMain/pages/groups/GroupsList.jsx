@@ -20,7 +20,10 @@ import JoinedGroupsList from './components/JoinedGroupsList';
 
 const GroupsList = () => {
   // 1. STATE MANAGEMENT
-  const [activeTab, setActiveTab] = useState('my-groups');
+  // Remember the last tab so returning from a group lands back on the tab the
+  // user came from (e.g. Joined), not always "My Groups".
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('groups_active_tab') || 'my-groups');
+  useEffect(() => { sessionStorage.setItem('groups_active_tab', activeTab); }, [activeTab]);
   const [selectedFilter, setSelectedFilter] = useState('all-groups');
   const [searchValue, setSearchValue] = useState('');
   const [isBannerVisible, setIsBannerVisible] = useState(true);
@@ -106,7 +109,9 @@ const GroupsList = () => {
   }, [trendingGroups]);
 
   const allGroupsData = useMemo(() => {
-    const all = [...createdGroups, ...joinedGroups];
+    // "My Groups" shows only groups the user created — joined groups have their
+    // own dedicated tab, so they're intentionally excluded here.
+    const all = [...createdGroups];
     const uniqueGroups = [];
     const seen = new Set();
     for (const g of all) {
@@ -203,11 +208,14 @@ const GroupsList = () => {
   }, [allGroupsData, searchValue, selectedFilter, selectedCity, filterCategory, filterStatus, filterSort]);
 
   // 4. SUB-TAB FILTER LOGIC (Joined Groups)
+  // A finished deal can be either 'completed' or 'locked' (target met / deal
+  // locked), so the Completed tab counts both — otherwise locked groups vanish.
+  const isCompletedStatus = (s) => s === 'completed' || s === 'locked';
   const joinedSubTabCounts = useMemo(() => {
     return {
       active: joinedGroupsData.filter(g => g.status === 'active').length,
       'closing-soon': joinedGroupsData.filter(g => g.status === 'closing').length,
-      completed: joinedGroupsData.filter(g => g.status === 'completed').length,
+      completed: joinedGroupsData.filter(g => isCompletedStatus(g.status)).length,
     };
   }, [joinedGroupsData]);
 
@@ -215,7 +223,7 @@ const GroupsList = () => {
     return joinedGroupsData.filter((group) => {
       if (joinedSubTab === 'active') return group.status === 'active';
       if (joinedSubTab === 'closing-soon') return group.status === 'closing';
-      if (joinedSubTab === 'completed') return group.status === 'completed';
+      if (joinedSubTab === 'completed') return isCompletedStatus(group.status);
       return true;
     });
   }, [joinedGroupsData, joinedSubTab]);

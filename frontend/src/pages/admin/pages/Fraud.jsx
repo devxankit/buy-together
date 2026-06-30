@@ -85,9 +85,17 @@ const Fraud = () => {
   const filtered = signals.filter((f) => tab === 'all' || f.severity === tab);
 
   const investigate = (f) => {
-    if (f.entityType === 'group') navigate('/admin/groups');
-    else if (f.entityType === 'user') navigate('/admin/users');
-    else showToast('No single entity to open for this signal.', 'ℹ️');
+    // Pre-seed the destination page's search so it opens focused on the exact
+    // group/account behind this signal, not just the full list.
+    if (f.entityType === 'group') {
+      if (f.entity) sessionStorage.setItem('admin_search_query', f.entity);
+      navigate('/admin/groups');
+    } else if (f.entityType === 'user') {
+      if (f.entity) sessionStorage.setItem('admin_search_query', f.entity);
+      navigate('/admin/users');
+    } else {
+      showToast('No single entity to open for this signal.', 'ℹ️');
+    }
   };
 
   const enforce = async (f) => {

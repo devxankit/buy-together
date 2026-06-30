@@ -3,6 +3,7 @@ import { Pencil, Trash2, ImageOff, X, Check, Layers, FolderTree } from 'lucide-r
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, SearchInput, SegmentTabs, Button, ImageUploader, ConfirmDialog } from '../components';
 import { showToast } from '../../../utils/toast';
+import { isValidHex } from '../../../utils/validators';
 import {
   listCategoriesAdmin,
   createCategory,
@@ -94,6 +95,9 @@ const CategoryModal = ({ initial, onClose, onSaved }) => {
     setError('');
     if (!form.name.trim()) return setError('Category name is required.');
     if (!form.image.trim()) return setError('A cover image URL is required.');
+    if (form.color.trim() && !isValidHex(form.color)) {
+      return setError('Enter a valid hex colour code (e.g. #0D9488).');
+    }
 
     const payload = {
       name: form.name.trim(),

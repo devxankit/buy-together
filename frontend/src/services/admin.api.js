@@ -5,6 +5,12 @@ import api from './api';
 // `pendingVendors` feeds the sidebar badge next to "Vendors".
 export const getAdminStats = () => api.get('/admin/stats');
 
+// ── Admin: live dashboard intelligence ──────────────────────────────
+// Real KPIs, category demand, top regions and recent activity computed from
+// users/groups/vendors/tickets (replaces the static dashboard mock data).
+// Returns: { kpis, revenueSeries, categoryDemand, topRegions, activityFeed, counts }
+export const getAdminDashboard = () => api.get('/admin/dashboard');
+
 // ── Admin: chat moderation (read-only) ──────────────────────────────
 // Full group chat transcript (oldest-first).
 export const getGroupChatAdmin = (groupId, limit = 500) =>

@@ -3,6 +3,7 @@ import { X, Plus, Trash2, ArrowUp, ArrowDown, FileText } from 'lucide-react';
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, StatusBadge, Button } from '../components';
 import { showToast } from '../../../utils/toast';
+import { isValidEmail } from '../../../utils/validators';
 import {
   listContentPagesAdmin,
   updateContentPage,
@@ -130,6 +131,9 @@ const PageModal = ({ page, onClose, onSaved }) => {
     e?.preventDefault();
     setError('');
     if (!form.title.trim()) return setError('Page title is required.');
+    if (form.contactEmail.trim() && !isValidEmail(form.contactEmail)) {
+      return setError('Enter a valid contact email or leave it blank.');
+    }
     const payload = {
       title: form.title.trim(),
       intro: form.intro.trim(),

@@ -2,10 +2,12 @@ const httpStatus = require('http-status').status;
 const catchAsync = require('../utils/catchAsync');
 const ticketService = require('../services/ticket.service');
 const { pick } = require('../utils/helpers');
+const { emitTicketUpdate, emitTicketCreated } = require('../sockets/ticket.socket');
 
 // ── User-facing ─────────────────────────────────────────────────────
 const createTicket = catchAsync(async (req, res) => {
   const ticket = await ticketService.createTicket(req.user, req.body);
+  emitTicketCreated(req.app.get('io'), ticket);
   res.status(httpStatus.CREATED).send(ticket);
 });
 
@@ -21,6 +23,7 @@ const getMyTicket = catchAsync(async (req, res) => {
 
 const replyToMyTicket = catchAsync(async (req, res) => {
   const ticket = await ticketService.addUserReply(req.user, req.params.ticketId, req.body.body);
+  emitTicketUpdate(req.app.get('io'), ticket);
   res.send(ticket);
 });
 
@@ -38,11 +41,13 @@ const getTicketAdmin = catchAsync(async (req, res) => {
 
 const replyToTicketAdmin = catchAsync(async (req, res) => {
   const ticket = await ticketService.addAdminReply(req.user, req.params.ticketId, req.body.body);
+  emitTicketUpdate(req.app.get('io'), ticket);
   res.send(ticket);
 });
 
 const updateTicketAdmin = catchAsync(async (req, res) => {
   const ticket = await ticketService.updateTicketAdmin(req.params.ticketId, req.body);
+  emitTicketUpdate(req.app.get('io'), ticket);
   res.send(ticket);
 });
 

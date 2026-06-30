@@ -12,7 +12,7 @@ const TrendingGroups = ({ groups }) => {
           Trending Right Now
         </h2>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/groups', { state: { filter: 'trending' } })}
           className="text-xs font-bold text-primary hover:text-[#0B7A70] flex items-center gap-0.5 active:scale-95 transition-all"
         >
           <span>See All</span>

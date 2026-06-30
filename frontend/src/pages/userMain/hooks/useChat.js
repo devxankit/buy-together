@@ -52,6 +52,8 @@ export const useChat = (groupId, enabled = true, targetUserId = null) => {
   const [onlineStatus, setOnlineStatus] = useState('offline');
   const socketRef = useRef(null);
   const isTypingRef = useRef(false);
+  // Tracks message payloads currently being sent, to drop duplicate taps.
+  const inFlightRef = useRef(new Set());
 
   // Load history whenever the group changes (Stale-While-Revalidate)
   useEffect(() => {
@@ -246,6 +248,13 @@ export const useChat = (groupId, enabled = true, targetUserId = null) => {
 
       payload.groupId = groupId;
 
+      // Guard against double-sends: if the send button is tapped multiple times
+      // before the request resolves, identical payloads in flight are dropped so
+      // the same message isn't posted twice.
+      const signature = JSON.stringify(payload);
+      if (inFlightRef.current.has(signature)) return null;
+      inFlightRef.current.add(signature);
+
       try {
         const res = await sendMessageApi(payload);
         const formatted = formatMessage(res.data);
@@ -267,6 +276,8 @@ export const useChat = (groupId, enabled = true, targetUserId = null) => {
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to send message');
         throw err;
+      } finally {
+        inFlightRef.current.delete(signature);
       }
     },
     [groupId]

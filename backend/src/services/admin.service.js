@@ -389,6 +389,168 @@ const updateSettings = async (body) => {
   return settings;
 };
 
+// ── Dashboard (live platform intelligence) ──────────────────────────
+// Backs the admin Dashboard's KPI cards, charts, top-regions and activity
+// feed with real data instead of static mock values. Heavy-ish (several
+// aggregations) but cached briefly since it's polled, not hit per-keystroke.
+
+const ACCENT_BY_INDEX = ['primary', 'violet', 'info', 'amber', 'danger'];
+const DONUT_COLORS = ['#0D9488', '#6D5BD0', '#2C5680', '#D08700', '#D14343', '#0B7A70'];
+
+// 12-month [{ y, m(0-11), label }] window ending with the current month.
+const lastTwelveMonths = () => {
+  const out = [];
+  const base = new Date();
+  base.setDate(1);
+  base.setHours(0, 0, 0, 0);
+  for (let i = 11; i >= 0; i -= 1) {
+    const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+    out.push({ y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleString('en-US', { month: 'short' }) });
+  }
+  return out;
+};
+
+// Monthly document counts over the last 12 months → [{ m: 'Jun', value }].
+const monthlySeries = async (Model, match = {}) => {
+  const months = lastTwelveMonths();
+  const start = new Date(months[0].y, months[0].m, 1);
+  const rows = await Model.aggregate([
+    { $match: { ...match, createdAt: { $gte: start } } },
+    { $group: { _id: { y: { $year: '$createdAt' }, m: { $month: '$createdAt' } }, count: { $sum: 1 } } },
+  ]);
+  const map = {};
+  rows.forEach((r) => { map[`${r._id.y}-${r._id.m}`] = r.count; });
+  // $month is 1-based; JS month is 0-based.
+  return months.map((mb) => ({ m: mb.label, value: map[`${mb.y}-${mb.m + 1}`] || 0 }));
+};
+
+// Percent change of the last point vs the previous one in a value series.
+const seriesDelta = (series) => {
+  if (!series || series.length < 2) return { delta: 0, trend: 'up' };
+  const cur = series[series.length - 1].value;
+  const prev = series[series.length - 2].value;
+  if (prev === 0) return { delta: cur > 0 ? 100 : 0, trend: cur >= 0 ? 'up' : 'down' };
+  const pct = ((cur - prev) / prev) * 100;
+  return { delta: Math.round(Math.abs(pct) * 10) / 10, trend: cur >= prev ? 'up' : 'down' };
+};
+
+const getDashboardData = async () => {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [
+    totalUsers,
+    activeGroups,
+    totalGroups,
+    totalVendors,
+    pendingVendors,
+    openTickets,
+    flaggedUsers,
+    userSeries,
+    groupSeries,
+    vendorSeries,
+    categoryAgg,
+    regionAgg,
+    recentGroups,
+    recentVendors,
+    recentUsers,
+  ] = await Promise.all([
+    User.countDocuments({ role: ROLES.USER }),
+    Group.countDocuments({ status: { $in: [GROUP_STATUS.ACTIVE, GROUP_STATUS.CLOSING] } }),
+    Group.countDocuments({}),
+    Vendor.countDocuments({}),
+    Vendor.countDocuments({ status: VENDOR_STATUS.PENDING }),
+    ticketService.countOpenTickets(),
+    User.countDocuments({ role: ROLES.USER, status: USER_STATUS.FLAGGED }),
+    monthlySeries(User, { role: ROLES.USER }),
+    monthlySeries(Group),
+    monthlySeries(Vendor),
+    Group.aggregate([
+      { $match: { category: { $nin: [null, ''] } } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]),
+    Group.aggregate([
+      { $match: { location: { $nin: [null, ''] } } },
+      {
+        $group: {
+          _id: '$location',
+          count: { $sum: 1 },
+          thisMonth: { $sum: { $cond: [{ $gte: ['$createdAt', startOfMonth] }, 1, 0] } },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]),
+    Group.find({}).sort({ createdAt: -1 }).limit(6).select('title productName category location createdAt'),
+    Vendor.find({}).sort({ createdAt: -1 }).limit(6).select('businessName category city status createdAt'),
+    User.find({ role: ROLES.USER }).sort({ createdAt: -1 }).limit(6).select('name location createdAt'),
+  ]);
+
+  // ── KPI cards ──────────────────────────────────────────────────
+  const usersDelta = seriesDelta(userSeries);
+  const groupsDelta = seriesDelta(groupSeries);
+  const vendorsDelta = seriesDelta(vendorSeries);
+  const spark = (s) => s.map((p) => p.value);
+
+  const kpis = [
+    { id: 'users', label: 'Total Users', value: totalUsers, prefix: '', delta: usersDelta.delta, trend: usersDelta.trend, spark: spark(userSeries), icon: 'Users', accent: 'primary' },
+    { id: 'groups', label: 'Active Groups', value: activeGroups, prefix: '', delta: groupsDelta.delta, trend: groupsDelta.trend, spark: spark(groupSeries), icon: 'Boxes', accent: 'violet' },
+    { id: 'vendors', label: 'Total Vendors', value: totalVendors, prefix: '', delta: vendorsDelta.delta, trend: vendorsDelta.trend, spark: spark(vendorSeries), icon: 'Store', accent: 'info' },
+    { id: 'pending', label: 'Pending Approvals', value: pendingVendors, prefix: '', delta: 0, trend: pendingVendors > 0 ? 'down' : 'up', spark: spark(vendorSeries), icon: 'ClockAlert', accent: 'amber' },
+  ];
+
+  // ── Category demand (donut) ────────────────────────────────────
+  const catTotal = categoryAgg.reduce((sum, c) => sum + c.count, 0) || 1;
+  const categoryDemand = categoryAgg.map((c, i) => ({
+    label: c._id,
+    value: Math.round((c.count / catTotal) * 100),
+    color: DONUT_COLORS[i % DONUT_COLORS.length],
+  }));
+
+  // ── Top regions (data-driven — no hard-coded city list) ────────
+  const maxRegion = regionAgg.reduce((mx, r) => Math.max(mx, r.count), 0) || 1;
+  const topRegions = regionAgg.map((r) => ({
+    region: r._id,
+    count: r.count,
+    demand: Math.max(8, Math.round((r.count / maxRegion) * 100)),
+    growth: r.thisMonth > 0 ? `+${r.thisMonth} this mo` : 'steady',
+  }));
+
+  // ── Recent activity (real events, newest first) ────────────────
+  const events = [];
+  recentGroups.forEach((g) => events.push({
+    id: `g-${g._id}`, type: 'group', title: 'New group created',
+    detail: g.title || g.productName || 'Untitled group', at: g.createdAt, icon: 'Boxes', accent: 'primary',
+  }));
+  recentVendors.forEach((v) => events.push({
+    id: `v-${v._id}`, type: 'vendor',
+    title: v.status === VENDOR_STATUS.PENDING ? 'Vendor awaiting review' : 'Vendor onboarded',
+    detail: `${v.businessName}${v.city ? ` · ${v.city}` : ''}`, at: v.createdAt, icon: 'Store', accent: 'amber',
+  }));
+  recentUsers.forEach((u) => events.push({
+    id: `u-${u._id}`, type: 'user', title: 'New sign-up',
+    detail: `${u.name || 'A user'}${u.location ? ` · ${u.location}` : ''}`, at: u.createdAt, icon: 'UserPlus', accent: 'info',
+  }));
+  const activityFeed = events
+    .sort((a, b) => new Date(b.at) - new Date(a.at))
+    .slice(0, 8);
+
+  return {
+    kpis,
+    revenueSeries: groupSeries, // monthly groups created (chart relabelled client-side)
+    categoryDemand,
+    topRegions,
+    activityFeed,
+    counts: { totalUsers, totalGroups, activeGroups, totalVendors, pendingVendors, openTickets, flaggedUsers },
+  };
+};
+
+// Cache 30s — the dashboard is polled and these aggregations are not cheap.
+const getDashboard = () => cache.wrap('admin:dashboard', SIGNALS_TTL, getDashboardData);
+
 module.exports = {
   queryUsers,
   getUserStats,
@@ -404,4 +566,5 @@ module.exports = {
   updateUserById,
   deleteUserById,
   getStats,
+  getDashboard,
 };

@@ -6,6 +6,7 @@ import {
 import { T, radius } from '../theme/adminTheme';
 import { PageHeader, Panel, DataTable, StatusBadge, Avatar, SearchInput, SegmentTabs, Button } from '../components';
 import { showToast } from '../../../utils/toast';
+import { isValidName, isValidIndianPhone, isValidEmail, isValidUrl, isValidPincode, hasLetters } from '../../../utils/validators';
 import {
   listVendorsAdmin,
   createVendorAdmin,
@@ -131,13 +132,26 @@ const VendorModal = ({ initial, onClose, onSaved }) => {
     setError('');
 
     if (!form.businessName.trim()) return setError('Business name is required.');
+    if (form.ownerName.trim() && !isValidName(form.ownerName)) {
+      return setError('Owner / contact name should contain only letters.');
+    }
     const phoneDigits = String(form.phone).replace(/\D/g, '').slice(-10);
-    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+    if (!isValidIndianPhone(phoneDigits)) {
       return setError('Enter a valid 10-digit Indian mobile number.');
+    }
+    if (form.email.trim() && !isValidEmail(form.email)) {
+      return setError('Enter a valid email address or leave it blank.');
+    }
+    if (form.website.trim() && !isValidUrl(form.website)) {
+      return setError('Enter a valid website URL (https://…) or leave it blank.');
     }
     if (!form.category.trim()) return setError('Category is required.');
     if (!form.city.trim()) return setError('City is required.');
-    if (form.pincode && !/^\d{6}$/.test(form.pincode)) {
+    if (!hasLetters(form.city)) return setError('Enter a valid city name.');
+    if (form.address.trim() && !hasLetters(form.address)) {
+      return setError('Enter a valid address.');
+    }
+    if (form.pincode && !isValidPincode(form.pincode)) {
       return setError('Pincode must be 6 digits.');
     }
     if (form.gstNumber && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(form.gstNumber.trim().toUpperCase())) {
