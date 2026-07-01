@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentPage } from './useContentPage';
 import { showToast } from '../../../../utils/toast';
 import { getChatSocket } from '../../../../services/socket';
+import { isTicketUnread, markTicketSeen, countUnread } from '../../../../utils/ticketSeen';
 import {
   createTicket,
   getMyTickets,
@@ -20,23 +21,72 @@ const CATEGORIES = [
 ];
 
 const STATUS_STYLE = {
-  open: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Open' },
-  in_progress: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'In Progress' },
-  resolved: { bg: 'bg-green-100', text: 'text-green-700', label: 'Resolved' },
-  closed: { bg: 'bg-slate-200', text: 'text-slate-600', label: 'Closed' },
+  open: { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500', label: 'Open' },
+  in_progress: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500', label: 'In Progress' },
+  resolved: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500', label: 'Resolved' },
+  closed: { bg: 'bg-slate-200', text: 'text-slate-600', dot: 'bg-slate-400', label: 'Closed' },
 };
 
 const StatusPill = ({ status }) => {
   const s = STATUS_STYLE[status] || STATUS_STYLE.open;
-  return <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{s.label}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+};
+
+const fmtTime = (d) => {
+  if (!d) return '';
+  try { return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
 };
 
 const fmtDate = (d) => {
   if (!d) return '';
-  try {
-    return new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  } catch { return ''; }
+  try { return new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
 };
+
+// Human day label for the in-thread date separators.
+const dayLabel = (d) => {
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return '';
+  const today = new Date();
+  const yst = new Date(); yst.setDate(today.getDate() - 1);
+  const same = (a, b) => a.toDateString() === b.toDateString();
+  if (same(dt, today)) return 'Today';
+  if (same(dt, yst)) return 'Yesterday';
+  return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// Group thread messages by calendar day so we can render date separators.
+const groupByDay = (thread) => {
+  const groups = [];
+  (thread || []).forEach((m) => {
+    const label = dayLabel(m.createdAt);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(m);
+    else groups.push({ label, items: [m] });
+  });
+  return groups;
+};
+
+// ── Small avatar for a message sender (Support headset vs user initial) ──
+const SenderAvatar = ({ isAdmin, name }) => (
+  isAdmin ? (
+    <div className="w-8 h-8 rounded-full bg-primary/10 border border-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 8a6 6 0 00-12 0v5a2 2 0 01-2 2h1m14-9v5a2 2 0 002 2h1M6 15a4 4 0 004 4h.5" />
+      </svg>
+    </div>
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <span className="text-[11px] font-black text-slate-500">{(name || 'Y').slice(0, 1).toUpperCase()}</span>
+    </div>
+  )
+);
 
 // ── FAQ accordion (admin-managed content) ───────────────────────────
 const FaqList = ({ sections, loading }) => {
@@ -135,12 +185,14 @@ const TicketForm = ({ onSubmitted }) => {
   );
 };
 
-// ── Single ticket thread (detail view) ──────────────────────────────
-const TicketThread = ({ ticketId }) => {
+// ── Single ticket thread (clean support-desk conversation) ──────────
+const TicketThread = ({ ticketId, onSeen }) => {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [pending, setPending] = useState(null); // optimistic outgoing message
+  const scrollRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -154,6 +206,16 @@ const TicketThread = ({ ticketId }) => {
   }, [ticketId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Whenever the thread changes, mark it read up to the latest message and let
+  // the parent recompute unread badges.
+  useEffect(() => {
+    if (!ticket) return;
+    const t = ticket.thread || [];
+    const lastAt = ticket.lastMessageAt || t[t.length - 1]?.createdAt || ticket.updatedAt;
+    markTicketSeen(ticketId, lastAt);
+    onSeen?.();
+  }, [ticket, ticketId, onSeen]);
 
   // Live updates: join this ticket's room and merge in admin replies / status
   // changes as they happen, so the user never has to refresh.
@@ -180,51 +242,109 @@ const TicketThread = ({ ticketId }) => {
     };
   }, [ticketId]);
 
+  // Auto-scroll to the newest message.
+  const threadLen = (ticket?.thread || []).length;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [threadLen, pending, loading]);
+
   const send = async () => {
-    if (!reply.trim()) return;
+    const body = reply.trim();
+    if (!body || sending) return;
     setSending(true);
+    setPending({ id: `pending-${Date.now()}`, sender: 'user', body, createdAt: new Date().toISOString(), pending: true });
+    setReply('');
     try {
-      const { data } = await replyToTicket(ticketId, reply.trim());
+      const { data } = await replyToTicket(ticketId, body);
       setTicket(data);
-      setReply('');
     } catch {
       showToast('Could not send your reply.');
+      setReply(body); // restore so the user doesn't lose their text
     } finally {
+      setPending(null);
       setSending(false);
     }
   };
 
+  const closed = ticket?.status === 'closed';
+  const groups = useMemo(() => {
+    const base = ticket?.thread || [];
+    const all = pending ? [...base, pending] : base;
+    return groupByDay(all);
+  }, [ticket?.thread, pending]);
+
   return (
-    <div className="flex flex-col gap-3">
-      {/* Back navigation is handled by the single context-aware header button. */}
+    <div className="flex flex-col h-[calc(100dvh-140px)]">
       {loading ? (
         <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
       ) : ticket ? (
         <>
-          <div className="bg-surface border border-line rounded-2xl p-4">
+          {/* Ticket header card */}
+          <div className="bg-surface border border-line rounded-2xl p-4 flex-shrink-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[14px] font-black text-ink flex-1">{ticket.subject}</h3>
+              <h3 className="text-[14px] font-black text-ink flex-1 leading-snug">{ticket.subject}</h3>
               <StatusPill status={ticket.status} />
             </div>
-            <p className="text-[10px] text-muted font-semibold mt-1 capitalize">{ticket.category} · {fmtDate(ticket.createdAt)}</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-[9.5px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full capitalize">{ticket.category}</span>
+              <span className="text-[10px] text-muted font-semibold">Opened {fmtDate(ticket.createdAt)}</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2.5">
-            {(ticket.thread || []).map((m, i) => (
-              <div key={m.id || i} className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${m.sender === 'admin' ? 'bg-primary-soft self-start border border-teal-100' : 'bg-primary text-white self-end'}`}>
-                <p className={`text-[9px] font-black mb-0.5 ${m.sender === 'admin' ? 'text-teal-700' : 'text-white/70'}`}>
-                  {m.sender === 'admin' ? (m.senderName || 'Support') : 'You'} · {fmtDate(m.createdAt)}
-                </p>
-                <p className={`text-[12px] leading-relaxed whitespace-pre-line break-words [overflow-wrap:anywhere] ${m.sender === 'admin' ? 'text-ink' : 'text-white'}`}>{m.body}</p>
+          {/* Conversation */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto py-3 flex flex-col gap-3 no-scrollbar">
+            {groups.map((group, gi) => (
+              <div key={gi} className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-center my-1">
+                  <span className="text-[9px] font-black text-muted bg-surface-alt border border-line px-2.5 py-0.5 rounded-full">{group.label}</span>
+                </div>
+                {group.items.map((m, i) => {
+                  const isAdmin = m.sender === 'admin';
+                  return (
+                    <div key={m.id || i} className="flex gap-2.5 px-0.5">
+                      <SenderAvatar isAdmin={isAdmin} name="You" />
+                      <div className={`flex-1 min-w-0 rounded-2xl rounded-tl-sm px-3.5 py-2.5 border ${isAdmin ? 'bg-primary/5 border-teal-100' : 'bg-surface border-line'} ${m.pending ? 'opacity-70' : ''}`}>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className={`text-[11px] font-black ${isAdmin ? 'text-primary' : 'text-ink'}`}>
+                            {isAdmin ? (m.senderName || 'Support Team') : 'You'}
+                          </span>
+                          <span className="text-[9px] text-muted font-semibold flex items-center gap-1">
+                            {m.pending && <span className="w-2.5 h-2.5 border border-muted border-t-transparent rounded-full animate-spin" />}
+                            {fmtTime(m.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-[12.5px] text-ink leading-relaxed whitespace-pre-line break-words [overflow-wrap:anywhere]">{m.body}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
 
-          {ticket.status !== 'closed' && (
-            <div className="flex items-end gap-2 mt-1">
-              <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={1} placeholder="Type a reply…" className="flex-1 px-3 py-2.5 text-[13px] font-medium text-ink bg-surface-alt border border-line rounded-xl outline-none focus:border-primary resize-none" />
-              <button onClick={send} disabled={sending || !reply.trim()} className="h-[42px] px-4 bg-primary text-white text-[12px] font-black rounded-xl active:scale-95 transition-all disabled:opacity-50">
-                {sending ? '…' : 'Send'}
+          {/* Composer */}
+          {closed ? (
+            <div className="flex-shrink-0 bg-surface-alt border border-line rounded-2xl px-4 py-3 text-center">
+              <p className="text-[11px] font-bold text-muted">This ticket is closed. Reply to reopen isn't available — raise a new request if you still need help.</p>
+            </div>
+          ) : (
+            <div className="flex-shrink-0 flex items-end gap-2 pt-1">
+              <textarea
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                rows={1}
+                placeholder="Type a reply…"
+                className="flex-1 px-3.5 py-3 text-[13px] font-medium text-ink bg-surface border border-line rounded-2xl outline-none focus:border-primary resize-none max-h-28"
+              />
+              <button
+                onClick={send}
+                disabled={sending || !reply.trim()}
+                className="w-11 h-11 flex items-center justify-center bg-primary text-white rounded-full active:scale-90 transition-all disabled:opacity-40 flex-shrink-0"
+                aria-label="Send reply"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l0-14m0 0l-6 6m6-6l6 6" /></svg>
               </button>
             </div>
           )}
@@ -235,39 +355,38 @@ const TicketThread = ({ ticketId }) => {
 };
 
 // ── My tickets list ─────────────────────────────────────────────────
-const MyTickets = ({ onOpen, refreshKey }) => {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    getMyTickets()
-      .then(({ data }) => { if (active) setTickets(Array.isArray(data) ? data : []); })
-      .catch(() => { if (active) setTickets([]); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [refreshKey]);
-
+const MyTickets = ({ tickets, loading, onOpen }) => {
   if (loading) {
     return <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
   }
-  if (tickets.length === 0) {
+  if (!tickets.length) {
     return <p className="text-[12px] text-muted text-center py-12">You haven't raised any tickets yet.</p>;
   }
 
   return (
     <div className="flex flex-col gap-2.5">
-      {tickets.map((t) => (
-        <button key={t.id} onClick={() => onOpen(t.id)} className="bg-surface border border-line rounded-2xl p-4 text-left active:scale-[0.99] transition-all">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[13px] font-bold text-ink flex-1">{t.subject}</p>
-            <StatusPill status={t.status} />
-          </div>
-          <p className="text-[11px] text-faint mt-1 line-clamp-1">{t.message}</p>
-          <p className="text-[9px] text-muted font-semibold mt-1.5 capitalize">{t.category} · Updated {fmtDate(t.lastMessageAt || t.updatedAt)}</p>
-        </button>
-      ))}
+      {tickets.map((t) => {
+        const unread = isTicketUnread(t, 'user');
+        return (
+          <button
+            key={t.id}
+            onClick={() => onOpen(t.id)}
+            className={`bg-surface border rounded-2xl p-4 text-left active:scale-[0.99] transition-all ${unread ? 'border-primary/40 ring-1 ring-primary/10' : 'border-line'}`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {unread && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
+                <p className={`text-[13px] flex-1 truncate ${unread ? 'font-black text-ink' : 'font-bold text-ink'}`}>{t.subject}</p>
+              </div>
+              <StatusPill status={t.status} />
+            </div>
+            <p className={`text-[11px] mt-1 line-clamp-1 ${unread ? 'text-ink font-semibold' : 'text-faint'}`}>
+              {unread ? 'New reply from Support' : t.message}
+            </p>
+            <p className="text-[9px] text-muted font-semibold mt-1.5 capitalize">{t.category} · Updated {fmtDate(t.lastMessageAt || t.updatedAt)}</p>
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -277,45 +396,109 @@ const HelpCenter = () => {
   const { page, loading } = useContentPage('help-center');
   const [tab, setTab] = useState('faqs'); // 'faqs' | 'tickets'
   const [openTicketId, setOpenTicketId] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [tickets, setTickets] = useState([]);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [seenTick, setSeenTick] = useState(0); // bump to recompute unread badges
 
   const sections = page?.sections || [];
   const contactEmail = page?.contactEmail;
 
+  // Keep a live ref of the open ticket so the socket handler isn't stale.
+  const openRef = useRef(openTicketId);
+  useEffect(() => { openRef.current = openTicketId; }, [openTicketId]);
+
+  const fetchTickets = useCallback(() => {
+    setTicketsLoading(true);
+    getMyTickets()
+      .then(({ data }) => setTickets(Array.isArray(data) ? data : []))
+      .catch(() => setTickets([]))
+      .finally(() => setTicketsLoading(false));
+  }, []);
+
+  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+
+  // App-level live updates: even when not viewing a specific ticket, merge
+  // incoming replies so the list + unread badges stay current, and toast when
+  // Support replies to a thread the user isn't currently reading.
+  useEffect(() => {
+    let socket;
+    try { socket = getChatSocket(); } catch { return undefined; }
+    if (!socket) return undefined;
+
+    const onUpdate = (payload) => {
+      if (!payload) return;
+      setTickets((prev) => {
+        const idx = prev.findIndex((t) => String(t.id) === String(payload.id));
+        if (idx === -1) { fetchTickets(); return prev; }
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...payload };
+        // Bubble the just-updated ticket to the top (most recent activity).
+        const [moved] = next.splice(idx, 1);
+        next.unshift(moved);
+        return next;
+      });
+
+      const thread = payload.thread || [];
+      const last = thread[thread.length - 1];
+      if (last?.sender === 'admin' && String(openRef.current) !== String(payload.id)) {
+        showToast('New reply from Support 💬');
+      }
+    };
+
+    socket.on('ticket_update', onUpdate);
+    return () => socket.off('ticket_update', onUpdate);
+  }, [fetchTickets]);
+
+  const unreadCount = useMemo(() => countUnread(tickets, 'user'), [tickets, seenTick]);
+
   return (
-    <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans">
-      <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-surface border-b border-line sticky top-0 z-20">
+    <div className="flex flex-col h-[100dvh] w-full max-w-[430px] mx-auto bg-[#FAFAFA] font-sans overflow-hidden">
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4 bg-surface border-b border-line sticky top-0 z-20 flex-shrink-0">
         <button
           onClick={() => {
             // When viewing a ticket, the single back button returns to the
             // ticket list; otherwise it leaves the Help Center.
-            if (openTicketId) { setOpenTicketId(null); setRefreshKey((k) => k + 1); }
+            if (openTicketId) { setOpenTicketId(null); fetchTickets(); }
             else navigate(-1);
           }}
           className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all"
         >
           <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <h1 className="text-[15px] font-black text-ink">{page?.title || 'Help Center'}</h1>
+        <h1 className="text-[15px] font-black text-ink flex-1">
+          {openTicketId ? 'Support Conversation' : (page?.title || 'Help Center')}
+        </h1>
+        {openTicketId && (
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Live
+          </span>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="px-5 pt-4">
-        <div className="flex gap-1 p-1 bg-surface-alt border border-line rounded-2xl">
-          {[{ id: 'faqs', label: 'Help & FAQs' }, { id: 'tickets', label: 'My Tickets' }].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => { setTab(t.id); setOpenTicketId(null); }}
-              className={`flex-1 h-9 rounded-xl text-[12px] font-black transition-all ${tab === t.id ? 'bg-surface text-primary shadow-sm' : 'text-muted'}`}
-            >
-              {t.label}
-            </button>
-          ))}
+      {/* Tabs (hidden while reading a thread to keep focus on the chat) */}
+      {!openTicketId && (
+        <div className="px-5 pt-4 flex-shrink-0">
+          <div className="flex gap-1 p-1 bg-surface-alt border border-line rounded-2xl">
+            {[{ id: 'faqs', label: 'Help & FAQs' }, { id: 'tickets', label: 'My Tickets' }].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => { setTab(t.id); setOpenTicketId(null); }}
+                className={`flex-1 h-9 rounded-xl text-[12px] font-black transition-all inline-flex items-center justify-center gap-1.5 ${tab === t.id ? 'bg-surface text-primary shadow-sm' : 'text-muted'}`}
+              >
+                {t.label}
+                {t.id === 'tickets' && unreadCount > 0 && (
+                  <span className="min-w-[16px] h-4 px-1 rounded-full bg-primary text-white text-[9px] font-black inline-flex items-center justify-center">{unreadCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex-1 px-5 py-5 flex flex-col gap-4 pb-10">
-        {tab === 'faqs' ? (
+      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4 pb-10">
+        {openTicketId ? (
+          <TicketThread ticketId={openTicketId} onSeen={() => setSeenTick((k) => k + 1)} />
+        ) : tab === 'faqs' ? (
           <>
             {contactEmail && (
               <a href={`mailto:${contactEmail}`} className="bg-surface border border-line rounded-2xl p-3.5 text-center active:scale-95 transition-all cursor-pointer block">
@@ -328,13 +511,11 @@ const HelpCenter = () => {
 
             <div className="mt-2">
               <h3 className="text-[12px] font-black text-faint uppercase tracking-wide mb-3">Still need help?</h3>
-              <TicketForm onSubmitted={() => { setRefreshKey((k) => k + 1); setTab('tickets'); }} />
+              <TicketForm onSubmitted={() => { fetchTickets(); setTab('tickets'); }} />
             </div>
           </>
-        ) : openTicketId ? (
-          <TicketThread ticketId={openTicketId} />
         ) : (
-          <MyTickets onOpen={setOpenTicketId} refreshKey={refreshKey} />
+          <MyTickets tickets={tickets} loading={ticketsLoading} onOpen={setOpenTicketId} />
         )}
       </div>
     </div>

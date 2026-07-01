@@ -61,6 +61,7 @@ const AdminSettings = lazy(() => import('../pages/admin/pages/Settings'));
 const AdminBanners = lazy(() => import('../pages/admin/pages/Banners'));
 const AdminHomeSections = lazy(() => import('../pages/admin/pages/HomeSections'));
 const AdminPushNotifications = lazy(() => import('../pages/admin/pages/PushNotifications'));
+const AdminNotifications = lazy(() => import('../pages/admin/pages/Notifications'));
 const AdminSupport = lazy(() => import('../pages/admin/pages/Support'));
 const AdminContentPages = lazy(() => import('../pages/admin/pages/ContentPages'));
 
@@ -138,6 +139,7 @@ const AppRoutes = () => {
             <Route path="/admin/banners" element={<AdminBanners />} />
             <Route path="/admin/home-sections" element={<AdminHomeSections />} />
             <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/vendors" element={<AdminVendors />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
             <Route path="/admin/revenue" element={<AdminRevenue />} />

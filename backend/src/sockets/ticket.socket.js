@@ -1,4 +1,7 @@
 const logger = require('../utils/logger');
+const pushService = require('../services/push.service');
+const User = require('../models/User');
+const { ROLES } = require('../utils/constants');
 const { CHAT_NAMESPACE } = require('./chat.socket');
 
 /**
@@ -74,4 +77,73 @@ const emitTicketCreated = (io, ticket) => {
   }
 };
 
-module.exports = { emitTicketUpdate, emitTicketCreated };
+/** Short, human preview of the last reply for a push body. */
+const lastReplyPreview = (ticket) => {
+  const thread = ticket.thread || [];
+  const last = thread[thread.length - 1];
+  const body = (last && last.body) || ticket.message || '';
+  const t = String(body).trim();
+  if (!t) return 'New message';
+  return t.length > 120 ? `${t.slice(0, 117)}…` : t;
+};
+
+/**
+ * Who is currently viewing this ticket thread (socket joined to `ticket:<id>`)?
+ * These recipients get the live in-thread update, so we skip a redundant push.
+ */
+const ticketViewers = async (io, ticketId) => {
+  const set = new Set();
+  try {
+    const sockets = await io.of(CHAT_NAMESPACE).in(`ticket:${ticketId}`).fetchSockets();
+    sockets.forEach((s) => { if (s.data?.userId) set.add(String(s.data.userId)); });
+  } catch (e) { /* presence is best-effort */ }
+  return set;
+};
+
+/**
+ * Push notification for a ticket reply, so the OTHER party is buzzed even when
+ * the app is closed/backgrounded. Admin reply → notify the ticket owner; user
+ * reply → notify every admin. Anyone currently viewing the thread is skipped
+ * (they already saw it live). Best-effort and non-throwing.
+ *
+ * @param {'user'|'admin'} senderRole who just replied
+ */
+const notifyTicketReply = async (io, ticket, senderRole) => {
+  try {
+    if (!io || !ticket) return;
+    const id = String(ticket.id || ticket._id);
+    const active = await ticketViewers(io, id);
+    const preview = lastReplyPreview(ticket);
+
+    if (senderRole === 'admin') {
+      const uid = ownerId(ticket);
+      if (!uid || active.has(uid)) return;
+      await pushService.sendToUser(uid, {
+        title: 'Support replied',
+        body: preview,
+        link: '/help-center',
+        data: { type: 'ticket', ticketId: id },
+      });
+    } else {
+      const admins = await User.find({ role: ROLES.ADMIN }).select('_id');
+      const userName = (ticket.user && ticket.user.name) || ticket.name || 'A user';
+      const targets = admins
+        .map((a) => String(a._id))
+        .filter((aid) => aid && !active.has(aid));
+      await Promise.all(
+        targets.map((aid) =>
+          pushService.sendToUser(aid, {
+            title: 'New ticket reply',
+            body: `${userName}: ${preview}`,
+            link: '/admin/support',
+            data: { type: 'ticket', ticketId: id },
+          })
+        )
+      );
+    }
+  } catch (err) {
+    logger.error(`notifyTicketReply failed: ${err.message}`);
+  }
+};
+
+module.exports = { emitTicketUpdate, emitTicketCreated, notifyTicketReply };

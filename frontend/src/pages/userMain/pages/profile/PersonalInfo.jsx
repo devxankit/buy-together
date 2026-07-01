@@ -6,6 +6,9 @@ import { updateUserProfile } from '../../../../services/user.api';
 import { uploadImage } from '../../../../services/upload.api';
 import { showToast } from '../../../../utils/toast';
 import { isValidEmail, isNotFutureDate, hasLetters } from '../../../../utils/validators';
+import { captureCameraPhoto } from '../../../../utils/captureImage';
+import { isFlutterCameraBridge } from '../../../../utils/flutterBridge';
+import ImageSourceSheet from '../../components/common/ImageSourceSheet';
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
@@ -32,9 +35,9 @@ const PersonalInfo = () => {
   const [saving, setSaving] = useState(false);
 
   const fileInputRef = useRef(null);
+  const [showSourceSheet, setShowSourceSheet] = useState(false);
 
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
+  const uploadAvatar = async (file) => {
     if (!file) return;
 
     setUploading(true);
@@ -47,6 +50,30 @@ const PersonalInfo = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleAvatarChange = (e) => uploadAvatar(e.target.files[0]);
+
+  // Tap the avatar: Camera/Gallery choice inside the Flutter wrapper (Camera →
+  // native bridge); direct file picker in a normal browser.
+  const openAvatarPicker = () => {
+    if (uploading) return;
+    if (isFlutterCameraBridge()) {
+      setShowSourceSheet(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const pickFromCamera = async () => {
+    setShowSourceSheet(false);
+    const file = await captureCameraPhoto();
+    if (file) uploadAvatar(file);
+  };
+
+  const pickFromGallery = () => {
+    setShowSourceSheet(false);
+    fileInputRef.current?.click();
   };
 
   const handleSave = async () => {
@@ -103,7 +130,7 @@ const PersonalInfo = () => {
       <div className="flex-1 px-5 py-6 flex flex-col gap-4">
         {/* Avatar */}
         <div className="flex flex-col items-center mb-2">
-          <div className="relative cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
+          <div className="relative cursor-pointer" onClick={openAvatarPicker}>
             <img src={avatar || getPlaceholderAvatar(name)} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-surface shadow-md" style={uploading ? { opacity: 0.6 } : undefined} />
             <button className="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-md border-2 border-surface">
               {uploading ? (
@@ -155,6 +182,14 @@ const PersonalInfo = () => {
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
+
+      <ImageSourceSheet
+        open={showSourceSheet}
+        onClose={() => setShowSourceSheet(false)}
+        onCamera={pickFromCamera}
+        onGallery={pickFromGallery}
+        title="Update profile photo"
+      />
     </div>
   );
 };

@@ -36,6 +36,7 @@ export const navSections = [
   {
     title: 'System',
     items: [
+      { label: 'Notifications', icon: 'Bell', path: '/admin/notifications' },
       { label: 'Push Notifications', icon: 'BellRing', path: '/admin/push-notifications', permission: 'pushNotifications' },
       { label: 'Settings',     icon: 'Settings',    path: '/admin/settings' },
     ],
@@ -75,5 +76,6 @@ export const routeMeta = {
   '/admin/support':   { title: 'Support Tickets', section: 'Support & Content' },
   '/admin/content-pages': { title: 'Content Pages', section: 'Support & Content' },
   '/admin/push-notifications': { title: 'Push Notifications', section: 'System' },
+  '/admin/notifications': { title: 'Notifications', section: 'System' },
   '/admin/settings':  { title: 'Settings',      section: 'System' },
 };
