@@ -6,6 +6,7 @@ import { uploadImage } from '../../../../services/upload.api';
 import { useUserMainContext } from '../../context';
 import { showToast } from '../../../../utils/toast';
 import { normalizeImageForUpload } from '../../../../utils/image';
+import { captureImageViaFlutter, isFlutterCameraBridge } from '../../../../utils/flutterBridge';
 import LocationPicker from './components/LocationPicker';
 
 // Persist the in-progress form so an accidental refresh (or navigating away and
@@ -37,6 +38,7 @@ const CreateGroup = () => {
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadErr, setUploadErr] = useState('');
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   // Live Location Field — `liveLocation` is the human label shown to the user,
   // while `coordinates` is the exact device pinpoint used for distance sorting.
@@ -164,6 +166,25 @@ const CreateGroup = () => {
     }
   };
 
+  // Camera capture. Inside the Flutter wrapper we go through the native bridge
+  // (image_picker → base64 → File) because the WebView's own file-chooser camera
+  // path doesn't return the photo. In a normal mobile browser we fall back to a
+  // standard capture input, which opens the OS camera directly.
+  const handleCameraCapture = async () => {
+    setUploadErr('');
+    if (isFlutterCameraBridge()) {
+      try {
+        const file = await captureImageViaFlutter();
+        if (file) await handleImageUpload(file); // null = user cancelled
+      } catch (err) {
+        console.error('Native camera capture failed:', err);
+        setUploadErr('Camera failed. Try uploading from the gallery instead.');
+      }
+      return;
+    }
+    cameraInputRef.current?.click();
+  };
+
   const canSubmit = () => {
     return (
       groupName.trim().length >= 3 &&
@@ -269,6 +290,13 @@ const CreateGroup = () => {
                   <div className="absolute top-2 right-2 flex gap-1.5">
                     <button
                       type="button"
+                      onClick={handleCameraCapture}
+                      className="w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
                     >
@@ -285,24 +313,38 @@ const CreateGroup = () => {
                 )}
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-primary/50 bg-surface-alt flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all"
-              >
-                {uploadingImage ? (
-                  <>
-                    <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
-                    <span className="text-[12px] font-bold text-ink">Uploading... {uploadPct}%</span>
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <span className="text-[12px] font-bold text-ink">Click to upload a group photo</span>
-                    <span className="text-[10px] text-faint">PNG, JPG, WebP — up to 5MB</span>
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-primary/50 bg-surface-alt flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all"
+                >
+                  {uploadingImage ? (
+                    <>
+                      <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                      <span className="text-[12px] font-bold text-ink">Uploading... {uploadPct}%</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <span className="text-[12px] font-bold text-ink">Upload from gallery</span>
+                      <span className="text-[10px] text-faint">PNG, JPG, WebP — up to 5MB</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Camera capture — uses the native Flutter bridge inside the app,
+                    or the OS camera via a capture input in a mobile browser. */}
+                <button
+                  type="button"
+                  onClick={handleCameraCapture}
+                  disabled={uploadingImage}
+                  className="w-full h-11 rounded-xl border border-line hover:border-primary/50 bg-surface flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all disabled:opacity-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <span className="text-[12px] font-bold text-ink">Take a photo</span>
+                </button>
+              </div>
             )}
 
             {uploadErr && <p className="text-[10px] font-bold text-red-500 mt-1">{uploadErr}</p>}
@@ -317,6 +359,23 @@ const CreateGroup = () => {
                 if (file) {
                   handleImageUpload(file);
                 }
+                e.target.value = ''; // allow re-picking the same file
+              }}
+            />
+
+            {/* Browser-only camera fallback (used when the Flutter bridge is absent). */}
+            <input
+              type="file"
+              ref={cameraInputRef}
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImageUpload(file);
+                }
+                e.target.value = '';
               }}
             />
 
