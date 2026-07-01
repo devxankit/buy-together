@@ -37,6 +37,7 @@ const CreateGroup = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadErr, setUploadErr] = useState('');
+  const [showSourceSheet, setShowSourceSheet] = useState(false);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -185,6 +186,29 @@ const CreateGroup = () => {
     cameraInputRef.current?.click();
   };
 
+  // Entry point for the upload area. Inside the Flutter wrapper the OS file
+  // chooser's camera option is broken, so we present our own Gallery/Camera
+  // choice (Camera → native bridge). In a normal browser the standard file
+  // input already offers both, so we just open it directly.
+  const openImagePicker = () => {
+    setUploadErr('');
+    if (isFlutterCameraBridge()) {
+      setShowSourceSheet(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const chooseGallery = () => {
+    setShowSourceSheet(false);
+    fileInputRef.current?.click();
+  };
+
+  const chooseCamera = () => {
+    setShowSourceSheet(false);
+    handleCameraCapture();
+  };
+
   const canSubmit = () => {
     return (
       groupName.trim().length >= 3 &&
@@ -290,14 +314,7 @@ const CreateGroup = () => {
                   <div className="absolute top-2 right-2 flex gap-1.5">
                     <button
                       type="button"
-                      onClick={handleCameraCapture}
-                      className="w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={openImagePicker}
                       className="w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18" /></svg>
@@ -313,38 +330,24 @@ const CreateGroup = () => {
                 )}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-primary/50 bg-surface-alt flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all"
-                >
-                  {uploadingImage ? (
-                    <>
-                      <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
-                      <span className="text-[12px] font-bold text-ink">Uploading... {uploadPct}%</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                      <span className="text-[12px] font-bold text-ink">Upload from gallery</span>
-                      <span className="text-[10px] text-faint">PNG, JPG, WebP — up to 5MB</span>
-                    </>
-                  )}
-                </button>
-
-                {/* Camera capture — uses the native Flutter bridge inside the app,
-                    or the OS camera via a capture input in a mobile browser. */}
-                <button
-                  type="button"
-                  onClick={handleCameraCapture}
-                  disabled={uploadingImage}
-                  className="w-full h-11 rounded-xl border border-line hover:border-primary/50 bg-surface flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all disabled:opacity-50"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <span className="text-[12px] font-bold text-ink">Take a photo</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={openImagePicker}
+                className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-primary/50 bg-surface-alt flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-[0.99] transition-all"
+              >
+                {uploadingImage ? (
+                  <>
+                    <span className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                    <span className="text-[12px] font-bold text-ink">Uploading... {uploadPct}%</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <span className="text-[12px] font-bold text-ink">Click to upload a group photo</span>
+                    <span className="text-[10px] text-faint">PNG, JPG, WebP — up to 5MB</span>
+                  </>
+                )}
+              </button>
             )}
 
             {uploadErr && <p className="text-[10px] font-bold text-red-500 mt-1">{uploadErr}</p>}
@@ -806,6 +809,47 @@ const CreateGroup = () => {
           )}
         </button>
       </div>
+
+      {/* ── IMAGE SOURCE CHOOSER (Gallery / Camera) ──
+          Shown only inside the Flutter wrapper, where the OS file-chooser's
+          camera option doesn't work. Camera routes through the native bridge. */}
+      {showSourceSheet && (
+        <div className="fixed inset-0 z-[60] flex flex-col justify-end" onClick={() => setShowSourceSheet(false)}>
+          <div className="absolute inset-0 bg-black/40 animate-fadeIn" />
+          <div
+            className="relative bg-surface rounded-t-2xl px-5 pt-4 pb-6 shadow-2xl animate-slideUp w-full max-w-[430px] mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full bg-line mx-auto mb-4" />
+            <p className="text-[11px] font-black text-ink uppercase tracking-wider text-center mb-3">Add group photo</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={chooseCamera}
+                className="flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-line bg-surface-alt active:scale-95 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <span className="text-[12px] font-bold text-ink">Camera</span>
+              </button>
+              <button
+                type="button"
+                onClick={chooseGallery}
+                className="flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-line bg-surface-alt active:scale-95 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-[12px] font-bold text-ink">Gallery</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSourceSheet(false)}
+              className="w-full mt-3 py-2.5 text-[12px] font-bold text-muted"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
