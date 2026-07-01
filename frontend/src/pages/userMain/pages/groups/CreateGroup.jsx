@@ -5,6 +5,7 @@ import { createGroup } from '../../../../services/group.api';
 import { uploadImage } from '../../../../services/upload.api';
 import { useUserMainContext } from '../../context';
 import { showToast } from '../../../../utils/toast';
+import { normalizeImageForUpload } from '../../../../utils/image';
 import LocationPicker from './components/LocationPicker';
 
 // Persist the in-progress form so an accidental refresh (or navigating away and
@@ -130,19 +131,31 @@ const CreateGroup = () => {
   const handleImageUpload = async (file) => {
     if (!file) return;
     setUploadErr('');
-    if (!file.type.startsWith('image/')) {
-      setUploadErr('Please select an image file.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadErr('Image must be 5MB or smaller.');
-      return;
-    }
 
+    // Don't reject on MIME/size up front: camera captures inside the Flutter
+    // WebView often arrive oversized and with an empty/octet-stream type.
+    // Normalization re-encodes them to a compact JPEG so they pass the server's
+    // strict image-only, 5MB filter. Only genuine non-images are blocked, and
+    // only after we've confirmed the file can't be decoded as an image.
     setUploadingImage(true);
     setUploadPct(0);
     try {
-      const { data } = await uploadImage(file, { folder: 'groups', onProgress: setUploadPct });
+      const normalized = await normalizeImageForUpload(file);
+
+      // If normalization couldn't produce an image (returned the original) and
+      // the source clearly isn't an image, stop with a clear message.
+      const looksLikeImage =
+        normalized.type?.startsWith('image/') || file.type?.startsWith('image/');
+      if (!looksLikeImage) {
+        setUploadErr('Please select an image file.');
+        return;
+      }
+      if (normalized.size > 5 * 1024 * 1024) {
+        setUploadErr('Image is too large even after compression. Try a smaller photo.');
+        return;
+      }
+
+      const { data } = await uploadImage(normalized, { folder: 'groups', onProgress: setUploadPct });
       setImage(data.url);
     } catch (err) {
       setUploadErr(err.response?.data?.message || 'Upload failed. Try again.');
