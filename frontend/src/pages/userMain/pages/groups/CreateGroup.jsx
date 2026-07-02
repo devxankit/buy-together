@@ -13,7 +13,7 @@ import LocationPicker from './components/LocationPicker';
 // back) doesn't wipe everything the user typed. Cleared on a successful create.
 const DRAFT_KEY = 'create_group_draft';
 const readDraft = () => {
-  try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY)) || {}; }
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY)) || {}; }
   catch { return {}; }
 };
 
@@ -106,7 +106,7 @@ const CreateGroup = () => {
   // re-derived from the device on mount, so they aren't persisted).
   useEffect(() => {
     try {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
         groupName, goal, deadline, selectedMainCat, selectedSubCat, productName, productDesc, image,
       }));
     } catch { /* storage full / unavailable — ignore */ }
@@ -250,7 +250,7 @@ const CreateGroup = () => {
 
     try {
       await createGroup(payload);
-      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       showToast('Group created successfully! 🎉');
       navigate('/groups');
     } catch (err) {
@@ -272,8 +272,8 @@ const CreateGroup = () => {
 
         {/* ── TYPOGRAPHIC HERO TITLE ── */}
         <div className="pb-2 border-b border-line">
-          <h1 className="text-[20px] font-black text-ink tracking-tight">Create Co-Buying Group</h1>
-          <p className="text-[11px] text-muted font-semibold mt-0.5">Fill in the fields below to launch a new buying pool</p>
+          <h1 className="text-[20px] font-black text-ink tracking-tight dark:text-slate-100">Create Co-Buying Group</h1>
+          <p className="text-[11px] text-muted dark:text-slate-400 font-semibold mt-0.5">Fill in the fields below to launch a new buying pool</p>
         </div>
 
         {/* ── SECTION 1: BASIC INFORMATION ── */}
@@ -738,29 +738,29 @@ const CreateGroup = () => {
         </div>
 
         {/* ── SECTION 5: LIVE SUMMARY BOX ── */}
-        <div className="bg-gradient-to-r from-teal-50/80 to-[#F0FDF9]/80 border border-teal-100/50 rounded-2xl p-4 flex flex-col gap-2.5">
+        <div className="bg-[#E6F6F3] dark:bg-slate-900 border border-teal-100/50 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-2.5">
           <p className="text-[10.5px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             LIVE PREVIEW SUMMARY
           </p>
-          <div className="flex flex-col gap-1.5 text-[11px] font-semibold text-faint">
-            <div className="flex justify-between items-center border-b border-teal-100/50 pb-1">
+          <div className="flex flex-col gap-1.5 text-[11px] font-semibold text-teal-800 dark:text-slate-400">
+            <div className="flex justify-between items-center border-b border-teal-100/30 dark:border-slate-800 pb-1">
               <span className="opacity-75">Pool Name:</span>
-              <span className="text-ink font-extrabold truncate max-w-[200px]">{groupName || 'Unspecified Name'}</span>
+              <span className="text-teal-950 dark:text-white font-extrabold truncate max-w-[200px]">{groupName || 'Unspecified Name'}</span>
             </div>
-            <div className="flex justify-between items-center border-b border-teal-100/50 pb-1">
+            <div className="flex justify-between items-center border-b border-teal-100/30 dark:border-slate-800 pb-1">
               <span className="opacity-75">Target Product:</span>
-              <span className="text-ink font-extrabold truncate max-w-[200px]">{productName || 'Unspecified Product'}</span>
+              <span className="text-teal-950 dark:text-white font-extrabold truncate max-w-[200px]">{productName || 'Unspecified Product'}</span>
             </div>
-            <div className="flex justify-between items-center border-b border-teal-100/50 pb-1">
+            <div className="flex justify-between items-center border-b border-teal-100/30 dark:border-slate-800 pb-1">
               <span className="opacity-75">Category Range:</span>
-              <span className="text-ink font-extrabold">{selectedMainCat ? `${selectedMainCat} › ${selectedSubCat || 'Sub-cat'}` : 'Not Categorized'}</span>
+              <span className="text-teal-950 dark:text-white font-extrabold">{selectedMainCat ? `${selectedMainCat} › ${selectedSubCat || 'Sub-cat'}` : 'Not Categorized'}</span>
             </div>
-            <div className="flex justify-between items-center border-b border-teal-100/50 pb-1">
+            <div className="flex justify-between items-center border-b border-teal-100/30 dark:border-slate-800 pb-1">
               <span className="opacity-75">Location:</span>
-              <span className="flex items-center gap-1 text-ink font-extrabold truncate max-w-[210px]">
+              <span className="flex items-center gap-1 text-teal-950 dark:text-white font-extrabold truncate max-w-[210px]">
                 {coordinates && (
                   <svg className="w-3 h-3 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -773,13 +773,13 @@ const CreateGroup = () => {
               </span>
             </div>
             {!locating && !coordinates && (
-              <p className="text-[9.5px] font-bold text-amber-600 -mt-1">
+              <p className="text-[9.5px] font-bold text-amber-600 dark:text-amber-500 -mt-1">
                 ⚠ Exact pinpoint not captured — enable location access so buyers can find this group nearby.
               </p>
             )}
             <div className="flex justify-between items-center pt-0.5">
               <span className="opacity-75">Deal Target:</span>
-              <span className="text-ink font-extrabold">{goal} Buyers • {deadline} Days Limit</span>
+              <span className="text-teal-950 dark:text-white font-extrabold">{goal} Buyers • {deadline} Days Limit</span>
             </div>
           </div>
         </div>

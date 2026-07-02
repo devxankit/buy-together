@@ -100,40 +100,60 @@ const TopBar = ({ navigate, user, onlineStatus, onProfileClick, onMenuToggle, is
 );
 
 const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike, onReply, uploading, isMe, read }) => {
-  let pressTimer = null;
-  let lastTap = 0;
-  let startX = 0;
+  const [dragX, setDragX] = useState(0);
+  const startXRef = useRef(0);
+  const lastTapRef = useRef(0);
+  const pressTimerRef = useRef(null);
 
   const handleStart = (e) => {
-    if (e.touches && e.touches.length > 0) {
-      startX = e.touches[0].clientX;
-    }
-    const now = Date.now();
-    if (now - lastTap < 300) {
-      if (onLike) onLike(id);
-      if (pressTimer) clearTimeout(pressTimer);
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    if (e.type === 'mousedown' && window.lastTouchTime && Date.now() - window.lastTouchTime < 1000) {
       return;
     }
-    lastTap = now;
+    if (e.type === 'touchstart') {
+      window.lastTouchTime = Date.now();
+    }
 
-    pressTimer = setTimeout(() => {
+    if (e.touches && e.touches.length > 0) {
+      startXRef.current = e.touches[0].clientX;
+    } else {
+      startXRef.current = e.clientX;
+    }
+
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (onLike) onLike(id);
+      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+      return;
+    }
+    lastTapRef.current = now;
+
+    pressTimerRef.current = setTimeout(() => {
       if (onLongPress) onLongPress({ id, content, name });
-    }, 2000); // Long-press hold set to 2 seconds
+    }, 450); // Snappy menu hold at 450ms
   };
 
   const handleEnd = () => {
-    if (pressTimer) clearTimeout(pressTimer);
-    startX = 0;
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    setDragX(0);
+    startXRef.current = 0;
   };
 
   const handleMove = (e) => {
-    if (pressTimer) clearTimeout(pressTimer);
-    if (e.touches && e.touches.length > 0 && startX !== 0) {
-      const currentX = e.touches[0].clientX;
-      const deltaX = currentX - startX;
-      if (Math.abs(deltaX) > 50) {
-        if (onReply) onReply({ id, content, name });
-        startX = 0; 
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    if (startXRef.current !== 0) {
+      const currentX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+      const deltaX = currentX - startXRef.current;
+      
+      // WhatsApp style: Swipe right to trigger reply
+      if (deltaX > 0) {
+        const cappedDrag = Math.min(deltaX, 80);
+        setDragX(cappedDrag);
+
+        if (deltaX > 60 && startXRef.current !== 0) {
+          if (onReply) onReply({ id, content, name });
+          startXRef.current = 0; // Trigger once per touch swipe
+        }
       }
     }
   };
@@ -152,21 +172,25 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
       onMouseUp={handleEnd}
       onMouseLeave={handleEnd}
       onDoubleClick={handleDoubleClick}
+      style={{
+        transform: `translateX(${dragX}px)`,
+        transition: dragX === 0 ? 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)' : 'none'
+      }}
     >
       {!isMe && <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1" />}
       <div className={`flex-1 flex flex-col min-w-0 max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
         <div 
-          className="bg-surface rounded-[14px] p-3 shadow-sm border border-line relative max-w-full"
-          style={isMe ? { borderBottomRightRadius: '4px', backgroundColor: '#e6f7f6', borderColor: 'transparent' } : { borderTopLeftRadius: '4px' }}
+          className="bg-surface rounded-[14px] p-3 shadow-sm border border-line relative max-w-full dark:bg-slate-800 dark:border-slate-700/50"
+          style={isMe ? { borderBottomRightRadius: '4px', backgroundColor: 'var(--primary-soft)', borderColor: 'transparent' } : { borderTopLeftRadius: '4px' }}
         >
           {replyData && (
-            <div className="mb-2 bg-surface-alt border-l-[3px] border-primary px-2.5 py-1.5 rounded-r-xl text-left text-[11px] leading-tight select-none">
+            <div className="mb-2 bg-surface-alt dark:bg-slate-900 border-l-[3px] border-primary px-2.5 py-1.5 rounded-r-xl text-left text-[11px] leading-tight select-none">
               <span className="block font-black text-primary mb-0.5">{replyData.name}</span>
               <span className="text-muted line-clamp-1">{replyData.content}</span>
             </div>
           )}
           
-          {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap">{content}</p>}
+          {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap dark:text-slate-100">{content}</p>}
 
           {image && (
             <div className="mt-2 rounded-xl overflow-hidden border border-line cursor-pointer active:scale-[0.98] transition-all relative">
@@ -499,9 +523,8 @@ const PersonalChat = () => {
         type: m.type,
         reactions: m.reactions,
         senderId: m.senderId,
-        isMe,
-        // Blue tick once the other person's last-read time covers this message.
-        read: Boolean(isMe && otherLastRead > 0 && Number(m.createdAt) <= otherLastRead),
+        // Blue tick once the other person's last-read time covers this message, or if sending to yourself.
+        read: Boolean(isMe && (String(chatId) === String(currentUserId) || (otherLastRead > 0 && Number(m.createdAt) <= otherLastRead))),
       };
     });
     const locals = (messages || []).map((m) => ({ ...m, _ts: m._ts ?? m.id }));
@@ -556,9 +579,11 @@ const PersonalChat = () => {
     setShowProfile(true);
   };
 
+  const [isSending, setIsSending] = useState(false);
+
   const handleSendMessage = async () => {
     const text = newMessage.trim();
-    if (!text || !dmRoomId) return;
+    if (!text || !dmRoomId || isSending) return;
     const replyTo = replyingToMessage
       ? {
           id: String(replyingToMessage.id),
@@ -571,12 +596,15 @@ const PersonalChat = () => {
     stopTyping();
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
+    setIsSending(true);
     try {
       await sendLiveMessage(text, replyTo);
       setReplyingToMessage(null);
       setNewMessage('');
     } catch (err) {
       console.error('Failed to send DM message:', err);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -905,7 +933,7 @@ const PersonalChat = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] relative overflow-hidden">
+    <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[var(--surface-deep)] relative overflow-hidden">
       <TopBar
         navigate={navigate}
         user={activePartner}
@@ -919,7 +947,7 @@ const PersonalChat = () => {
       />
       
       {/* Scrollable messages container */}
-      <div className="flex-1 overflow-y-auto pb-24 no-scrollbar relative pt-4 bg-[#F6F6F8]">
+      <div className="flex-1 overflow-y-auto pb-24 no-scrollbar relative pt-4 bg-[var(--surface-deep)]">
         {loading && displayMessages.length === 0 ? (
           <ChatSkeleton />
         ) : (

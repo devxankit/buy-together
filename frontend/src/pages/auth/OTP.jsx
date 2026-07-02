@@ -42,6 +42,22 @@ const OTP = () => {
   /* focus first box on mount */
   useEffect(() => { refs.current[0]?.focus(); }, []);
 
+  // Auto-submit OTP verification once all digits are filled
+  useEffect(() => {
+    const otp = digits.join('');
+    if (otp.length === N && !loading && !(isNewUser && !nameInput.trim())) {
+      const autoVerify = async () => {
+        try {
+          const { user } = await dispatch(verifyOtp({ phone, otp, name: nameInput.trim() || undefined })).unwrap();
+          navigate(user?.role === 'vendor' ? '/vendor/dashboard' : '/', { replace: true });
+        } catch {
+          // Handled by Redux / display state
+        }
+      };
+      autoVerify();
+    }
+  }, [digits, phone, nameInput, isNewUser, loading, dispatch, navigate]);
+
   const focus = (i) => {
     const el = refs.current[i];
     if (!el) return;

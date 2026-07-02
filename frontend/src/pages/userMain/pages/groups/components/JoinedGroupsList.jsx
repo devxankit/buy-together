@@ -1,20 +1,54 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const JoinedGroupsList = ({ groups }) => {
   const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.auth.user);
+  const userId = currentUser?.id || currentUser?._id || 'guest';
+
+  const userPinnedKey = `buytogether_${userId}_pinned_groups`;
+
+  const [pinnedIds, setPinnedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(userPinnedKey)) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  const togglePin = useCallback((groupId, e) => {
+    e.stopPropagation();
+    setPinnedIds(prev => {
+      const next = prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId];
+      localStorage.setItem(userPinnedKey, JSON.stringify(next));
+      return next;
+    });
+  }, [userPinnedKey]);
+
+  // Sort: pinned groups float to the top
+  const sortedGroups = [...groups].sort((a, b) => {
+    const aPin = pinnedIds.includes(a.id || a._id) ? 1 : 0;
+    const bPin = pinnedIds.includes(b.id || b._id) ? 1 : 0;
+    return bPin - aPin;
+  });
 
   return (
     <div className="flex flex-col gap-4 select-none pb-8 animate-fadeIn">
-      {groups.map((group) => {
+      {sortedGroups.map((group) => {
         const percentage = Math.round((group.spotsJoined / group.spotsTotal) * 100);
         const isClosingSoon = group.status === 'closing';
+        const groupId = group.id || group._id;
+        const lastSeen = Number(localStorage.getItem(`buytogether_group_last_seen_${groupId}`) || 0);
+        const groupTime = new Date(group.updatedAt || group.createdAt).getTime();
+        const hasUnread = groupTime > lastSeen;
+        const isPinned = pinnedIds.includes(groupId);
 
         return (
           <div
-            key={group.id}
-            onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true } })}
-            className="bg-surface border border-line/70 hover:border-primary/15 rounded-[22px] p-3.5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            key={groupId}
+            onClick={() => navigate(`/groups/${groupId}/chat`, { state: { group, isJoined: true } })}
+            className={`bg-surface border ${hasUnread ? 'border-primary/45 shadow-md shadow-primary/5' : 'border-line/70'} hover:border-primary/15 rounded-[22px] p-3.5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer relative`}
           >
             {/* ── TOP SECTION (Product Image and Info) ── */}
             <div className="flex gap-3">
@@ -64,6 +98,11 @@ const JoinedGroupsList = ({ groups }) => {
                         Active
                       </span>
                     )}
+                    {hasUnread && (
+                      <span className="bg-primary text-white text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none tracking-tight animate-pulse shadow-sm shadow-primary/20">
+                        New
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-[9px] font-extrabold text-muted mt-0.5">
@@ -91,6 +130,17 @@ const JoinedGroupsList = ({ groups }) => {
 
               {/* Right column indicators */}
               <div className="flex flex-col items-end justify-between flex-shrink-0 pl-1 self-stretch">
+                {/* Pin Button */}
+                <button
+                  onClick={(e) => togglePin(groupId, e)}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${isPinned ? 'bg-primary/10' : 'bg-surface-alt hover:bg-surface-alt/80'}`}
+                  title={isPinned ? 'Unpin group' : 'Pin group'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${isPinned ? 'text-primary' : 'text-muted'}`} viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                  </svg>
+                </button>
+
                 {/* Spots progress stack */}
                 <div className="bg-surface-alt border border-line/50 px-2 py-1 rounded-xl text-center min-w-[56px]">
                   <p className="text-[9.5px] font-black text-ink leading-none">

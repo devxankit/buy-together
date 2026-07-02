@@ -95,9 +95,25 @@ export const UserMainProvider = ({ children }) => {
 
   const refreshUnreadMessageCount = useCallback(async () => {
     try {
-      const { data } = await api.get('/chat/conversations');
-      const totalUnread = (data || []).reduce((acc, convo) => acc + (convo.unread || 0), 0);
-      setUnreadMessageCount(totalUnread);
+      const [convoRes, groupsRes] = await Promise.all([
+        api.get('/chat/conversations'),
+        api.get('/groups?joined=true').catch(() => ({ data: [] }))
+      ]);
+      const dmUnread = (convoRes.data || []).reduce((acc, convo) => acc + (convo.unread || 0), 0);
+      
+      let groupUnreadCount = 0;
+      if (groupsRes && groupsRes.data && Array.isArray(groupsRes.data)) {
+        groupsRes.data.forEach(group => {
+          const groupId = group.id || group._id;
+          const lastSeen = Number(localStorage.getItem(`buytogether_group_last_seen_${groupId}`) || 0);
+          const groupTime = new Date(group.updatedAt || group.createdAt).getTime();
+          if (groupTime > lastSeen) {
+            groupUnreadCount++;
+          }
+        });
+      }
+      
+      setUnreadMessageCount(dmUnread + groupUnreadCount);
     } catch (err) {
       console.error('Failed to fetch unread message count:', err);
     }
@@ -107,16 +123,19 @@ export const UserMainProvider = ({ children }) => {
     refreshUnreadMessageCount();
   }, [refreshUnreadMessageCount]);
 
-  // Live messages badge: when a DM arrives for this user (and they're not the
-  // one viewing it), the backend pings their personal socket room — re-pull the
-  // unread total so the icon badge updates without a page reload.
+  // Live messages badge: when a DM or group message notification arrives, 
+  // re-pull the unread total so the icon badge updates live.
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return undefined;
     const socket = getChatSocket();
-    const onDm = () => refreshUnreadMessageCount();
-    socket.on('dm_notification', onDm);
-    return () => { socket.off('dm_notification', onDm); };
+    const handleUpdate = () => refreshUnreadMessageCount();
+    socket.on('dm_notification', handleUpdate);
+    socket.on('group_notification', handleUpdate);
+    return () => { 
+      socket.off('dm_notification', handleUpdate); 
+      socket.off('group_notification', handleUpdate); 
+    };
   }, [refreshUnreadMessageCount]);
 
 

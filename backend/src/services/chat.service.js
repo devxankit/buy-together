@@ -91,6 +91,11 @@ const createMessage = async ({
 
   await ref.set(message);
 
+  // If this is a group message, update MongoDB Group's updatedAt field
+  if (!String(groupId).startsWith('dm-')) {
+    await Group.findByIdAndUpdate(groupId, { updatedAt: Date.now() });
+  }
+
   // If this is a direct message, update conversations metadata for both users in Firebase RTDB
   if (String(groupId).startsWith('dm-')) {
     const parts = String(groupId).split('-');

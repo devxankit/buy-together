@@ -1,34 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const TrendingGroups = ({ groups }) => {
+const TrendingGroups = ({ groups, onSeeAll }) => {
   const navigate = useNavigate();
 
   return (
     <div className="flex flex-col gap-3 select-none">
-      {/* Header section with See All */}
+      {/* Header section */}
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-extrabold text-ink">
           Trending Right Now
         </h2>
-        <button
-          onClick={() => navigate('/groups', { state: { filter: 'trending' } })}
-          className="text-xs font-bold text-primary hover:text-[#0B7A70] flex items-center gap-0.5 active:scale-95 transition-all"
-        >
-          <span>See All</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-3 h-3"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
       </div>
 
       {/* Horizontal Carousel */}

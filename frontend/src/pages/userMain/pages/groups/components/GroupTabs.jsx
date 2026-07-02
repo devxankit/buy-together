@@ -3,18 +3,18 @@ import { motion } from 'framer-motion';
 
 const GroupTabs = ({ activeTab, onChange }) => {
   return (
-    <div className="bg-[#F1F5F9]/80 border border-slate-200/40 p-1 rounded-full flex w-full relative select-none">
+    <div className="bg-[#F1F5F9]/80 dark:bg-slate-800/80 border border-slate-200/40 dark:border-slate-700/40 p-1 rounded-full flex w-full relative select-none">
       {/* My Groups Tab */}
       <button
         onClick={() => onChange('my-groups')}
         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-extrabold relative transition-colors duration-300 z-10 ${
-          activeTab === 'my-groups' ? 'text-primary' : 'text-[#64748B] hover:text-[#475569]'
+          activeTab === 'my-groups' ? 'text-primary dark:text-teal-400' : 'text-[#64748B] hover:text-[#475569] dark:text-slate-400 dark:hover:text-slate-200'
         }`}
       >
         {activeTab === 'my-groups' && (
           <motion.div
             layoutId="activeGroupTabIndicator"
-            className="absolute inset-0 bg-white rounded-full -z-10 shadow-sm shadow-slate-200/50"
+            className="absolute inset-0 bg-white dark:bg-slate-700 rounded-full -z-10 shadow-sm shadow-slate-200/50 dark:shadow-none"
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
           />
         )}
@@ -39,13 +39,13 @@ const GroupTabs = ({ activeTab, onChange }) => {
       <button
         onClick={() => onChange('joined-groups')}
         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-extrabold relative transition-colors duration-300 z-10 ${
-          activeTab === 'joined-groups' ? 'text-primary' : 'text-[#64748B] hover:text-[#475569]'
+          activeTab === 'joined-groups' ? 'text-primary dark:text-teal-400' : 'text-[#64748B] hover:text-[#475569] dark:text-slate-400 dark:hover:text-slate-200'
         }`}
       >
         {activeTab === 'joined-groups' && (
           <motion.div
             layoutId="activeGroupTabIndicator"
-            className="absolute inset-0 bg-white rounded-full -z-10 shadow-sm shadow-slate-200/50"
+            className="absolute inset-0 bg-white dark:bg-slate-700 rounded-full -z-10 shadow-sm shadow-slate-200/50 dark:shadow-none"
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
           />
         )}

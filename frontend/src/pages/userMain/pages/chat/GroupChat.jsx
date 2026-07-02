@@ -125,13 +125,28 @@ const JoinedInfo = ({ group }) => {
   const spotsJoined = group.spotsJoined ?? group.joined ?? 0;
   const spotsTotal = group.spotsTotal ?? (spotsJoined + (group.needed || 0));
   
+  const members = group.members || [];
+  const displayMembers = members.slice(0, 3);
+
   return (
     <div className="flex items-center gap-3 px-4 pb-4 bg-surface">
       <div className="flex -space-x-2">
-        <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=40&q=80" alt="User" className="w-7 h-7 rounded-full border-2 border-surface object-cover bg-surface-alt" />
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=40&q=80" alt="User" className="w-7 h-7 rounded-full border-2 border-surface object-cover bg-surface-alt" />
-        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=40&q=80" alt="User" className="w-7 h-7 rounded-full border-2 border-surface object-cover bg-surface-alt" />
-        <div className="w-7 h-7 rounded-full border-2 border-surface bg-surface-alt flex items-center justify-center text-[10px] font-bold text-faint">+{Math.max(spotsJoined - 3, 0)}</div>
+        {displayMembers.map((m, idx) => {
+          const avatarUrl = m.avatar || getPlaceholderAvatar(m.name || 'Member');
+          return (
+            <img 
+              key={m._id || m.id || idx} 
+              src={avatarUrl} 
+              alt={m.name || 'Member'} 
+              className="w-7 h-7 rounded-full border-2 border-surface object-cover bg-slate-100" 
+            />
+          );
+        })}
+        {spotsJoined > displayMembers.length && (
+          <div className="w-7 h-7 rounded-full border-2 border-surface bg-surface-alt flex items-center justify-center text-[10px] font-bold text-faint">
+            +{spotsJoined - displayMembers.length}
+          </div>
+        )}
       </div>
       <span className="text-[12px] font-semibold text-faint">{spotsJoined} / {spotsTotal} buyers joined</span>
     </div>
@@ -176,7 +191,7 @@ const StatsCard = ({ group }) => {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            <span className="text-[11px] font-black text-ink">{spotsJoined}</span>
+            <span className="text-[11px] font-black text-ink">{group.spotsUnits ?? spotsJoined}</span>
             <span className="text-[9px] font-medium text-faint">Units</span>
           </div>
           <div className="flex flex-col items-center justify-center text-center border-l border-line/60">
@@ -222,82 +237,131 @@ const TabsAndPinned = ({ activeTab, setActiveTab, group, pinnedMessage, onPinCli
       </div>
 
       {/* Pinned Message */}
-      <div onClick={onPinClick} className="px-4 py-3 bg-primary-soft cursor-pointer hover:bg-primary/20 transition-colors active:scale-[0.99]">
-        <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-          </svg>
-          <p className="text-[11px] font-semibold text-ink flex-1 truncate">
-            <span className="text-primary font-bold">Pinned:</span> {pinnedMessage ? pinnedMessage.content : (group.targetPrice ? `Target price ${group.targetPrice} & min ${group.spotsTotal} units to order` : group.slogan)}
-          </p>
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+      {pinnedMessage && (
+        <div onClick={onPinClick} className="px-4 py-3 bg-primary-soft cursor-pointer hover:bg-primary/20 transition-colors active:scale-[0.99]">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+            </svg>
+            <p className="text-[11px] font-semibold text-ink flex-1 truncate">
+              <span className="text-primary font-bold">Pinned:</span> {pinnedMessage.content}
+            </p>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike, onReply, uploading }) => {
-  let pressTimer = null;
-  let lastTap = 0;
-  let startX = 0;
+const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reactions, replyTo, quoteData, onVote, documentData, locationData, voiceData, onLongPress, replyData, onLike, onReply, uploading, isMe, onProfileClick }) => {
+  const [dragX, setDragX] = useState(0);
+  const startXRef = useRef(0);
+  const lastTapRef = useRef(0);
+  const pressTimerRef = useRef(null);
 
   const handleStart = (e) => {
-    if (e.touches && e.touches.length > 0) {
-      startX = e.touches[0].clientX;
-    }
-    const now = Date.now();
-    if (now - lastTap < 300) {
-      if (onLike) onLike(id);
-      if (pressTimer) clearTimeout(pressTimer);
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    if (e.type === 'mousedown' && window.lastTouchTime && Date.now() - window.lastTouchTime < 1000) {
       return;
     }
-    lastTap = now;
+    if (e.type === 'touchstart') {
+      window.lastTouchTime = Date.now();
+    }
 
-    pressTimer = setTimeout(() => {
+    if (e.touches && e.touches.length > 0) {
+      startXRef.current = e.touches[0].clientX;
+    } else {
+      startXRef.current = e.clientX;
+    }
+
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (onLike) onLike(id);
+      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+      return;
+    }
+    lastTapRef.current = now;
+
+    pressTimerRef.current = setTimeout(() => {
       if (onLongPress) onLongPress({ id, content, name });
-    }, 2000); // Long-press hold set to 2 seconds
+    }, 450); // Snappy menu hold at 450ms
   };
 
   const handleEnd = () => {
-    if (pressTimer) clearTimeout(pressTimer);
-    startX = 0;
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    setDragX(0);
+    startXRef.current = 0;
   };
 
   const handleMove = (e) => {
-    if (pressTimer) clearTimeout(pressTimer);
-    if (e.touches && e.touches.length > 0 && startX !== 0) {
-      const currentX = e.touches[0].clientX;
-      const deltaX = currentX - startX;
-      if (Math.abs(deltaX) > 50) {
-        if (onReply) onReply({ id, content, name });
-        startX = 0; 
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    if (startXRef.current !== 0) {
+      const currentX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+      const deltaX = currentX - startXRef.current;
+      
+      // WhatsApp style: Swipe right to trigger reply
+      if (deltaX > 0) {
+        const cappedDrag = Math.min(deltaX, 80);
+        setDragX(cappedDrag);
+
+        if (deltaX > 60 && startXRef.current !== 0) {
+          if (onReply) onReply({ id, content, name });
+          startXRef.current = 0; // Trigger once per touch swipe
+        }
       }
     }
   };
 
   return (
     <div
-      className="flex gap-2.5 mb-5 px-4 w-full select-none cursor-pointer active:opacity-95 transition-opacity"
+      className={`flex gap-2.5 mb-5 px-4 w-full select-none cursor-pointer active:opacity-95 transition-opacity ${isMe ? 'flex-row-reverse' : ''}`}
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
       onTouchMove={handleMove}
       onMouseDown={handleStart}
       onMouseUp={handleEnd}
       onMouseLeave={handleEnd}
+      style={{
+        transform: `translateX(${dragX}px)`,
+        transition: dragX === 0 ? 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)' : 'none'
+      }}
     >
-      <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1" />
-      <div className="flex-1 flex flex-col min-w-0">
+      {!isMe && (
+        <img 
+          src={avatar} 
+          alt={name} 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onProfileClick) onProfileClick();
+          }}
+          className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-slate-200 mt-1 hover:opacity-80 transition-all" 
+        />
+      )}
+      <div className={`flex-1 flex flex-col min-w-0 max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[12px] font-bold text-ink">{name}</span>
-          {role && <span className="text-[8.5px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">{role}</span>}
+          <span 
+            onClick={(e) => {
+              if (!isMe) {
+                e.stopPropagation();
+                if (onProfileClick) onProfileClick();
+              }
+            }}
+            className={`text-[12px] font-bold text-ink ${!isMe ? 'hover:underline cursor-pointer' : ''}`}
+          >
+            {isMe ? 'You' : name}
+          </span>
+          {role && !isMe && <span className="text-[8.5px] font-extrabold text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider">{role}</span>}
         </div>
         
-        <div className="bg-surface rounded-[14px] rounded-tl-sm p-3 shadow-sm border border-line relative max-w-full">
+        <div 
+          className="bg-surface rounded-[14px] p-3 shadow-sm border border-line relative max-w-full dark:bg-slate-800 dark:border-slate-700/50"
+          style={isMe ? { borderBottomRightRadius: '4px', backgroundColor: 'var(--primary-soft)', borderColor: 'transparent' } : { borderTopLeftRadius: '4px' }}
+        >
           {replyData && (
-            <div className="mb-2 bg-surface-alt border-l-[3px] border-primary px-2.5 py-1.5 rounded-r-xl text-left text-[11px] leading-tight select-none">
+            <div className="mb-2 bg-surface-alt dark:bg-slate-900 border-l-[3px] border-primary px-2.5 py-1.5 rounded-r-xl text-left text-[11px] leading-tight select-none">
               <span className="block font-black text-primary mb-0.5">{replyData.name}</span>
               <span className="text-muted line-clamp-1">{replyData.content}</span>
             </div>
@@ -309,7 +373,7 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
             </div>
           )}
           
-          {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap">{content}</p>}
+          {content && <p className="text-[12px] text-ink leading-relaxed break-words whitespace-pre-wrap dark:text-slate-100">{content}</p>}
 
           {image && (
             <div
@@ -496,26 +560,30 @@ const ChatMessage = ({ id, avatar, name, role, time, content, image, video, reac
             </div>
           )}
 
-          {reactions && (
-            <div className="flex items-center gap-2 mt-2">
-              {reactions.map((r, i) => (
-                <div key={i} className="flex items-center gap-1 bg-surface-alt border border-line px-1.5 py-0.5 rounded-full text-[10px] font-bold text-faint">
+          {/* Time & Reactions Row */}
+          <div className="flex justify-between items-center gap-6 mt-1.5 select-none">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {reactions && reactions.map((r, i) => (
+                <div key={i} className="flex items-center gap-1 bg-[#F1F5F9] border border-[#E2E8F0] px-1.5 py-0.5 rounded-full text-[10px] font-bold text-[#64748B]">
                   <span>{r.emoji}</span> {r.count}
                 </div>
               ))}
             </div>
-          )}
-
-          <span className="absolute bottom-2.5 right-3 text-[8.5px] font-bold text-faint">{time}</span>
+            <span className="text-[9px] font-bold text-[#94A3B8] whitespace-nowrap self-end ml-auto">
+              {time}
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, onLike, onReply }) => {
+const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, onLike, onReply, onViewProfile }) => {
   const endRef = useRef(null);
   const prevLenRef = useRef(0);
+  const currentUser = useSelector((s) => s.auth.user);
+  const currentUserId = currentUser?.id || currentUser?._id;
 
   useEffect(() => {
     const firstLoad = prevLenRef.current === 0;
@@ -530,7 +598,7 @@ const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, on
   }, [messages, typingUsers]);
 
   return (
-    <div className="bg-[#F6F6F8] pt-5 w-full max-w-[430px] mx-auto pb-4">
+    <div className="bg-surface-alt/10 pt-5 w-full max-w-[430px] mx-auto pb-4">
       {loading && messages.length === 0 ? (
         <div className="flex flex-col gap-5 px-4 py-2 w-full animate-pulse">
           {[1, 2, 3].map((i) => {
@@ -548,7 +616,28 @@ const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, on
         </div>
       ) : (
         messages.map(msg => (
-          <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} onReply={onReply} />
+          <ChatMessage 
+            key={msg.id} 
+            {...msg} 
+            isMe={currentUserId && String(msg.senderId) === String(currentUserId)} 
+            onProfileClick={() => {
+              if (onViewProfile) {
+                onViewProfile({
+                  id: msg.senderId,
+                  _id: msg.senderId,
+                  name: msg.senderName || msg.name,
+                  avatar: msg.avatar,
+                  role: msg.role,
+                  phone: msg.senderPhone || '',
+                  location: msg.senderLocation || ''
+                });
+              }
+            }}
+            onVote={onVote} 
+            onLongPress={onLongPress} 
+            onLike={onLike} 
+            onReply={onReply} 
+          />
         ))
       )}
 
@@ -571,6 +660,8 @@ const ChatFeed = ({ messages, loading, typingUsers = [], onVote, onLongPress, on
 
 const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike, onReply }) => {
   const pollMessages = messages.filter(m => m.quoteData?.isPoll);
+  const currentUser = useSelector((s) => s.auth.user);
+  const currentUserId = currentUser?.id || currentUser?._id;
 
   return (
     <div className="bg-[#F6F6F8] pt-5 w-full max-w-[430px] mx-auto pb-4 min-h-[300px]">
@@ -588,7 +679,17 @@ const PollsFeed = ({ messages, onCreatePoll, onVote, onLongPress, onLike, onRepl
       </div>
       
       {pollMessages.length > 0 ? (
-        pollMessages.map(msg => <ChatMessage key={msg.id} {...msg} onVote={onVote} onLongPress={onLongPress} onLike={onLike} onReply={onReply} />)
+        pollMessages.map(msg => (
+          <ChatMessage 
+            key={msg.id} 
+            {...msg} 
+            isMe={currentUserId && String(msg.senderId) === String(currentUserId)} 
+            onVote={onVote} 
+            onLongPress={onLongPress} 
+            onLike={onLike} 
+            onReply={onReply} 
+          />
+        ))
       ) : (
         <div className="text-center mt-10">
           <p className="text-sm text-faint font-medium">No polls available.</p>
@@ -723,6 +824,7 @@ const MembersFeed = ({ groupId, isAdmin, members = [], confirmedMembers = [], on
 
 const MediaFeed = ({ messages }) => {
   const chatMedia = messages.filter(m => m.image).map(m => m.image);
+  const [activePreview, setActivePreview] = useState(null);
 
   return (
     <div className="bg-surface pt-4 w-full max-w-[430px] mx-auto pb-4 min-h-[300px]">
@@ -732,7 +834,11 @@ const MediaFeed = ({ messages }) => {
       {chatMedia.length > 0 ? (
         <div className="grid grid-cols-3 gap-1 px-1">
           {chatMedia.map((img, idx) => (
-            <div key={idx} className="aspect-square bg-surface-alt rounded-sm overflow-hidden cursor-pointer active:scale-95 transition-all group relative">
+            <div 
+              key={idx} 
+              onClick={() => setActivePreview(img)}
+              className="aspect-square bg-surface-alt rounded-sm overflow-hidden cursor-pointer active:scale-95 transition-all group relative"
+            >
               <img src={img} alt={`Media ${idx}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </div>
           ))}
@@ -740,6 +846,29 @@ const MediaFeed = ({ messages }) => {
       ) : (
         <div className="text-center mt-10">
           <p className="text-sm text-faint font-medium">No shared media yet.</p>
+        </div>
+      )}
+
+      {/* Full-Page Image Preview Modal */}
+      {activePreview && (
+        <div 
+          className="fixed inset-0 bg-black/95 z-[200] flex flex-col items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setActivePreview(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center backdrop-blur-sm active:scale-90 transition-all"
+            onClick={(e) => { e.stopPropagation(); setActivePreview(null); }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img 
+            src={activePreview} 
+            alt="Preview" 
+            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
@@ -1110,10 +1239,16 @@ const GroupChat = () => {
 
   useEffect(() => {
     if (resolvedGroupId) {
-      setIsPinned(localStorage.getItem(`buytogether_pinned_group_${resolvedGroupId}`) === 'true');
+      try {
+        const uId = currentUserId || 'guest';
+        const pinned = JSON.parse(localStorage.getItem(`buytogether_${uId}_pinned_groups`)) || [];
+        setIsPinned(pinned.includes(resolvedGroupId));
+      } catch (e) {
+        setIsPinned(false);
+      }
       setIsMuted(localStorage.getItem(`buytogether_muted_group_${resolvedGroupId}`) === 'true');
     }
-  }, [resolvedGroupId]);
+  }, [resolvedGroupId, currentUserId]);
   // `messages` holds client-only items (polls, in-session file shares). Real
   // text chat comes from Firebase RTDB via the useChat hook and is merged below.
   const [messages, setMessages] = useState([]);
@@ -1207,6 +1342,13 @@ const GroupChat = () => {
     reactMessage: reactLiveMessage
   } = useChat(resolvedGroupId, isJoined);
 
+  // Update last seen timestamp for unread calculation
+  useEffect(() => {
+    if (resolvedGroupId && isJoined) {
+      localStorage.setItem(`buytogether_group_last_seen_${resolvedGroupId}`, Date.now().toString());
+    }
+  }, [resolvedGroupId, isJoined, liveMessages]);
+
   // Merge live RTDB text messages with client-only items (polls, files),
   // mapping each live message into the shape <ChatMessage /> expects.
   const displayMessages = useMemo(() => {
@@ -1262,6 +1404,7 @@ const GroupChat = () => {
 
   // New Interactive states
   const [showPinnedModal, setShowPinnedModal] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   // Interest confirmation state
   const [showInterestModal, setShowInterestModal] = useState(false);
   const [showBuyStatusPicker, setShowBuyStatusPicker] = useState(false);
@@ -1619,9 +1762,9 @@ const GroupChat = () => {
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     const text = messageInput.trim();
-    if (!text || !isJoined) return;
+    if (!text || !isJoined || isSending) return;
     const replyTo = replyingToMessage
       ? {
           id: String(replyingToMessage.id),
@@ -1634,11 +1777,18 @@ const GroupChat = () => {
     stopTyping();
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-    // Persist to Firebase RTDB via the backend; it echoes back over the socket.
-    sendLiveMessage(text, replyTo).catch(() => {});
-    setReplyingToMessage(null);
-    setMessageInput('');
-    if (activeTab !== 'Chat') setActiveTab('Chat');
+    setIsSending(true);
+    try {
+      // Persist to Firebase RTDB via the backend; it echoes back over the socket.
+      await sendLiveMessage(text, replyTo);
+      setReplyingToMessage(null);
+      setMessageInput('');
+      if (activeTab !== 'Chat') setActiveTab('Chat');
+    } catch (err) {
+      console.error('Failed to send group message:', err);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -1790,7 +1940,17 @@ const GroupChat = () => {
 
   const handleTogglePin = () => {
     const nextState = !isPinned;
-    localStorage.setItem(`buytogether_pinned_group_${resolvedGroupId}`, String(nextState));
+    const uId = currentUserId || 'guest';
+    const key = `buytogether_${uId}_pinned_groups`;
+    try {
+      const pinned = JSON.parse(localStorage.getItem(key)) || [];
+      const updated = nextState 
+        ? [...new Set([...pinned, resolvedGroupId])]
+        : pinned.filter(id => id !== resolvedGroupId);
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch (e) {
+      localStorage.setItem(key, JSON.stringify(nextState ? [resolvedGroupId] : []));
+    }
     setIsPinned(nextState);
     showToast(nextState ? 'Group pinned to your home screen! 📌' : 'Group unpinned!', '📌');
     setIsMenuOpen(false);
@@ -1800,7 +1960,7 @@ const GroupChat = () => {
     const nextState = !isMuted;
     localStorage.setItem(`buytogether_muted_group_${resolvedGroupId}`, String(nextState));
     setIsMuted(nextState);
-    showToast(nextState ? 'Group notifications muted.' : 'Group notifications unmuted.', '🔇');
+    showToast(nextState ? 'Group notifications muted. 🔇' : 'Group notifications unmuted. 🔊', nextState ? '🔇' : '🔊');
     setIsMenuOpen(false);
   };
 
@@ -1845,7 +2005,7 @@ const GroupChat = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[#F6F6F8] relative overflow-hidden">
+    <div className="flex flex-col h-screen h-[100dvh] w-full max-w-[430px] mx-auto bg-[var(--surface-deep)] relative overflow-hidden">
       <TopBar 
         navigate={navigate} 
         group={group} 
@@ -1876,15 +2036,17 @@ const GroupChat = () => {
             </svg>
             <span>{isMuted ? 'Unmute Group' : 'Mute Group'}</span>
           </button>
-          <button 
-            onClick={handleReportGroup}
-            className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>Report Group</span>
-          </button>
+          {!isAdmin && (
+            <button 
+              onClick={handleReportGroup}
+              className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>Report Group</span>
+            </button>
+          )}
           <div className="border-t border-line my-1"></div>
           <button 
             onClick={handleLeaveGroup}
@@ -1900,13 +2062,22 @@ const GroupChat = () => {
  
       {/* Main Scrollable Area */}
       <div className={`flex-1 overflow-y-auto ${isInterestConfirmed ? 'pb-24' : 'pb-44'} no-scrollbar relative`}>
-        <JoinedInfo group={group} />
-        <StatsCard group={group} />
+        <JoinedInfo group={{
+          ...group,
+          spotsJoined: realConfirmedMembers.length,
+          spotsTotal: group.spotsTotal || 29
+        }} />
+        <StatsCard group={{
+          ...group,
+          spotsJoined: realConfirmedMembers.length,
+          spotsUnits: realConfirmedMembers.reduce((acc, curr) => acc + (typeof curr.units === 'number' ? curr.units : parseInt(curr.units, 10) || 1), 0),
+          spotsTotal: group.spotsTotal || 29
+        }} />
         
         <TabsAndPinned activeTab={activeTab} setActiveTab={setActiveTab} group={group} pinnedMessage={pinnedMessage} onPinClick={() => setShowPinnedModal(true)} />
         
         {/* Dynamic Content Based on Tab */}
-        {activeTab === 'Chat' && <ChatFeed messages={displayMessages} loading={chatLoading} typingUsers={typingUsers} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
+        {activeTab === 'Chat' && <ChatFeed messages={displayMessages} loading={chatLoading} typingUsers={typingUsers} onVote={handleVote} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} onViewProfile={setProfileMember} />}
         {activeTab === 'Polls' && <PollsFeed messages={displayMessages} onVote={handleVote} onCreatePoll={() => setShowPollModal(true)} onLongPress={setSelectedMessageForMenu} onLike={handleLikeMessage} onReply={setReplyingToMessage} />}
         {activeTab === 'Members' && (
           <MembersFeed
@@ -2204,6 +2375,7 @@ const GroupChat = () => {
           onClose={() => setShowInterestModal(false)} 
           onSave={(val) => {
             setMyInterestUnits(val);
+            localStorage.setItem(`buytogether_interest_units_${resolvedGroupId}`, val.toString());
             setShowInterestModal(false);
           }}
         />
@@ -2307,9 +2479,10 @@ const GroupChat = () => {
           profileMember && !profileMember.isCurrentUser
             ? () => {
                 const m = profileMember;
+                const targetUserId = m.id || m._id;
                 setProfileMember(null);
-                navigate(`/messages/${m.id}`, {
-                  state: { user: { id: m.id, name: m.name, avatar: m.avatar, phone: m.phone, location: m.location } },
+                navigate(`/messages/${targetUserId}`, {
+                  state: { user: { id: targetUserId, name: m.name, avatar: m.avatar, phone: m.phone, location: m.location } },
                 });
               }
             : undefined

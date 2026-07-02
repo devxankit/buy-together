@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../../../../redux/slices/wishlistSlice';
@@ -9,49 +9,78 @@ import WishlistButton from '../../../../../components/ui/WishlistButton';
 const memberAvatar = (m) =>
   m?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m?.name || 'User')}&background=random&color=fff`;
 
+const PINNED_KEY = 'buytogether_pinned_groups';
+const readPinned = () => { try { return JSON.parse(localStorage.getItem(PINNED_KEY)) || []; } catch { return []; } };
+
 const AllGroupsList = ({ groups, onSortChange }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state) => state.wishlist.items);
+  const currentUser = useSelector((state) => state.auth.user);
+  const userId = currentUser?.id || currentUser?._id || 'guest';
+
+  const userPinnedKey = `buytogether_${userId}_pinned_groups`;
+
+  const [pinnedIds, setPinnedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(userPinnedKey)) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  const togglePin = useCallback((groupId, e) => {
+    e.stopPropagation();
+    setPinnedIds(prev => {
+      const next = prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId];
+      localStorage.setItem(userPinnedKey, JSON.stringify(next));
+      return next;
+    });
+  }, [userPinnedKey]);
+
+  // Sort: pinned groups float to the top
+  const sortedGroups = [...groups].sort((a, b) => {
+    const aPin = pinnedIds.includes(a.id || a._id) ? 1 : 0;
+    const bPin = pinnedIds.includes(b.id || b._id) ? 1 : 0;
+    return bPin - aPin;
+  });
 
   return (
     <div className="flex flex-col gap-3 select-none pb-4">
-      {/* Header section with sorting options */}
+      {/* Header section */}
       <div className="flex items-center justify-between mt-1">
         <h2 className="text-[15px] font-extrabold text-ink">
           All Groups
         </h2>
-        <button
-          onClick={onSortChange}
-          className="text-xs font-bold text-[#64748B] hover:text-[#475569] flex items-center gap-0.5 active:scale-95 transition-all"
-        >
-          <span>Sort: Recently Active</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-3 h-3 text-muted ml-0.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="3.2"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
       </div>
 
       {/* Vertical Groups List */}
       <div className="flex flex-col gap-3.5">
-        {groups.map((group) => {
+        {sortedGroups.map((group) => {
           const percentage = (group.spotsJoined / group.spotsTotal) * 100;
           const isClosingSoon = group.status === 'closing';
           const isWishlisted = wishlistItems.some(item => String(item.id || item._id) === String(group.id || group._id));
+          const groupId = group.id || group._id;
+          const lastSeen = Number(localStorage.getItem(`buytogether_group_last_seen_${groupId}`) || 0);
+          const groupTime = new Date(group.updatedAt || group.createdAt).getTime();
+          const hasUnread = groupTime > lastSeen;
+          const isPinned = pinnedIds.includes(groupId);
 
           return (
             <div
-              key={group.id}
-              onClick={() => navigate(`/groups/${group.id}/chat`, { state: { group, isJoined: true, isAdmin: group.isAdmin } })}
-              className="bg-surface border border-line/70 hover:border-primary/15 rounded-2xl p-3 flex gap-3 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] cursor-pointer"
+              key={groupId}
+              onClick={() => navigate(`/groups/${groupId}/chat`, { state: { group, isJoined: true, isAdmin: group.isAdmin } })}
+              className={`bg-surface border ${hasUnread ? 'border-primary/45 shadow-md shadow-primary/5' : 'border-line/70'} hover:border-primary/15 rounded-2xl p-3 flex gap-3 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] cursor-pointer relative`}
             >
+              {/* Pinned indicator */}
+              {isPinned && (
+                <div className="absolute top-2 left-2 z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                  </svg>
+                </div>
+              )}
+
               {/* Product Image on the left */}
               <div className="w-[84px] h-[84px] bg-surface-alt border border-line/40 rounded-xl overflow-hidden flex items-center justify-center p-1.5 flex-shrink-0 self-center">
                 <img
@@ -77,6 +106,11 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                     ) : (
                       <span className="bg-[#DCFCE7] text-[#15803D] text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none tracking-tight">
                         Active
+                      </span>
+                    )}
+                    {hasUnread && (
+                      <span className="bg-primary text-white text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none tracking-tight animate-pulse shadow-sm shadow-primary/20">
+                        New
                       </span>
                     )}
                   </div>
@@ -130,14 +164,25 @@ const AllGroupsList = ({ groups, onSortChange }) => {
                 </div>
               </div>
 
-              {/* Right Section: wishlist, spots indicator & time */}
+              {/* Right Section: pin, wishlist, spots indicator & time */}
               <div className="flex flex-col items-end justify-between flex-shrink-0 pl-1">
-                {/* Wishlist Button */}
-                <WishlistButton
-                  isWishlisted={isWishlisted}
-                  onClick={() => dispatch(toggleWishlist(group))}
-                  className="mr-1"
-                />
+                <div className="flex items-center gap-1">
+                  {/* Pin Button */}
+                  <button
+                    onClick={(e) => togglePin(groupId, e)}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${isPinned ? 'bg-primary/10' : 'bg-surface-alt hover:bg-surface-alt/80'}`}
+                    title={isPinned ? 'Unpin group' : 'Pin group'}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${isPinned ? 'text-primary' : 'text-muted'}`} viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                    </svg>
+                  </button>
+                  {/* Wishlist Button */}
+                  <WishlistButton
+                    isWishlisted={isWishlisted}
+                    onClick={() => dispatch(toggleWishlist(group))}
+                  />
+                </div>
 
                 {/* Spots Progress Stack Box */}
                 <div className="bg-surface-alt border border-line/50 px-2 py-1.5 rounded-xl text-center min-w-[60px]">

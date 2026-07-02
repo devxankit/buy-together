@@ -86,10 +86,7 @@ const DealConfirm = () => {
     localStorage.setItem(`buytogether_confirmed_interest_${finalId}`, 'true');
   }, [group.id, groupId]);
 
-  const spotsJoined = group.spotsJoined ?? group.joined ?? 45;
-  const spotsNeeded = group.needed ?? Math.max(0, (group.spotsTotal || 10) - spotsJoined);
-  const spotsTotal = group.spotsTotal ?? (spotsJoined + spotsNeeded);
-  const percentage = Math.round((spotsJoined / spotsTotal) * 100) || 0;
+
   
   const unitName = group.unitName || 'Units';
   const priceStr = group.bestOffer ? group.bestOffer.split(' ')[0] : 'TBD';
@@ -156,6 +153,7 @@ const DealConfirm = () => {
 
         return {
           ...m,
+          unitCount: units,
           units: `${units} ${units > 1 ? (group.unitName || 'Units') : (group.unitName ? group.unitName.replace(/s$/, '') : 'Unit')}`,
           role: badge
         };
@@ -168,6 +166,7 @@ const DealConfirm = () => {
         id: currentUserId,
         name: 'You (Verified)',
         role: 'Buyer',
+        unitCount: units,
         units: `${units} ${units > 1 ? (group.unitName || 'Units') : (group.unitName ? group.unitName.replace(/s$/, '') : 'Unit')}`,
         avatar: currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'You')}&background=random&color=fff`,
         isYou: true,
@@ -178,6 +177,15 @@ const DealConfirm = () => {
     return list;
   }, [group, currentUserId, groupId, currentUser]);
 
+  // Dynamically calculate actual units joined by summing the unitCount of all committed buyers
+  const spotsJoined = useMemo(() => {
+    return buyersList.reduce((acc, curr) => acc + (curr.unitCount || 0), 0);
+  }, [buyersList]);
+
+  const spotsNeeded = Math.max(0, (group.spotsTotal || 10) - spotsJoined);
+  const spotsTotal = group.spotsTotal || 10;
+  const percentage = Math.round((spotsJoined / spotsTotal) * 100) || 0;
+
   if (loading && !fetchedGroup) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen w-full max-w-[430px] mx-auto bg-[var(--surface-deep)] font-sans gap-3">
@@ -187,15 +195,30 @@ const DealConfirm = () => {
     );
   }
 
-  const handleShare = () => {
-    const shareText = `Hey! I just committed interest for ${group.title} on Buy Together. Join our pool and let's unlock the wholesale discount of ${group.bestOffer} together! 🤝 Link: https://buytogether.in/groups/${group.id}`;
-    navigator.clipboard.writeText(shareText)
-      .then(() => {
-        showToast('Invite link copied to clipboard!', '🚀');
-      })
-      .catch(() => {
-        showToast('Failed to copy link.', '❌');
-      });
+  const handleShare = async () => {
+    const shareText = `Hey! I just committed interest for ${group.title} on Buy Together. Join our pool and let's unlock the wholesale discount of ${group.bestOffer} together! 🤝`;
+    const shareUrl = `${window.location.origin}/groups/${group.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: group.title,
+          text: shareText,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    
+    // Fallback copy to clipboard
+    try {
+      await navigator.clipboard.writeText(`${shareText} Link: ${shareUrl}`);
+      showToast('Invite link copied to clipboard! 🔗', '🚀');
+    } catch {
+      showToast('Failed to copy link.', '❌');
+    }
   };
 
   const handleBackToChat = () => {

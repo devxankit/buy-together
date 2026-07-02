@@ -111,11 +111,15 @@
     position: relative;
     touch-action: pan-y;
     -webkit-text-size-adjust: 100%;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
   }
-  html::-webkit-scrollbar, body::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
   /* App shell — centered to 430px on desktop */
   #root {
@@ -132,6 +136,13 @@
   }
   button { font-family: inherit; cursor: pointer; }
   input, textarea, select { font-family: inherit; }
+  /* Fix text color invisibility in dark mode active inputs */
+  [data-theme='dark'] input:focus,
+  [data-theme='dark'] textarea:focus,
+  [data-theme='dark'] select:focus {
+    color: #FFFFFF !important;
+    background-color: var(--surface-alt) !important;
+  }
   * { box-sizing: border-box; }
 }
 
@@ -406,4 +417,3 @@
 .animate-heartPop {
   animation: heartPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-

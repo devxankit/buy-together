@@ -6,13 +6,14 @@ import Icon from '../../components/ui/Icon';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
+  const [agreed, setAgreed] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (phone.length !== 10) return;
+    if (!agreed || phone.length !== 10) return;
     try {
       const res = await dispatch(sendOtp({ phone })).unwrap();
       navigate('/otp', { state: { phone, isNewUser: res.isNewUser, devOtp: res.devOtp } });
@@ -199,7 +200,7 @@ const Login = () => {
             {/* Send OTP Button */}
             <button
               type="submit"
-              disabled={loading || phone.length !== 10}
+              disabled={!agreed || loading || phone.length !== 10}
               className="w-full h-[46px] bg-gradient-to-r from-[#009294] to-[#006C6E] rounded-2xl text-white text-[14px] font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#009294]/15 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               {loading ? 'Sending OTP…' : 'Send OTP'}
@@ -228,7 +229,8 @@ const Login = () => {
             <label className="flex items-start gap-2.5 cursor-pointer mt-1">
               <input
                 type="checkbox"
-                required
+                checked={agreed}
+                onChange={() => setAgreed(!agreed)}
                 className="w-3.5 h-3.5 rounded border-[#CBD5E1] text-[#009294] focus:ring-[#009294] mt-0.5 accent-[#009294]"
               />
               <span className="text-[10px] text-[#5A6E6E] font-semibold leading-tight">
@@ -333,15 +335,6 @@ const Login = () => {
             </svg>
             <span className="text-[9px] font-bold text-[#006C6E]">Apna Indore, Apna BuyTogether</span>
           </div>
-        </div>
-
-        {/* Footer links */}
-        <div className="flex items-center justify-center gap-1.5 mt-3 text-[10px] text-[#788E8E]">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          <span>Need help?</span>
-          <a href="mailto:support@buytogether.in?subject=Login%20help" className="text-[#009294] font-bold hover:underline">Contact Support</a>
         </div>
       </div>
     </div>

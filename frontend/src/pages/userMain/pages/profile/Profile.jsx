@@ -98,7 +98,6 @@ const Profile = () => {
 
   const settings = [
     { label: 'Personal Information', route: '/personal-info', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
-    { label: 'Privacy Settings', route: '/privacy-settings', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /> },
   ];
 
   const legal = [
@@ -115,6 +114,46 @@ const Profile = () => {
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full max-w-[430px] mx-auto bg-[var(--surface-deep)] font-sans pb-28 relative">
+      {/* Member benefits sheet overlay (moved to top layer of JSX to prevent z-index stacking issues in layouts) */}
+      {showBenefits && (
+        <div
+          onClick={() => setShowBenefits(false)}
+          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-[3px] flex items-end sm:items-center justify-center animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[430px] bg-surface rounded-t-[28px] sm:rounded-[28px] p-6 pb-9 flex flex-col gap-5 animate-slideUp shadow-2xl border border-line"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-[16px] font-black text-ink">Verified Member Benefits</h3>
+              <button
+                onClick={() => setShowBenefits(false)}
+                className="w-8 h-8 rounded-full bg-surface-alt flex items-center justify-center active:scale-90 transition-all border border-line"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex flex-col gap-3.5">
+              {MEMBER_BENEFITS.map((b) => (
+                <div key={b.title} className="flex items-start gap-4.5 bg-surface-alt rounded-2xl p-4 border border-line/30">
+                  <span className="text-2xl leading-none mt-0.5">{b.icon}</span>
+                  <div>
+                    <p className="text-[13px] font-extrabold text-ink">{b.title}</p>
+                    <p className="text-[11px] font-semibold text-muted leading-relaxed mt-1">{b.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowBenefits(false)}
+              className="h-[48px] bg-primary text-white text-[13px] font-black rounded-2xl active:scale-95 transition-all shadow-md shadow-primary/20"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Decorative Background Blob */}
       <div className="absolute top-0 left-0 w-full h-[320px] overflow-hidden z-0">
@@ -176,21 +215,28 @@ const Profile = () => {
         
         {/* Stats Row */}
         <div className="bg-surface rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-line p-4 flex justify-between">
-          {stats.map((item, idx) => (
-            <React.Fragment key={idx}>
-              <div
-                onClick={() => handleRoute(item.route)}
-                className="flex flex-col items-center flex-1 cursor-pointer active:scale-95 transition-transform"
-              >
-                <div className="text-primary mb-1.5">
-                  {item.icon}
+          {stats.map((item, idx) => {
+            const isClickable = item.label !== 'Deals Booked';
+            return (
+              <React.Fragment key={idx}>
+                <div
+                  onClick={() => {
+                    if (isClickable) {
+                      handleRoute(item.route);
+                    }
+                  }}
+                  className={`flex flex-col items-center flex-1 ${isClickable ? 'cursor-pointer active:scale-95 transition-transform' : 'cursor-default opacity-85'}`}
+                >
+                  <div className="text-primary mb-1.5">
+                    {item.icon}
+                  </div>
+                  <span className="text-[14px] font-black text-ink mb-0.5 leading-none">{item.value}</span>
+                  <span className="text-[8px] font-bold text-muted text-center leading-tight max-w-[50px]">{item.label}</span>
                 </div>
-                <span className="text-[14px] font-black text-ink mb-0.5 leading-none">{item.value}</span>
-                <span className="text-[8px] font-bold text-muted text-center leading-tight max-w-[50px]">{item.label}</span>
-              </div>
-              {idx < stats.length - 1 && <div className="w-[1px] bg-line my-1"></div>}
-            </React.Fragment>
-          ))}
+                {idx < stats.length - 1 && <div className="w-[1px] bg-line my-1"></div>}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         {/* Verified Banner */}
@@ -221,68 +267,28 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Member benefits sheet (opened from "View Benefits") */}
-        {showBenefits && (
-          <div
-            onClick={() => setShowBenefits(false)}
-            className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center animate-fadeIn"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[430px] bg-surface rounded-t-[24px] sm:rounded-[24px] p-5 pb-7 flex flex-col gap-4 animate-slideUp"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-[15px] font-black text-ink">Verified Member Benefits</h3>
-                <button
-                  onClick={() => setShowBenefits(false)}
-                  className="w-8 h-8 rounded-full bg-surface-alt flex items-center justify-center active:scale-90 transition-all"
-                  aria-label="Close"
-                >
-                  <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              <div className="flex flex-col gap-3">
-                {MEMBER_BENEFITS.map((b) => (
-                  <div key={b.title} className="flex items-start gap-3 bg-surface-alt rounded-2xl p-3">
-                    <span className="text-xl leading-none mt-0.5">{b.icon}</span>
-                    <div>
-                      <p className="text-[12.5px] font-extrabold text-ink">{b.title}</p>
-                      <p className="text-[10.5px] font-medium text-muted leading-tight mt-0.5">{b.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => setShowBenefits(false)}
-                className="h-[44px] bg-primary text-white text-[13px] font-black rounded-xl active:scale-95 transition-all"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* My Shortcuts */}
         <div>
           <h3 className="text-[13px] font-extrabold text-ink mb-3">My Shortcuts</h3>
           <div className="grid grid-cols-4 gap-2">
-            {shortcuts.map((item, idx) => (
-              <div 
-                key={idx} 
-                onClick={() => {
-                  if (item.label === 'Wishlist') handleRoute('/wishlist');
-                  else if (item.label === 'My Deals') handleRoute('/deals');
-                  else if (item.label === 'My Groups') handleRoute('/groups');
-                  else handleRoute('/help-center');
-                }}
-                className="bg-surface border border-line rounded-[18px] p-3 flex flex-col items-center justify-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-95 transition-all cursor-pointer hover:border-primary/30"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-[22px] h-[22px] text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                  {item.icon}
-                </svg>
-                <span className="text-[9px] font-bold text-muted text-center leading-tight">{item.label}</span>
-              </div>
-            ))}
+            {shortcuts.map((item, idx) => {
+              const isClickable = item.label !== 'My Deals';
+              return (
+                <div 
+                  key={idx} 
+                  onClick={() => {
+                    if (item.label === 'Wishlist') handleRoute('/wishlist');
+                    else if (item.label === 'My Groups') handleRoute('/groups');
+                  }}
+                  className={`bg-surface border border-line rounded-[18px] p-3 flex flex-col items-center justify-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all ${isClickable ? 'active:scale-95 cursor-pointer hover:border-primary/30' : 'opacity-85 cursor-default'}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-[22px] h-[22px] text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                    {item.icon}
+                  </svg>
+                  <span className="text-[9px] font-bold text-muted text-center leading-tight">{item.label}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -291,24 +297,15 @@ const Profile = () => {
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-1.5">
               <h3 className="text-[13px] font-extrabold text-ink">My Orders</h3>
-              <span className="bg-surface-alt text-muted px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider border border-line">Coming Soon</span>
             </div>
-            <button 
-              onClick={() => showToast('Order tracking coming soon! 📦', 'ℹ️')}
-              className="text-[10px] font-extrabold text-primary flex items-center gap-0.5 active:scale-95 transition-all"
-            >
-              View All
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-            </button>
           </div>
           <div className="flex justify-between">
             {orders.map((item, idx) => (
               <div 
                 key={idx} 
-                onClick={() => showToast('Order tracking coming soon! 📦', 'ℹ️')}
-                className="flex flex-col items-center flex-1 cursor-pointer group active:scale-95 transition-all"
+                className="flex flex-col items-center flex-1 transition-all select-none"
               >
-                <div className={`w-[40px] h-[40px] rounded-full flex items-center justify-center mb-1.5 transition-colors ${item.color || 'text-primary bg-transparent group-hover:bg-primary-soft'}`}>
+                <div className={`w-[40px] h-[40px] rounded-full flex items-center justify-center mb-1.5 transition-colors ${item.color || 'text-primary bg-transparent'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${item.color || 'text-primary'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
                     {item.icon}
                   </svg>

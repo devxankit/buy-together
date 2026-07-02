@@ -17,7 +17,7 @@ const CreateGroupBanner = () => {
       </div>
 
       <div className="ml-[110px] flex-1 flex flex-col justify-center py-1">
-        <h3 className="text-[11px] font-bold text-ink leading-tight mb-2">
+        <h3 className="text-[11px] font-black text-slate-800 leading-tight mb-2">
           Deals are better<br />when we do it together! <span className="text-primary">💜</span>
         </h3>
         

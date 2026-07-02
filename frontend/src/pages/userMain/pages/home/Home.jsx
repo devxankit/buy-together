@@ -203,7 +203,7 @@ const Home = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
               {unreadMessageCount > 0 && (
-                <span className="absolute top-1 right-1 w-3 h-3 bg-danger text-white text-[7.5px] font-black rounded-full flex items-center justify-center border border-surface">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-0.5 bg-[#EF4444] text-white text-[8.5px] font-black rounded-full flex items-center justify-center border-1.5 border-[#0D9488] shadow-sm">
                   {unreadMessageCount}
                 </span>
               )}
@@ -213,7 +213,7 @@ const Home = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               {notificationCount > 0 && (
-                <span className="absolute top-1 right-1 w-3 h-3 bg-danger text-white text-[7.5px] font-black rounded-full flex items-center justify-center border border-surface animate-pulse">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-0.5 bg-[#EF4444] text-white text-[8.5px] font-black rounded-full flex items-center justify-center border-1.5 border-[#0D9488] shadow-sm animate-pulse">
                   {notificationCount}
                 </span>
               )}
@@ -342,7 +342,6 @@ const Home = () => {
         <HomeSectionsSkeleton />
       ) : sections.length === 0 ? (
         <>
-          <LiveActivitySection />
           <CreateGroupBanner />
           <WholesaleAdBanner onClick={() => navigate('/groups/create')} />
         </>
@@ -374,7 +373,7 @@ const Home = () => {
               )}
 
               {/* Interleaved decorative blocks (original layout positions) */}
-              {idx === 0 && <LiveActivitySection />}
+
               {idx === 1 && <CreateGroupBanner />}
               {idx === 4 && <WholesaleAdBanner onClick={() => navigate('/groups/create')} />}
             </React.Fragment>
@@ -382,8 +381,11 @@ const Home = () => {
         })
       )}
 
+      {/* ── LIVE ACTIVITY MARQUEE (moved to bottom) ── */}
+      <LiveActivitySection />
+
       {/* ── 15. PREMIUM MADE IN INDIA FOOTER ── */}
-      <div className="mt-12 mb-6 flex flex-col items-center justify-center gap-3 text-center">
+      <div className="mt-6 mb-6 flex flex-col items-center justify-center gap-3 text-center">
         <div className="text-[22px] font-black italic tracking-tight text-muted/50 select-none">
           #Buy<span className="text-primary/70">Together</span>
         </div>

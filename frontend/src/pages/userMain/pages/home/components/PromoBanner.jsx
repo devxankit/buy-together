@@ -32,6 +32,26 @@ const PromoBanner = ({ onExplore }) => {
     cached === undefined ? null : (cached.length ? cached : DEFAULT_SLIDES)
   );
   const [activeSlide, setActiveSlide] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null || !slides || slides.length <= 1) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX - touchEndX;
+
+    if (diffX > 50) {
+      // Swipe left -> Next slide
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    } else if (diffX < -50) {
+      // Swipe right -> Prev slide
+      setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    }
+    setTouchStartX(null);
+  };
 
   useEffect(() => {
     let active = true;
@@ -69,7 +89,11 @@ const PromoBanner = ({ onExplore }) => {
   return (
     <div className="flex flex-col gap-2">
       {/* Outer Banner Wrapper with compact height */}
-      <div className="relative rounded-[24px] overflow-hidden flex flex-col items-start h-[142px] transition-all duration-500 bg-[#E6F6F3] border border-line/10 shadow-sm">
+      <div 
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative rounded-[24px] overflow-hidden flex flex-col items-start h-[142px] transition-all duration-500 bg-[#E6F6F3] border border-line/10 shadow-sm"
+      >
         
         {slides.map((slide, index) => {
           const isActive = index === activeSlide;

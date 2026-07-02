@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { showToast } from '../../../../utils/toast';
+import { getGroups } from '../../../../services/group.api';
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
@@ -13,6 +15,53 @@ const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encod
  * profile: { id, name, avatar, phone | number, location, role, buyStatus }
  */
 const ContactProfile = ({ open, onClose, profile, sharedMedia = [], onMessage }) => {
+  const navigate = useNavigate();
+  const [userGroups, setUserGroups] = useState([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+
+  useEffect(() => {
+    if (!open || !profile) return;
+    const targetUserId = String(profile.id || profile._id || '');
+    if (!targetUserId) return;
+
+    setLoadingGroups(true);
+    Promise.all([
+      getGroups({ joined: 'true' }),
+      getGroups({ created: 'true' })
+    ])
+      .then(([joinedRes, createdRes]) => {
+        const joined = joinedRes.data || [];
+        const created = createdRes.data || [];
+        const allGroups = [...created, ...joined];
+        
+        // Filter groups where targetUserId is a member or admin
+        const filtered = allGroups.filter(group => {
+          const isAdmin = String(group.admin?._id || group.admin?.id || group.admin) === targetUserId;
+          const isMember = group.members?.some(m => String(m._id || m.id || m) === targetUserId);
+          return isAdmin || isMember;
+        });
+
+        // De-duplicate groups by ID just in case
+        const unique = [];
+        const seen = new Set();
+        for (const g of filtered) {
+          const id = String(g.id || g._id);
+          if (!seen.has(id)) {
+            seen.add(id);
+            unique.push(g);
+          }
+        }
+
+        setUserGroups(unique);
+      })
+      .catch((err) => {
+        console.error('Failed to load groups for contact profile modal:', err);
+      })
+      .finally(() => {
+        setLoadingGroups(false);
+      });
+  }, [open, profile]);
+
   if (!open || !profile) return null;
 
   const name = profile.name || 'User';
@@ -33,6 +82,11 @@ const ContactProfile = ({ open, onClose, profile, sharedMedia = [], onMessage })
     if (!phone) return;
     navigator.clipboard.writeText(phone.replace(/\s+/g, ''));
     showToast('Phone number copied', '📋');
+  };
+
+  const handleGroupClick = (group) => {
+    onClose();
+    navigate(`/groups/${group.id || group._id}/chat`, { state: { group, isJoined: true } });
   };
 
   return (
@@ -90,7 +144,7 @@ const ContactProfile = ({ open, onClose, profile, sharedMedia = [], onMessage })
 
         {/* Phone card */}
         {phone && (
-          <div className="mx-4 mb-3 bg-surface-alt/60 border border-line rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3">
+          <div className="mx-4 mb-4 bg-surface-alt/60 border border-line rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3">
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] font-bold text-faint uppercase tracking-wider">Phone</span>
               <span className="text-[15px] font-extrabold text-ink mt-0.5 truncate">{phone}</span>
@@ -109,7 +163,7 @@ const ContactProfile = ({ open, onClose, profile, sharedMedia = [], onMessage })
 
         {/* Message action */}
         {onMessage && (
-          <div className="px-4 mb-3">
+          <div className="px-4 mb-4">
             <button
               onClick={onMessage}
               className="w-full bg-primary text-white rounded-2xl py-3 font-black text-sm active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2"
@@ -121,6 +175,55 @@ const ContactProfile = ({ open, onClose, profile, sharedMedia = [], onMessage })
             </button>
           </div>
         )}
+
+        {/* Joined Groups List */}
+        <div className="px-4 mb-4 flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black text-faint uppercase tracking-wider">
+              Joined Groups
+            </span>
+            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {loadingGroups ? '...' : userGroups.length}
+            </span>
+          </div>
+
+          {loadingGroups ? (
+            <div className="flex flex-col gap-2 mt-1 animate-pulse">
+              {[1, 2].map(i => (
+                <div key={i} className="h-14 bg-slate-100 rounded-xl w-full" />
+              ))}
+            </div>
+          ) : userGroups.length === 0 ? (
+            <p className="text-[12px] text-faint font-semibold text-center py-4 bg-surface-alt/40 border border-dashed border-line rounded-xl">
+              No shared groups found
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto no-scrollbar">
+              {userGroups.map(group => (
+                <div
+                  key={group.id || group._id}
+                  onClick={() => handleGroupClick(group)}
+                  className="flex items-center gap-3 bg-surface border border-line rounded-2xl p-2.5 hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer shadow-[0_2px_8px_rgba(15,23,42,0.01)] hover:border-primary/20"
+                >
+                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-[#E2E8F0] p-0.5 bg-slate-50 flex items-center justify-center flex-shrink-0">
+                    <img src={group.image} alt={group.title} className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[13px] font-black text-ink truncate leading-tight">
+                      {group.title}
+                    </span>
+                    <span className="block text-[10px] text-faint font-semibold truncate mt-0.5">
+                      {group.slogan || 'Group chat is active'}
+                    </span>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#94A3B8] flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Shared media */}
         {sharedMedia.length > 0 && (

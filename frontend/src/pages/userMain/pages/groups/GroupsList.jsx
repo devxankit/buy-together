@@ -18,14 +18,23 @@ import JoinedHeader from './components/JoinedHeader';
 import JoinedTabs from './components/JoinedTabs';
 import JoinedGroupsList from './components/JoinedGroupsList';
 
+import { useLocation } from 'react-router-dom';
+
 const GroupsList = () => {
-  // 1. STATE MANAGEMENT
+  const location = useLocation();
   // Remember the last tab so returning from a group lands back on the tab the
   // user came from (e.g. Joined), not always "My Groups".
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('groups_active_tab') || 'my-groups');
   useEffect(() => { sessionStorage.setItem('groups_active_tab', activeTab); }, [activeTab]);
-  const [selectedFilter, setSelectedFilter] = useState('all-groups');
+  const [selectedFilter, setSelectedFilter] = useState(() => location.state?.filter || 'all-groups');
   const [searchValue, setSearchValue] = useState('');
+
+  // Sync state filter from location state updates
+  useEffect(() => {
+    if (location.state?.filter) {
+      setSelectedFilter(location.state.filter);
+    }
+  }, [location.state]);
   const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [joinedSubTab, setJoinedSubTab] = useState('active');
 
@@ -45,8 +54,14 @@ const GroupsList = () => {
   // API Data States — seeded from the SWR cache so revisiting paints instantly
   // (no spinner) and is then revalidated silently in the background.
   const cachedMine = swrPeek(myGroupsKey);
-  const [createdGroups, setCreatedGroups] = useState(cachedMine?.created || []);
-  const [joinedGroups, setJoinedGroups] = useState(cachedMine?.joined || []);
+  const [createdGroups, setCreatedGroups] = useState(() => {
+    const cached = cachedMine?.created || [];
+    return [...cached].sort((a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0));
+  });
+  const [joinedGroups, setJoinedGroups] = useState(() => {
+    const cached = cachedMine?.joined || [];
+    return [...cached].sort((a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0));
+  });
   const [trendingGroups, setTrendingGroups] = useState(() => swrPeek('groups:trending') || []);
   const [loading, setLoading] = useState(cachedMine === undefined);
 
@@ -67,8 +82,18 @@ const GroupsList = () => {
         ttl: 0,
         onData: (d) => {
           if (!active) return;
-          setCreatedGroups(d.created || []);
-          setJoinedGroups(d.joined || []);
+          const sortedCreated = (d.created || []).sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+            const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+            return timeB - timeA;
+          });
+          const sortedJoined = (d.joined || []).sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+            const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+            return timeB - timeA;
+          });
+          setCreatedGroups(sortedCreated);
+          setJoinedGroups(sortedJoined);
           setLoading(false);
         },
       }
@@ -138,7 +163,8 @@ const GroupsList = () => {
         spotsTotal,
         daysLeft: g.daysLeft || '—',
         members: Array.isArray(g.members) ? g.members : [],
-        isAdmin: isCreator
+        isAdmin: isCreator,
+        createdAt: g.createdAt
       };
     });
   }, [createdGroups, joinedGroups]);
@@ -160,7 +186,8 @@ const GroupsList = () => {
         spotsTotal,
         daysLeft: g.daysLeft || '—',
         members: Array.isArray(g.members) ? g.members : [],
-        closingLabel: g.status === 'closing' ? 'Closing Soon' : null
+        closingLabel: g.status === 'closing' ? 'Closing Soon' : null,
+        createdAt: g.createdAt
       };
     });
   }, [joinedGroups]);
@@ -185,7 +212,11 @@ const GroupsList = () => {
       // Badges filter
       if (selectedFilter === 'all-groups') return true;
       if (selectedFilter === 'closing-soon') return group.status === 'closing';
-      if (selectedFilter === 'new') return group.spotsJoined < 20;
+      if (selectedFilter === 'new') {
+        const createdAtTime = new Date(group.createdAt || 0).getTime();
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        return createdAtTime > oneDayAgo;
+      }
       if (selectedFilter === 'popular') return group.spotsJoined >= 25;
       if (selectedFilter === 'nearby') return group.location.toLowerCase() === selectedCity.split(',')[0].toLowerCase();
 
@@ -269,7 +300,12 @@ const GroupsList = () => {
               <AllGroupsList groups={filteredGroups} />
 
               {/* Trending Horizontal list — admin-curated; hidden when empty */}
-              {trendingGroupsData.length > 0 && <TrendingGroups groups={trendingGroupsData} />}
+              {trendingGroupsData.length > 0 && (
+                <TrendingGroups 
+                  groups={trendingGroupsData} 
+                  onSeeAll={() => setSelectedFilter('all-groups')} 
+                />
+              )}
             </>
           )}
         </>

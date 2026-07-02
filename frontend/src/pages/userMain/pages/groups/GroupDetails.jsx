@@ -5,6 +5,7 @@ import { getGroup, joinGroup, leaveGroup } from '../../../../services/group.api'
 import { swr, swrPeek } from '../../../../services/swr';
 import { toggleWishlist } from '../../../../redux/slices/wishlistSlice';
 import WishlistButton from '../../../../components/ui/WishlistButton';
+import { createTicket } from '../../../../services/ticket.api';
 import { showToast } from '../../../../utils/toast';
 
 const GroupDetails = () => {
@@ -19,6 +20,77 @@ const GroupDetails = () => {
   const [group, setGroup] = useState(() => swrPeek(detailKey) || null);
   const [loading, setLoading] = useState(() => swrPeek(detailKey) === undefined);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Options Menu & Modal States
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+
+  const userId = currentUser.id || currentUser._id || 'guest';
+  const userPinnedKey = `buytogether_${userId}_pinned_groups`;
+
+  useEffect(() => {
+    if (groupId) {
+      try {
+        const pinned = JSON.parse(localStorage.getItem(userPinnedKey)) || [];
+        setIsPinned(pinned.includes(groupId));
+      } catch (e) {
+        setIsPinned(false);
+      }
+    }
+  }, [groupId, userPinnedKey]);
+
+  const handleTogglePin = () => {
+    const nextState = !isPinned;
+    try {
+      const pinned = JSON.parse(localStorage.getItem(userPinnedKey)) || [];
+      const updated = nextState 
+        ? [...new Set([...pinned, groupId])]
+        : pinned.filter(id => id !== groupId);
+      localStorage.setItem(userPinnedKey, JSON.stringify(updated));
+    } catch (e) {
+      localStorage.setItem(userPinnedKey, JSON.stringify(nextState ? [groupId] : []));
+    }
+    setIsPinned(nextState);
+    showToast(nextState ? 'Group pinned to your home screen! 📌' : 'Group unpinned!', '📌');
+    setIsMenuOpen(false);
+  };
+
+  const handleShareGroup = async () => {
+    const shareUrl = `${window.location.origin}/groups/${groupId}`;
+    const shareText = `Hey! Join our co-buying group for ${group?.title} on Buy Together! 🤝`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: group?.title, text: shareText, url: shareUrl });
+        setIsMenuOpen(false);
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText} Link: ${shareUrl}`);
+      showToast('Invite link copied to clipboard! 🔗', '🚀');
+    } catch {
+      showToast('Failed to share.', '❌');
+    }
+    setIsMenuOpen(false);
+  };
+
+  const handleReportGroupSubmit = async (reason) => {
+    try {
+      await createTicket({
+        subject: `Report Group: ${group?.title}`,
+        message: `Reason: ${reason}\nGroup ID: ${groupId}`,
+        category: 'group'
+      });
+      showToast('Thank you for reporting. Our moderation team will investigate this group.', '📢');
+      setShowReportModal(false);
+    } catch (err) {
+      console.error('Failed to report group:', err);
+      showToast('Failed to submit report. Please try again.', '❌');
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -50,6 +122,8 @@ const GroupDetails = () => {
       const { data } = await joinGroup(groupId);
       setGroup(data);
       showToast('Successfully joined the group! 🎉');
+      // Redirect directly to group chat after joining
+      navigate(`/groups/${groupId}/chat`, { state: { group: data, isJoined: true }, replace: true });
     } catch (err) {
       console.error('Failed to join group:', err);
       showToast(err.response?.data?.message || 'Failed to join group.', '❌');
@@ -92,6 +166,7 @@ const GroupDetails = () => {
   // Capacity reached — uses the real cap (not the 1000 display fallback). A
   // `spotsTotal` of 0 means uncapped, so the group is never "full".
   const isFull = group.spotsTotal > 0 && spotsJoined >= group.spotsTotal;
+  const isClosed = group.status === 'completed' || group.status === 'locked' || (group.closesAt && new Date(group.closesAt) < new Date());
   const isWishlisted = wishlistItems.some(item => item.id === group.id);
 
   const renderAvatars = () => {
@@ -140,9 +215,14 @@ const GroupDetails = () => {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h2 className="text-[13px] font-black text-ink truncate max-w-[175px] leading-none">{group.title}</h2>
-              <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded-[4px] leading-none uppercase tracking-wide ${group.status === 'closing' ? 'bg-[#FEF3C7] text-[#D97706]' : 'bg-[#DCFCE7] text-[#15803D]'
-                }`}>
-                {group.status === 'closing' ? 'Closing Soon' : 'Active'}
+              <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded-[4px] leading-none uppercase tracking-wide ${
+                isClosed
+                  ? 'bg-red-100 text-red-600'
+                  : group.status === 'closing'
+                    ? 'bg-[#FEF3C7] text-[#D97706]'
+                    : 'bg-[#DCFCE7] text-[#15803D]'
+              }`}>
+                {isClosed ? 'Closed' : group.status === 'closing' ? 'Closing Soon' : 'Active'}
               </span>
             </div>
             <p className="text-[9.5px] font-bold text-muted truncate mt-0.5 leading-none">
@@ -151,26 +231,57 @@ const GroupDetails = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0 relative">
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-              showToast('Link copied to clipboard! 🔗');
-            }}
-            className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all text-ink"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 10.742l4.57 2.286M15.316 11.258l-4.57-2.286M21 12a3 3 0 11-6 0 3 3 0 016 0zm-9-6a3 3 0 11-6 0 3 3 0 016 0zm-9 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => showToast('Options coming soon!', 'ℹ️')}
-            className="w-8 h-8 rounded-xl bg-surface-alt flex items-center justify-center active:scale-90 transition-all text-ink"
+            onClick={() => setIsMenuOpen(prev => !prev)}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center active:scale-90 transition-all text-ink ${isMenuOpen ? 'bg-primary/10' : 'bg-surface-alt'}`}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </button>
+
+          {isMenuOpen && (
+            <div className="absolute top-[40px] right-0 w-[180px] bg-surface rounded-2xl border border-line shadow-2xl py-2 z-50 animate-fadeIn">
+              {/* Share */}
+              <button
+                onClick={handleShareGroup}
+                className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
+              >
+                <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 10.742l4.57 2.286M15.316 11.258l-4.57-2.286M21 12a3 3 0 11-6 0 3 3 0 016 0zm-9-6a3 3 0 11-6 0 3 3 0 016 0zm-9 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Share Group Link</span>
+              </button>
+
+              {/* Pin / Unpin */}
+              <button
+                onClick={handleTogglePin}
+                className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-faint" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                </svg>
+                <span>{isPinned ? 'Unpin Group' : 'Pin Group'}</span>
+              </button>
+
+              {/* Report (Only if the user is not the admin creator) */}
+              {group?.admin && String(group.admin._id || group.admin.id || group.admin) !== String(userId) && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setShowReportModal(true);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-xs font-bold text-ink hover:bg-surface-alt flex items-center gap-2.5 transition-colors border-t border-line mt-1 pt-3.5"
+                >
+                  <svg className="w-4 h-4 text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>Report Group</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -261,13 +372,20 @@ const GroupDetails = () => {
 
       {/* Bottom Fixed Action Button */}
       <div className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-surface/85 backdrop-blur-md border-t border-line px-5 py-4 flex z-30 shadow-lg">
-        {!isMember ? (
+        {isClosed ? (
+          <button
+            disabled
+            className="w-full py-3.5 bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black text-[13.5px] text-center cursor-not-allowed opacity-75"
+          >
+            Deal Closed
+          </button>
+        ) : !isMember ? (
           <button
             onClick={handleJoin}
             disabled={actionLoading || isFull}
             className={`w-full py-3.5 text-white rounded-2xl font-black text-[13.5px] text-center transition-all shadow-md shadow-[#0D9488]/20 ${isFull ? 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-80' : 'bg-[#0D9488] hover:bg-[#0B7A70] active:scale-95'}`}
           >
-            {isFull ? 'Group Full' : actionLoading ? 'Joining...' : 'Join Group To Interact'}
+            {isFull ? 'Group Full' : actionLoading ? 'Joining...' : 'Join Group'}
           </button>
         ) : (
           <button
@@ -278,6 +396,50 @@ const GroupDetails = () => {
           </button>
         )}
       </div>
+
+      {showReportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-surface rounded-3xl w-full max-w-[340px] p-5 shadow-2xl border border-line" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-[16px] font-black text-ink mb-2">Report Group</h2>
+            <p className="text-[11px] text-muted font-bold mb-4">Please describe the reason for reporting this. Our moderation team will review it.</p>
+            
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const reason = e.target.reason.value;
+                if (!reason.trim()) return;
+                await handleReportGroupSubmit(reason.trim());
+              }} 
+              className="flex flex-col gap-4"
+            >
+              <textarea
+                name="reason"
+                placeholder="Type your reason here..."
+                rows={3}
+                required
+                className="w-full p-3 text-[12px] font-medium text-ink placeholder:text-muted/60 bg-surface-alt border border-slate-200/90 rounded-2xl outline-none focus:border-primary transition-all resize-none"
+                maxLength={1000}
+              />
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(false)}
+                  className="flex-1 py-3 rounded-xl font-bold text-xs text-faint bg-surface-alt border border-line active:scale-95 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl font-bold text-xs text-white bg-red-500 hover:bg-red-600 active:scale-95 transition-all"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

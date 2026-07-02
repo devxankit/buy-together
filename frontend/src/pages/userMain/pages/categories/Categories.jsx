@@ -158,13 +158,16 @@ const Categories = () => {
   const filteredProducts = useMemo(() => {
     let list = mappedGroups;
 
-    // Filter out groups created or joined by the current user
+    // Filter out groups created or joined by the current user UNLESS 'my-groups' sort is active
     const currentUserId = currentUser.id || currentUser._id;
-    if (currentUserId) {
+    if (currentUserId && activeSort !== 'my-groups') {
       list = list.filter(p => 
         String(p.creatorId) !== String(currentUserId) &&
         !p.members.some(m => String(m._id || m.id || m) === String(currentUserId))
       );
+    } else if (currentUserId && activeSort === 'my-groups') {
+      // For 'My Groups', show user's own created groups
+      list = list.filter(p => String(p.creatorId) === String(currentUserId));
     }
 
     // Filter by Selected Category slug
@@ -221,8 +224,7 @@ const Categories = () => {
     } else if (activeSort === 'new') {
       return list.filter(p => p.badgeType === 'new' || p.badgeType === 'rising');
     } else if (activeSort === 'my-groups') {
-      const userId = currentUser.id || currentUser._id;
-      return list.filter(p => p.members.some(m => String(m._id || m) === String(userId)));
+      return list;
     }
 
     return list;

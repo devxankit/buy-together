@@ -25,7 +25,7 @@ const GroupsHeader = ({ selectedLocation, onLocationClick }) => {
       </div>
       <button
         onClick={() => navigate('/groups/create')}
-        className="flex items-center gap-1 bg-primary/10 hover:bg-primary/15 text-primary px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 duration-200"
+        className="flex items-center gap-1 bg-primary/20 hover:bg-primary/30 text-primary dark:text-teal-400 dark:bg-teal-950/40 dark:hover:bg-teal-950/60 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 duration-200"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

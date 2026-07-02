@@ -60,8 +60,8 @@ const Header = ({
             {title}
           </h1>
         ) : (
-          <div className="flex items-center text-lg font-black tracking-tight">
-            <span className="text-secondary">Buy</span>
+          <div className="flex items-center text-lg font-black tracking-tight select-none">
+            <span className="text-slate-800 dark:text-slate-200">Buy</span>
             <span className="text-primary">together</span>
           </div>
         )}

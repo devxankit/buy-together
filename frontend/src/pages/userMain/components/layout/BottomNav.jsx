@@ -21,12 +21,11 @@ const BottomNav = () => {
       )
     },
     {
-      path: '/categories',
-      label: 'Explore',
+      path: '/messages',
+      label: 'Chat',
       icon: (isActive) => (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       )
     },
@@ -55,6 +54,16 @@ const BottomNav = () => {
       )
     },
     {
+      path: '/categories',
+      label: 'Explore',
+      icon: (isActive) => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+      )
+    },
+    {
       path: '/groups',
       label: 'My Groups',
       icon: (isActive) => (
@@ -62,16 +71,6 @@ const BottomNav = () => {
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
           <polyline points="2 17 12 22 22 17"></polyline>
           <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
-      )
-    },
-    {
-      path: '/profile',
-      label: 'Profile',
-      icon: (isActive) => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
         </svg>
       )
     }
@@ -85,6 +84,8 @@ const BottomNav = () => {
     return location.pathname.startsWith(item.path);
   });
 
+  const numItems = navItems.length;
+
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(min(100vw,430px)-32px)] z-50">
       {/* Curved floating bar container with modern glow and outline */}
@@ -95,10 +96,10 @@ const BottomNav = () => {
           <div
             className="absolute h-[46px] bg-primary-soft border border-primary/10 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
             style={{
-              left: `calc(12px + ${activeIndex} * (100% - 24px) / 5 + 3px)`,
+              left: `calc(12px + ${activeIndex} * (100% - 24px) / ${numItems} + 3px)`,
               top: '50%',
               transform: 'translateY(-50%)',
-              width: `calc((100% - 24px) / 5 - 6px)`,
+              width: `calc((100% - 24px) / ${numItems} - 6px)`,
               pointerEvents: 'none'
             }}
           />
