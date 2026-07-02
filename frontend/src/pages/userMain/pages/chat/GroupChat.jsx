@@ -7,6 +7,7 @@ import { getGroup, joinGroup, leaveGroup, kickGroupMember } from '../../../../se
 import { votePollMessage, pinMessage, unpinMessage, reactMessage, deleteMessage } from '../../../../services/chat.api';
 import { createTicket } from '../../../../services/ticket.api';
 import api from '../../../../services/api';
+import { captureCameraPhoto } from '../../../../utils/captureImage';
 import ContactProfile from './ContactProfile';
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
@@ -1565,8 +1566,7 @@ const GroupChat = () => {
     }, 100);
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const processFile = async (file, kind = fileTypeToUpload) => {
     if (!file) return;
 
     setShowAttachmentDrawer(false);
@@ -1574,7 +1574,7 @@ const GroupChat = () => {
     const tempId = `temp-${Date.now()}`;
     const localUrl = URL.createObjectURL(file);
 
-    if (fileTypeToUpload === 'image') {
+    if (kind === 'image') {
       const isVideo = file.type.startsWith('video/');
       
       // Optimistic preview message
@@ -1683,6 +1683,18 @@ const GroupChat = () => {
         URL.revokeObjectURL(localUrl);
       }
     }
+  };
+
+  const handleFileChange = (e) => processFile(e.target.files[0]);
+
+  // Camera: inside the Flutter wrapper capture a photo through the native
+  // bridge (the WebView file-chooser camera doesn't work); in a browser this
+  // opens the OS camera. Video capture isn't supported here — share clips from
+  // Gallery. The captured photo is sent through the normal image flow.
+  const handleCameraShare = async () => {
+    setShowAttachmentDrawer(false);
+    const file = await captureCameraPhoto();
+    if (file) processFile(file, 'image');
   };
 
   const handleShareLocation = () => {
@@ -2126,7 +2138,7 @@ const GroupChat = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     ),
-                    action: () => triggerFileUpload('image')
+                    action: () => handleCameraShare()
                   },
                   {
                     label: 'Location',

@@ -6,6 +6,9 @@ import { useTheme } from '../../context';
 import { uploadImage } from '../../../../services/upload.api';
 import { getUserProfile, updateUserProfile } from '../../../../services/user.api';
 import { showToast } from '../../../../utils/toast';
+import { captureCameraPhoto } from '../../../../utils/captureImage';
+import { isFlutterCameraBridge } from '../../../../utils/flutterBridge';
+import ImageSourceSheet from '../../components/common/ImageSourceSheet';
 
 const getPlaceholderAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
 
@@ -26,6 +29,7 @@ const Profile = () => {
   ];
 
   const fileInputRef = React.useRef(null);
+  const [showSourceSheet, setShowSourceSheet] = React.useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -43,8 +47,7 @@ const Profile = () => {
     return () => { active = false; };
   }, [dispatch]);
 
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
+  const uploadAvatar = async (file) => {
     if (!file) return;
 
     setUploading(true);
@@ -64,6 +67,30 @@ const Profile = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleAvatarChange = (e) => uploadAvatar(e.target.files[0]);
+
+  // Tap the avatar: inside the Flutter wrapper show a Camera/Gallery choice
+  // (Camera → native bridge); in a normal browser open the file picker directly.
+  const openAvatarPicker = () => {
+    if (uploading) return;
+    if (isFlutterCameraBridge()) {
+      setShowSourceSheet(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const pickFromCamera = async () => {
+    setShowSourceSheet(false);
+    const file = await captureCameraPhoto();
+    if (file) uploadAvatar(file);
+  };
+
+  const pickFromGallery = () => {
+    setShowSourceSheet(false);
+    fileInputRef.current?.click();
   };
 
   const handleLogout = () => {
@@ -167,7 +194,7 @@ const Profile = () => {
         <div className="mb-6"></div>
 
         <div className="flex items-center gap-4 relative">
-          <div className="relative flex-shrink-0 cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
+          <div className="relative flex-shrink-0 cursor-pointer" onClick={openAvatarPicker}>
             <img src={currentUser.avatar || getPlaceholderAvatar(currentUser.name)} alt={currentUser.name} className="w-[75px] h-[75px] rounded-full object-cover border-2 border-[var(--surface)] shadow-md" style={uploading ? { opacity: 0.6 } : undefined} />
             <button className="absolute bottom-0 right-0 w-6 h-6 bg-surface border border-line rounded-full flex items-center justify-center shadow-sm text-primary active:scale-95 transition-all">
               {uploading ? (
@@ -408,6 +435,14 @@ const Profile = () => {
         </button>
 
       </div>
+
+      <ImageSourceSheet
+        open={showSourceSheet}
+        onClose={() => setShowSourceSheet(false)}
+        onCamera={pickFromCamera}
+        onGallery={pickFromGallery}
+        title="Update profile photo"
+      />
     </div>
   );
 };

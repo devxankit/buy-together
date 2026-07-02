@@ -7,6 +7,7 @@ import { showToast } from '../../../../utils/toast';
 import { createTicket } from '../../../../services/ticket.api';
 import api from '../../../../services/api';
 import { getChatSocket } from '../../../../services/socket';
+import { captureCameraPhoto } from '../../../../utils/captureImage';
 import ContactProfile from './ContactProfile';
 
 const ChatSkeleton = () => (
@@ -622,8 +623,7 @@ const PersonalChat = () => {
     }, 100);
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const processFile = async (file, kind = fileTypeToUpload) => {
     if (!file) return;
 
     setShowAttachmentDrawer(false);
@@ -631,7 +631,7 @@ const PersonalChat = () => {
     const tempId = `temp-${Date.now()}`;
     const localUrl = URL.createObjectURL(file);
 
-    if (fileTypeToUpload === 'image') {
+    if (kind === 'image') {
       const isVideo = file.type.startsWith('video/');
       
       // Optimistic preview message
@@ -742,6 +742,16 @@ const PersonalChat = () => {
         URL.revokeObjectURL(localUrl);
       }
     }
+  };
+
+  const handleFileChange = (e) => processFile(e.target.files[0]);
+
+  // Camera: native bridge inside the Flutter wrapper, OS camera in a browser.
+  // Photo only — video clips are shared from Gallery.
+  const handleCameraShare = async () => {
+    setShowAttachmentDrawer(false);
+    const file = await captureCameraPhoto();
+    if (file) processFile(file, 'image');
   };
 
   const handleShareLocation = () => {
@@ -1012,7 +1022,7 @@ const PersonalChat = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   ),
-                  action: () => triggerFileUpload('image')
+                  action: () => handleCameraShare()
                 },
                 {
                   label: 'Location',

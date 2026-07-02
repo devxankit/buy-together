@@ -63,7 +63,7 @@
 .admin-nav-item.active { background: rgba(13,148,136,0.16); color: #fff; }
 .admin-nav-item.active .admin-nav-rail {
   opacity: 1;
-  transform: scaleY(1);
+  transform: translateY(-50%) scaleY(1);
 }
 .admin-nav-rail {
   position: absolute;

@@ -35,7 +35,12 @@ const Topbar = ({ onOpenMobileNav }) => {
   useEffect(() => {
     fetchNotifications();
     const timer = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(timer);
+    const handler = () => fetchNotifications();
+    window.addEventListener('admin:notifications_changed', handler);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('admin:notifications_changed', handler);
+    };
   }, [fetchNotifications]);
 
   const unread = notificationsList.filter(n => !n.read).length;
@@ -44,6 +49,7 @@ const Topbar = ({ onOpenMobileNav }) => {
     try {
       await markNotificationAsRead(id);
       setNotificationsList(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      window.dispatchEvent(new CustomEvent('admin:notifications_changed'));
     } catch (err) {
       console.warn('Failed to mark notification as read:', err);
     }
@@ -53,6 +59,7 @@ const Topbar = ({ onOpenMobileNav }) => {
     try {
       await markAllNotificationsAsRead();
       setNotificationsList(prev => prev.map(n => ({ ...n, read: true })));
+      window.dispatchEvent(new CustomEvent('admin:notifications_changed'));
     } catch (err) {
       console.warn('Failed to mark all notifications as read:', err);
     }
@@ -362,7 +369,7 @@ const Topbar = ({ onOpenMobileNav }) => {
                 )}
               </div>
               <button
-                onClick={() => { setBellOpen(false); navigate('/admin'); }}
+                onClick={() => { setBellOpen(false); navigate('/admin/notifications'); }}
                 className="admin-btn"
                 style={{ width: '100%', padding: '11px', border: 'none', background: T.surfaceAlt, color: T.primary, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
               >
